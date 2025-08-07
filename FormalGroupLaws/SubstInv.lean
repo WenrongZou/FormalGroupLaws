@@ -312,7 +312,7 @@ theorem subst_inv_aux
   and if `f(X) = u * X + ⋯` where `u ∈ Aˣ`, then there is `g ∈ A ⟦X⟧`,
   such that `f ∘ g = id` and `g ∘ f = id`. -/
 theorem exist_subst_inv
-  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0) :
   ∃ (g : PowerSeries R), (subst f ∘ subst g = id ∧ subst g ∘ subst f = id
   ∧ constantCoeff R g = 0) := by
   obtain ⟨g, hg₁, hg₂, hg₃⟩ := subst_inv_aux f h hc

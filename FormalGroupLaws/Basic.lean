@@ -160,6 +160,11 @@ abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries 
   PowerSeries.subst (MvPowerSeries.X i) f
 
 
+-- noncomputable def sub_hom {A : Type*} [CommRing A] (a : PowerSeries  A):
+--   Fin 2 → MvPowerSeries (Fin 2) A
+--   | ⟨0, _⟩ => PowerSeries.subst  X₀ a
+--   | ⟨1, _⟩ => PowerSeries.subst  X₁ a
+
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
 @[ext]
