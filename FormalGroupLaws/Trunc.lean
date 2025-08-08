@@ -138,7 +138,7 @@ theorem trunc_of_subst (f g: PowerSeries R)(hg : constantCoeff R g = 0)
         simp [show n > 0 by linarith, hg]
       exact aux
     simp [coeff_trunc]
-    simp [if_pos hm, if_pos hm, coeff_subst' subst_aux, coeff_subst' subst_aux']
+    simp [if_pos hm, coeff_subst' subst_aux, coeff_subst' subst_aux']
     congr
     funext d
     -- prove that (coeff R m) (g ^ d) = (coeff R m) (↑(trunc n g) ^ d)
@@ -163,7 +163,7 @@ theorem trunc_of_subst (f g: PowerSeries R)(hg : constantCoeff R g = 0)
           simp at hj
           exact this j (by simp [hj.2])
         have ge_aux2 : m ≥ l i := by
-          simp only [←h1, zero_add, ge_iff_le, le_add_iff_nonneg_left, zero_le]
+          simp only [← h1, ge_iff_le, le_add_iff_nonneg_left, zero_le]
         linarith
         simp at hi
         have li_eq_zero : l i = 0 := by
@@ -173,7 +173,7 @@ theorem trunc_of_subst (f g: PowerSeries R)(hg : constantCoeff R g = 0)
           have aux : i ∈ Finset.range d := by
             exact h2 supp_l
           simp at aux
-          exact (lt_iff_not_ge i d).mp aux hi
+          linarith
         rw [li_eq_zero] at hc
         linarith
       have le_aux' : l i < n := by

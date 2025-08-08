@@ -52,13 +52,19 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
+/-- This is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  `0 ↦ Y₀`, `1 ↦ Y₁` -/
 abbrev subst_fir_aux : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₀
   | ⟨1, _⟩ => Y₁
 
+
+/-- This is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  `0 ↦ Y₁`, `1 ↦ Y₂`-/
 abbrev subst_sec_aux : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₁
   | ⟨1, _⟩ => Y₂
+
 
 lemma has_subst_fir_aux : MvPowerSeries.HasSubst subst_fir_aux (S := R):= by
   refine hasSubst_of_constantCoeff_zero ?_
@@ -75,12 +81,14 @@ lemma has_subst_sec_aux: MvPowerSeries.HasSubst subst_sec_aux (S := R):= by
   · simp [show s = 1 by omega, subst_sec_aux]
 
 
--- (0 : Fin 2) ↦ F(X, Y), (1 : Fin 2) ↦ Z
+/-- this is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  `(0 : Fin 2) ↦ F(X, Y), (1 : Fin 2) ↦ Z`. -/
 abbrev subst_fir : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => subst (subst_fir_aux) F
   | ⟨1, _⟩ => Y₂
 
--- (0 : Fin 2) ↦ X, (1 : Fin 2) ↦ F (Y, Z)
+/-- this is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
+  (0 : Fin 2) ↦ X, (1 : Fin 2) ↦ F (Y, Z) -/
 abbrev subst_sec : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₀
   | ⟨1, _⟩ => subst (subst_sec_aux) F
@@ -104,7 +112,7 @@ lemma has_subst_fir (hF : constantCoeff _ R F = 0) : MvPowerSeries.HasSubst (sub
         intro a
         by_cases ha0 : a = 0
         · simp [ha0, hc]
-        · simp [show a = 1 by omega, ha0, hc]
+        · simp [show a = 1 by omega, hc]
       contradiction
     obtain x_or | x_or := xneq
     · simp [zero_pow x_or]
@@ -129,9 +137,8 @@ lemma has_subst_sec (hF : constantCoeff _ R F = 0) : MvPowerSeries.HasSubst (sub
       have xeq : x = 0 := by
         refine Finsupp.ext ?_
         intro a
-        by_cases ha0 : a = 0
-        · simp [ha0, hc]
-        · simp [show a = 1 by omega, ha0, hc]
+        fin_cases a
+        all_goals simp [hc]
       contradiction
     obtain x_or | x_or := xneq
     · simp [zero_pow x_or]
@@ -159,11 +166,6 @@ multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
 abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
   PowerSeries.subst (MvPowerSeries.X i) f
 
-
--- noncomputable def sub_hom {A : Type*} [CommRing A] (a : PowerSeries  A):
---   Fin 2 → MvPowerSeries (Fin 2) A
---   | ⟨0, _⟩ => PowerSeries.subst  X₀ a
---   | ⟨1, _⟩ => PowerSeries.subst  X₁ a
 
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
@@ -301,7 +303,7 @@ lemma FormalGroup.constantCoeff_of_subst_X₀ :
         all_goals simp [hd, hd']
       simp [d_is_zero, zero_constantCoeff]
     · -- the case `d 0 ≠ 0`
-      simp [show subst_X₀ 0 = PowerSeries.X by rfl, hd, PowerSeries.coeff_X_pow, zero_pow hd']
+      simp [show subst_X₀ 0 = PowerSeries.X by rfl, hd, zero_pow hd']
   · -- the case `d 1 ≠ 0`
     simp [show subst_X₀ 1 = 0 by rfl, zero_pow hd]
 
@@ -324,7 +326,7 @@ lemma FormalGroup.constantCoeff_of_subst_X₁ :
         all_goals simp [hd, hd']
       simp [d_is_zero, zero_constantCoeff]
     · -- the case `d 1 ≠ 0`
-      simp [show subst_X₀ 0 = PowerSeries.X by rfl, hd, PowerSeries.coeff_X_pow, zero_pow hd']
+      simp [show subst_X₀ 0 = PowerSeries.X by rfl, hd, zero_pow hd']
   · -- the case `d 0 ≠ 0`
     simp [show subst_X₁ 0 = 0 by rfl, zero_pow hd]
 
@@ -403,7 +405,7 @@ lemma self_comp_aux :
       apply subst_congr
       funext t
       fin_cases t
-      all_goals simp [map_aux, subst_fir_aux, subst_X₀, subst_X, subst_X has_subst_map_aux]
+      all_goals simp [map_aux, subst_fir_aux, subst_X₀, subst_X has_subst_map_aux]
     · -- the cases s = 1
       simp [subst_X₀, subst_fir]
       rw [subst_X has_subst_map_aux]
@@ -527,7 +529,7 @@ lemma self_comp_aux' :
       apply subst_congr
       funext t
       fin_cases t
-      all_goals simp [map_aux, subst_fir_aux, subst_X₀, subst_X, subst_X has_subst_map_aux]
+      all_goals simp [map_aux, subst_X has_subst_map_aux]
   have right_eq : subst map_aux (subst (subst_fir F.toFun) F.toFun) =
     (PowerSeries.subst (subst subst_X₁ F.toFun : PowerSeries R) (R := R)) PowerSeries.X := by
     rw [PowerSeries.subst_X has_subst_aux, subst_comp_subst_apply

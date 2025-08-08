@@ -104,8 +104,7 @@ lemma constCoeff_invFunAux_eq_zero {n : ℕ} :
 -- this lemma only use once, could remove maybe
 lemma HasSubst_aux₀ : HasSubst ((C R) ↑h.unit⁻¹ * X) := by
   refine HasSubst.of_constantCoeff_zero ?_
-  simp [←(smul_eq_C_mul X (↑h.unit⁻¹ : R)),
-    constantCoeff_smul (X (R := R)) (↑h.unit⁻¹ : R), X]
+  simp [X]
 
 lemma coeff_of_subst_of_add_pow (g h: PowerSeries R) (n : ℕ)
   (hn₀ : n ≠ 0) (a : R) (hg : constantCoeff R g = 0):
@@ -201,7 +200,7 @@ lemma coeff_of_subst_of_add_pow (g h: PowerSeries R) (n : ℕ)
     rw [eq_aux]; ring
     · refine coeff_subst_finite (HasSubst.of_constantCoeff_zero ?_) h (Finsupp.single () n)
       unfold constantCoeff at hg
-      simp [X, hg, constantCoeff_X, zero_pow hn₀]
+      simp [X, hg, zero_pow hn₀]
     · exact coeff_subst_finite (HasSubst.of_constantCoeff_zero
         (by rw [←hg, constantCoeff])) h (Finsupp.single () n)
   rw [← aux]; ring
@@ -266,8 +265,7 @@ theorem subst_inv_aux₁ {n : ℕ} :
         X ^ (k + 1)) = (C R) ((↑h.unit⁻¹ : R) * ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f)))
         * X ^ (k + 1) := by
         simp
-      · simp [coeff_truncFun', if_pos hd, eq_aux, coeff_C_mul_X_pow, if_neg,
-        coeff_X_pow, if_neg (show d ≠ k + 1 by linarith), mul_zero]
+      · simp [coeff_truncFun', eq_aux, coeff_X_pow, if_neg (show d ≠ k + 1 by linarith), mul_zero]
       · simp [PowerSeries.coeff_truncFun', if_neg hd]
     rw [trunc'_of_succ, trunc'_of_subst k _ _ (by simp [constCoeff_invFunAux_eq_zero f h hc]), map_add, aux, add_zero, ←trunc'_of_subst k _ _ (constCoeff_invFunAux_eq_zero f h hc), ih]
     have zero_aux : (Polynomial.monomial (k + 1))
@@ -334,7 +332,7 @@ theorem exist_subst_inv
       rw [hg₂]
       apply HasSubst.of_constantCoeff_zero
       unfold constantCoeff at hg₂'
-      simp [constantCoeff, hg₂']
+      simp [hg₂']
     rw [←subst_aux₁, subst_aux₂, hg₁']
     simp [←map_algebraMap_eq_subst_X f]
   rw [eq_aux]

@@ -293,7 +293,7 @@ lemma coeff_RecurFun_mul_mem (n : ℕ) :
           have mem_aux1 : ⟨((⇑σ)^[i] (RecurFunAux hp_prime hn hq σ s g (n / q ^ i)) * ↑x), mem_aux⟩ ∈ 𝔞 := by
             have aux : ((⇑σ)^[i] (RecurFunAux hp_prime hn hq σ s g (n / q ^ i)) * ↑x)
               ∈ Set.image (algebraMap R K) 𝔞 := by
-              simp [Function.iterate_succ_apply' (⇑σ) _ _] at mem_aux2
+              simp at mem_aux2
               simp [mem_aux2]
             exact mem_image_aux aux
           obtain h1 := hs_i i _ mem_aux1
@@ -318,16 +318,16 @@ lemma coeff_infty_sum [TopologicalSpace K]
   -- refine Summable.map_tsum hf (PowerSeries.coeff K n) ?_
   -- exact PowerSeries.WithPiTopology.continuous_coeff K n
 
-theorem tsum_to_finite_aux [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' : K →ₗ[R] K) 
+theorem tsum_to_finite_aux [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' : K →ₗ[R] K)
   (h : ∀ i, (¬ i ∈ range n) → f i ∈ LinearMap.ker g')
-  : ∑' (i : ℕ), f i - ∑ i ∈ range n, f i ∈ LinearMap.ker g' := by 
-  
+  : ∑' (i : ℕ), f i - ∑ i ∈ range n, f i ∈ LinearMap.ker g' := by
+
   sorry
 
-theorem tsum_to_finite_aux' [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' : K →ₗ[R] K) 
+theorem tsum_to_finite_aux' [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' : K →ₗ[R] K)
   (h : ∀ i, (¬ i ∈ range n) → g' (f i) = 0)
-  : g' (∑' (i : ℕ), f i) = g' (∑ i ∈ range n, f i) := by 
-  
+  : g' (∑' (i : ℕ), f i) = g' (∑ i ∈ range n, f i) := by
+
   sorry
 
 
@@ -335,35 +335,35 @@ theorem tsum_to_finite_aux' [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' :
 theorem tsum_to_finite [TopologicalSpace K] (n : ℕ) :
   (PowerSeries.coeff K n) (∑' (i : ℕ), (PowerSeries.C K) (s i) *
     (PowerSeries.map (σ ^ i)) (PowerSeries.subst ((PowerSeries.monomial K (q ^ i)) 1)
-    (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g)))) 
-    = (PowerSeries.coeff K n) (∑ i ∈ range (n + 1), (PowerSeries.C K) (s i) * 
+    (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g))))
+    = (PowerSeries.coeff K n) (∑ i ∈ range (n + 1), (PowerSeries.C K) (s i) *
       (PowerSeries.map (σ ^ i)) (PowerSeries.subst ((PowerSeries.monomial K (q ^ i)) 1)
-      (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g)))):= by 
+      (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g)))):= by
   refine LinearMap.sub_mem_ker_iff.mp ?_
   have eq_zero : ∀ i, (¬ i ∈ range (n + 1)) → (PowerSeries.C K) (s i) *
     (PowerSeries.map (σ ^ i)) (PowerSeries.subst ((PowerSeries.monomial K (q ^ i)) 1) (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g))) ∈
-    LinearMap.ker (PowerSeries.coeff K n) := by 
-    intro i hi 
+    LinearMap.ker (PowerSeries.coeff K n) := by
+    intro i hi
     simp
-    have has_subst : PowerSeries.HasSubst ((PowerSeries.monomial K (q ^ i)) 1) := by 
+    have has_subst : PowerSeries.HasSubst ((PowerSeries.monomial K (q ^ i)) 1) := by
       sorry
     have eq_aux : (PowerSeries.coeff K n) (PowerSeries.subst ((PowerSeries.monomial K (q ^ i)) 1) (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g))) = 0 := by
       rw [PowerSeries.coeff_subst' has_subst]
       refine finsum_eq_zero_of_forall_eq_zero ?_
-      intro d 
-      by_cases hd0 : d = 0 
+      intro d
+      by_cases hd0 : d = 0
       · simp [hd0, RecurFunAux]
-      · 
+      ·
         have dge : d ≥ 1 := by omega
-        have eq_zero :(PowerSeries.coeff K n) ((PowerSeries.monomial K (q ^ i)) 1 ^ d) = 0:= by 
-          -- have eq_aux : ((PowerSeries.monomial K (q ^ i)) 1 ^ d) = 
-          --   PowerSeries.monomial K (q ^ i ^ d) 1 := by 
+        have eq_zero :(PowerSeries.coeff K n) ((PowerSeries.monomial K (q ^ i)) 1 ^ d) = 0:= by
+          -- have eq_aux : ((PowerSeries.monomial K (q ^ i)) 1 ^ d) =
+          --   PowerSeries.monomial K (q ^ i ^ d) 1 := by
           --   sorry
-          
+
           sorry
         simp [eq_zero]
     simp [eq_aux]
-  
+
   sorry
 
 include hp_prime hn hq hg in
@@ -372,12 +372,13 @@ theorem Fun_eq_of_RecurFun [TopologicalSpace K]
   -- [CanonicallyOrderedAdd K]
   -- [OrderClosedTopology K]
   (hs0 : s 0 = 0) :
-  (RecurFun hp_prime hn hq σ s g) = (PowerSeries.map (algebraMap R K) g) +  ∑' (i : ℕ), ((PowerSeries.C K (s i))
-    * (PowerSeries.map (σ^(i)) (PowerSeries.subst (PowerSeries.monomial K (q ^ (i)) 1) (RecurFun hp_prime hn hq σ s g)))) := by
+  (RecurFun hp_prime hn hq σ s g) = (PowerSeries.map (algebraMap R K) g) +
+    ∑' (i : ℕ), ((PowerSeries.C K (s i)) * (PowerSeries.map (σ^(i))
+    (PowerSeries.subst (PowerSeries.monomial K (q ^ (i)) 1) (RecurFun hp_prime hn hq σ s g)))) := by
   refine PowerSeries.ext ?_
   intro n
   by_cases hn0 : n = 0
-  · 
+  ·
     simp [RecurFun]
     rw [coeff_infty_sum, hn0]
     conv =>
@@ -398,7 +399,7 @@ theorem Fun_eq_of_RecurFun [TopologicalSpace K]
         have eq_aux₂ : (PowerSeries.constantCoeff K)
           (PowerSeries.subst ((PowerSeries.monomial K (q ^ i)) 1)
           (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g))) = 0 := by
-          have has_subst₁ : PowerSeries.HasSubst ((PowerSeries.monomial K (q ^ i)) 1) :=  
+          have has_subst₁ : PowerSeries.HasSubst ((PowerSeries.monomial K (q ^ i)) 1) :=
             PowerSeries.HasSubst.monomial' (by linarith) 1
           rw [PowerSeries.constantCoeff, PowerSeries.constantCoeff_subst has_subst₁]
           simp
@@ -407,10 +408,9 @@ theorem Fun_eq_of_RecurFun [TopologicalSpace K]
           by_cases hd0 : d = 0
           · simp [hd0, RecurFunAux]
           ·
-            rw [←PowerSeries.constantCoeff_def]
             have eq_zero : PowerSeries.constantCoeff K ((PowerSeries.monomial K (q ^ i)) 1) = 0 := by
               rw [←PowerSeries.coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_monomial, if_neg]
-              
+
               linarith
             simp [eq_zero, zero_pow hd0]
         simp [eq_aux₂]
@@ -419,7 +419,7 @@ theorem Fun_eq_of_RecurFun [TopologicalSpace K]
   · simp [RecurFun, PowerSeries.coeff_mk, coeff_infty_sum]
     conv =>
       lhs
-    
+
     sorry
   · sorry
 
