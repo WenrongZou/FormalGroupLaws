@@ -52,6 +52,7 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
+
 /-- This is a map from `Fin 2` to `MvPowerSeries (Fin 3) R`,
   `0 ↦ Y₀`, `1 ↦ Y₁` -/
 abbrev subst_fir_aux : Fin 2 → MvPowerSeries (Fin 3) R
@@ -64,7 +65,6 @@ abbrev subst_fir_aux : Fin 2 → MvPowerSeries (Fin 3) R
 abbrev subst_sec_aux : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₁
   | ⟨1, _⟩ => Y₂
-
 
 lemma has_subst_fir_aux : MvPowerSeries.HasSubst subst_fir_aux (S := R):= by
   refine hasSubst_of_constantCoeff_zero ?_
@@ -137,8 +137,9 @@ lemma has_subst_sec (hF : constantCoeff _ R F = 0) : MvPowerSeries.HasSubst (sub
       have xeq : x = 0 := by
         refine Finsupp.ext ?_
         intro a
-        fin_cases a
-        all_goals simp [hc]
+        by_cases ha0 : a = 0
+        · simp [ha0, hc]
+        · simp [show a = 1 by omega, hc]
       contradiction
     obtain x_or | x_or := xneq
     · simp [zero_pow x_or]
@@ -165,6 +166,20 @@ multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
 -/
 abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries σ R :=
   PowerSeries.subst (MvPowerSeries.X i) f
+
+lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
+  (hf : PowerSeries.constantCoeff R f = 0) :
+  HasSubst (f.toMvPowerSeries (σ := σ)) (S := R) := by
+  refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
+  intro x
+  rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
+    (PowerSeries.HasSubst.X x)]
+  simp
+  apply finsum_eq_zero_of_forall_eq_zero
+  intro d
+  by_cases hd₀ : d = 0
+  · simp [hd₀, hf]
+  · simp [zero_pow hd₀]
 
 
 variable (R) in
@@ -653,6 +668,7 @@ open PowerSeries
 
 /-- The homomorphism `α(X) : F (X, Y) → G (X, Y)` is an isomorphism if there exists a
   homomorphism `β(X) : G (X, Y) → F (X, Y)` such that `α ∘ β = id,  β ∘ α = id`. -/
+@[ext]
 structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
   toHom : FormalGroupHom G₁ G₂
   invHom : FormalGroupHom G₂ G₁
@@ -661,5 +677,25 @@ structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
 
 /-- An isomorphism `α(X) : F (X, Y) → G (X, Y)`, `α(X) = a₁ * X + a₂ * X ^ 2 + ⋯`
   is called strict isomorphism if `a₁ = 1`.-/
+@[ext]
 structure FormalGroupStrictIso (G₁ G₂ : FormalGroup R) extends FormalGroupIso G₁ G₂ where
   one_coeff_one : coeff R 1 toHom.toFun = 1
+
+theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
+  α = β ↔  α.toHom = β.toHom := by
+  constructor
+  · intro h
+    rw [h]
+  · intro h
+    refine FormalGroupStrictIso.ext h ?_
+    have eq_aux₁ : (PowerSeries.subst α.toHom.toFun) ∘ (PowerSeries.subst α.invHom.toFun) = id := by
+      exact α.left_inv
+    rw [h] at eq_aux₁
+    have eq_aux₂ : (PowerSeries.subst β.toHom.toFun) ∘ (PowerSeries.subst β.invHom.toFun) = id := by
+      exact β.left_inv
+    have eq_aux₃ : α.invHom.toFun = β.invHom.toFun := by
+      obtain ⟨g, h₁, h₂⟩ := exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
+        β.toHom.zero_constantCoeff
+      simp at h₂
+      rw [h₂ _ eq_aux₁ α.invHom.zero_constantCoeff, h₂ _ eq_aux₂ β.invHom.zero_constantCoeff]
+    exact FormalGroupHom.ext eq_aux₃

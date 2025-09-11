@@ -306,15 +306,10 @@ theorem subst_inv_aux
   · simp [g, invFun_aux]
   simp [g, invFun_aux]
 
-/-- For every power series `f ∈ A⟦X⟧` with zero constant coefficient,
-  and if `f(X) = u * X + ⋯` where `u ∈ Aˣ`, then there is `g ∈ A ⟦X⟧`,
-  such that `f ∘ g = id` and `g ∘ f = id`. -/
-theorem exist_subst_inv
-  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0) :
-  ∃ (g : PowerSeries R), (subst f ∘ subst g = id ∧ subst g ∘ subst f = id
-  ∧ constantCoeff R g = 0) := by
-  obtain ⟨g, hg₁, hg₂, hg₃⟩ := subst_inv_aux f h hc
-  refine ⟨g, ?_, (subst_comp_eq_id_iff _ (HasSubst.of_constantCoeff_zero hg₂) (HasSubst.of_constantCoeff_zero hc)).mpr hg₁, hg₂⟩
+theorem exist_subst_inv_aux {g : PowerSeries R}
+  (hg₃ : IsUnit (coeff R 1 g)) (hg₂ : constantCoeff R g = 0) :
+  subst g f = X → subst f g = X := by
+  intro hg₁
   obtain ⟨g', hg₁', hg₂', hg₃'⟩ := subst_inv_aux g hg₃ hg₂
   -- use this g to constructor g', then g' = f
   have eq_aux : f = g' := by
@@ -336,8 +331,77 @@ theorem exist_subst_inv
     rw [←subst_aux₁, subst_aux₂, hg₁']
     simp [←map_algebraMap_eq_subst_X f]
   rw [eq_aux]
-  refine (subst_comp_eq_id_iff g' (HasSubst.of_constantCoeff_zero' hg₂')
-    (HasSubst.of_constantCoeff_zero' hg₂)).mpr hg₁'
+  exact hg₁'
+
+
+/-- For every power series `f ∈ A⟦X⟧` with zero constant coefficient,
+  and if `f(X) = u * X + ⋯` where `u ∈ Aˣ`, then there is `g ∈ A ⟦X⟧`,
+  such that `f ∘ g = id` and `g ∘ f = id`. -/
+theorem exist_subst_inv
+  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  ∃ (g : PowerSeries R), (subst f ∘ subst g = id ∧ subst g ∘ subst f = id
+  ∧ constantCoeff R g = 0) := by
+  obtain ⟨g, hg₁, hg₂, hg₃⟩ := subst_inv_aux f h hc
+  refine ⟨g, ?_, (subst_comp_eq_id_iff _ (HasSubst.of_constantCoeff_zero hg₂)
+    (HasSubst.of_constantCoeff_zero hc)).mpr hg₁, hg₂⟩
+  refine (subst_comp_eq_id_iff f ?_ ?_).mpr ?_
+  · exact HasSubst.of_constantCoeff_zero' hc
+  · exact HasSubst.of_constantCoeff_zero' hg₂
+  · exact exist_subst_inv_aux f hg₃ hg₂ hg₁
+
+
+theorem exist_unique_subst_inv_aux
+  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  ∃! (g : PowerSeries R), subst f ∘ subst g = id ∧ subst g ∘ subst f = id
+  ∧ constantCoeff R g = 0 := by
+  refine existsUnique_of_exists_of_unique ?_ ?_
+  · obtain ⟨g, h₁, h₂, h₃⟩ := exist_subst_inv _ h hc
+    exact ⟨g, h₁, h₂, h₃⟩
+  · intro g₁ g₂ hg₁ hg₂
+    obtain ⟨hg₁, hg₁', hg₁''⟩ := hg₁
+    have eq_aux : subst g₁ ∘ subst f ∘ subst g₂ = id ∘ subst g₂ (R := R) := by
+      rw [←hg₁', Function.comp_assoc]
+    rw [hg₂.1] at eq_aux
+    simp at eq_aux
+    have eq_aux' : subst g₁ PowerSeries.X (R := R) = subst g₂ PowerSeries.X (R := R) := by
+      rw [eq_aux]
+    rw [subst_X (HasSubst.of_constantCoeff_zero' hg₂.2.2), subst_X
+      (HasSubst.of_constantCoeff_zero' hg₁'')] at eq_aux'
+    exact eq_aux'
+
+theorem exist_unique_subst_inv_left (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  ∃! (g : PowerSeries R), subst f ∘ subst g = id ∧ constantCoeff _ g = 0 := by
+  obtain ⟨g, h₁, h₂⟩ := exist_unique_subst_inv_aux _ h hc
+  use g
+  simp
+  constructor
+  · exact ⟨h₁.1, h₁.2.2⟩
+  · intro y h_subst h_const
+    have aux : subst g ∘ subst f ∘ subst y = subst g (R := R) := by
+      simp [h_subst]
+    have aux' : subst y = subst g (R := R) := by
+      simp [←Function.comp_assoc, h₁.2.1] at aux
+      exact aux
+    rw [←subst_X (a := y) (R := R) (HasSubst.of_constantCoeff_zero' h_const),
+      ←subst_X (a := g) (R := R) (HasSubst.of_constantCoeff_zero' h₁.2.2), aux']
+
+
+theorem exist_unique_subst_inv_right (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  ∃! (g : PowerSeries R), subst g ∘ subst f = id ∧ constantCoeff _ g = 0 := by
+  obtain ⟨g, h₁, h₂⟩ := exist_unique_subst_inv_aux _ h hc
+  use g
+  simp
+  constructor
+  · exact ⟨h₁.2.1, h₁.2.2⟩
+  · intro y h_subst h_const
+    have aux : subst y ∘ subst f ∘ subst g = subst g (R := R) := by
+      simp [←Function.comp_assoc, h_subst]
+    have aux' : subst y = subst g (R := R) := by
+      simp [h₁.1] at aux
+      exact aux
+    rw [←subst_X (a := y) (R := R) (HasSubst.of_constantCoeff_zero' h_const),
+      ←subst_X (a := g) (R := R) (HasSubst.of_constantCoeff_zero' h₁.2.2), aux']
+
 
 end
 end PowerSeries
