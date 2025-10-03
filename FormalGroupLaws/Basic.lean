@@ -194,12 +194,63 @@ structure FormalGroup where
   --  Associativity of the Formal Group : `F (F (X, Y), Z) = F (X, F (Y, Z))`.
 
 variable (R) in
+@[ext]
 structure CommFormalGroup extends FormalGroup R where
   comm : toFun = MvPowerSeries.subst (subst_symm) toFun
 -- Commutativity F (X, Y) = F (Y, X)
 
-variable {F : FormalGroup R} {f : PowerSeries R}
+/-- Given a formal group `F`, `F.comm` is a proposition that `F(X,Y) = F(Y,X)`-/
+def FormalGroup.comm (F : FormalGroup R) : Prop :=
+  F.toFun = MvPowerSeries.subst subst_symm F.toFun
 
+/-- A commutative formal group law is a formal group law.-/
+instance : Coe (CommFormalGroup R) (FormalGroup R) where
+  coe := CommFormalGroup.toFormalGroup
+
+/-- Additive formal group law `Gₐ(X,Y) = X + Y`-/
+def Gₐ : CommFormalGroup R where
+  toFun := X₀ + X₁
+  zero_constantCoeff := by simp only [map_add, constantCoeff_X, add_zero]
+  lin_coeff_X := by
+    simp [coeff_X]
+    intro h
+
+    sorry
+  lin_coeff_Y := sorry
+  assoc := sorry
+  comm := sorry
+
+/-- Multiplicative formal group law `Gₘ(X,Y) = X + Y + XY`-/
+def Gₘ : CommFormalGroup R where
+  toFun := X₀ + X₁ + X₀ * X₁
+  zero_constantCoeff := by
+    simp only [map_add, constantCoeff_X, add_zero, map_mul, mul_zero]
+  lin_coeff_X := by
+    simp [coeff_X]
+    rw [if_neg]
+    simp
+
+    sorry
+    sorry
+  lin_coeff_Y := sorry
+  assoc := sorry
+  comm := sorry
+
+def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
+  FormalGroup R' where
+    toFun := MvPowerSeries.map _ f F.toFun
+    zero_constantCoeff := by
+      simp only [constantCoeff_map, F.zero_constantCoeff, map_zero]
+    lin_coeff_X := by
+      simp [F.lin_coeff_X]
+    lin_coeff_Y := by
+      simp [F.lin_coeff_Y]
+    assoc := by
+
+      sorry
+
+
+variable {F : FormalGroup R} {f : PowerSeries R}
 
 @[simp]
 lemma PowerSeries.coeff_coe  (n : ℕ) : MvPowerSeries.coeff R (Finsupp.single () n) f

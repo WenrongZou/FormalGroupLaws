@@ -20,60 +20,6 @@ noncomputable section
 open LubinTateF
 
 
-/-- truncation of total degree `2` of multi variate power series `X (x : σ)` is `X (x : σ)`. -/
-theorem truncTotalDegTwo.X {x : σ}  :
-  (truncTotalDeg 2 (X x)).toMvPowerSeries = X x (R := R) := by
-  ext d
-  simp [truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq, coeff_X]
-  by_cases hd : d = Finsupp.single x 1
-  all_goals simp [hd]
-
-
-/-- Given a formal group law `F (X, Y)` over ring `R`, `F (X, Y)≅ X + Y (mod deg 2)` -/
-theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
-  ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
-  ext d
-  simp [truncTotalDegHom, truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq]
-  by_cases hd : d = Finsupp.single 0 1
-  · simp [hd, F.lin_coeff_X]
-  · by_cases hd₁ : d = Finsupp.single 1 1
-    · simp [hd₁, F.lin_coeff_Y]
-    · simp [MvPolynomial.coeff_X', if_neg (Ne.symm hd), if_neg (Ne.symm hd₁)]
-      by_cases hd₂ : d = 0
-      · simp [hd₂, F.zero_constantCoeff]
-      · intro h
-        have heq : d 0 + d 1 = d 1 + d 0 := by ring_nf
-        interval_cases (d 0 + d 1)
-        · have d₀eq : d 0 = 0 := by linarith
-          have d₁eq : d 1 = 0 := by linarith
-          have deq_zero : d = 0 := by
-            ext x
-            fin_cases x
-            all_goals simp [d₀eq, d₁eq]
-          contradiction
-        · have d₁eq : (d 0 = 1 ∧ d 1 = 0) ∨ (d 0 = 0 ∧ d 1 = 1) := by
-            omega
-          obtain deq | deq := d₁eq
-          · have hc : d = Finsupp.single 0 1 := by
-              ext x
-              fin_cases x
-              all_goals simp [deq]
-            contradiction
-          · have hc : d = Finsupp.single 1 1 := by
-              ext x
-              fin_cases x
-              all_goals simp [deq]
-            contradiction
-
-/-- Given a multi variate power series `f` and an element `a ∈ R`, let  `fₙ ≡ f mod (deg n)`
-  then `a • f ≡ a • fₙ mod (deg n)`. -/
-theorem truncTotalDeg_smul (f : MvPowerSeries σ R) {a : R} {n : ℕ} : truncTotalDeg n (a • f)
-  = a • truncTotalDeg n f := by
-  ext m
-  simp [coeff_truncTotalDeg]
-
-
-
 /-- Given a multi variate power series `f` with two variables, assume `f` satisfies the condition
   of Lubin Tate Formal Group condition with respect to `π`. -/
 def LubinTateFormalGroupAux (f : LubinTateF π) :  FormalGroup (𝒪[K]) :=
@@ -443,6 +389,7 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF π) :
     MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2)
   have phi_supp : ∀ i ∈ ϕ₁.support, Finset.univ.sum ⇑i = 1 := by
     intro i
+    -- MvPolynomial.support_X and MvPolynomial.support_add
     have supp_eq : ϕ₁.support =
       {(Finsupp.single 0 1), (Finsupp.single 1 1)} := by
       refine Finset.ext_iff.mpr ?_
@@ -489,22 +436,14 @@ theorem existence_of_LubinTateFormalGroup (f : LubinTateF π) :
       unfold F_f LubinTateFormalGroupAux
       rw [h_hom]
   }
-  refine existsUnique_of_exists_of_unique ?_ ?_
+  refine existsUnique_of_exists_of_unique ?_  ?_
   · use F_f, Hom_f
-  · obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
-    obtain ⟨h₁, h_hom⟩ := h₁
-    intro y₁ y₂ hy₁ hy₂
-    obtain ⟨α, ha⟩ := hy₁
-    obtain ⟨β, hb⟩ := hy₂
-    obtain uni₁ := constructive_lemma_two π f f
-    obtain ha₁ := α.hom
-    obtain hb₁ := β.hom
-    obtain ⟨F_f', h1, h2⟩ := uni₁
-    obtain eq₁ := h2 y₁.toFun ⟨FormalGroup.truncTotalDegTwo y₁, by rw [←ha,ha₁]⟩
-    obtain eq₂ := h2 y₂.toFun ⟨FormalGroup.truncTotalDegTwo y₂, by rw [←hb,hb₁]⟩
-    have toFun_eq : y₁.toFun = y₂.toFun := by
-      rw [eq₁, ←eq₂]
-    exact FormalGroup.ext_iff.mpr toFun_eq
+  · obtain ⟨⟨h₁, h_hom⟩, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
+    intro y₁ y₂ ⟨α, ha⟩ ⟨β, hb⟩
+    obtain ⟨F_f', h1, h2⟩  := constructive_lemma_two π f f
+    obtain eq₁ := h2 y₁.toFun ⟨FormalGroup.truncTotalDegTwo y₁, by rw [←ha,α.hom]⟩
+    obtain eq₂ := h2 y₂.toFun ⟨FormalGroup.truncTotalDegTwo y₂, by rw [←hb,β.hom]⟩
+    rw [FormalGroup.ext_iff, eq₁, ←eq₂]
 
 
 
@@ -769,8 +708,7 @@ theorem ScalarHom.subst_eq (f g : LubinTateF π) (a : 𝒪[K]) :
   rw [ScalarHom]
   simp [hsubst]
 
-
-
+-- how to define notation here `--------------------------------`
 -- variable (a : 𝒪[K]) (f g : LubinTateF π)
 
 -- notation "[" a "]" π f g => choose (existence_of_scalar_mul π f g a)
@@ -799,6 +737,8 @@ open scoped FormalGroup
 
 
 -- Proposition 2.15.1
+/-- For any `f, g` be Lubin Tate F, `a b ∈ 𝒪[K]`,
+  then `[a + b]_f,g = [a]_f, g + [b]_f, g` -/
 theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :
   (ScalarHom π f g (a + b)).toFun = (ScalarHom π f g a).toFun +[(LubinTateFormalGroup π g)]
   (ScalarHom π f g b).toFun := by
@@ -869,6 +809,7 @@ theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :
   rw [h₂ _ (by simp [trunc_eq₁]) (ScalarHom.subst_eq π f g (a + b)), h₂ _ (by simp [eq_aux]) subst_aux₂]
 
 -- Proposition 2.15.2
+/-- For any `f, g, h` in LubinTate F, then `[a * b]_f, h = [a]_g, h ∘ [b]_f, g`-/
 theorem multiplicative_of_ScalarHom (f g h : LubinTateF π) (a b : 𝒪[K]) :
   (ScalarHom π f h (a * b)).toFun = PowerSeries.subst (ScalarHom π f g b).toFun
   (ScalarHom π g h a).toFun := by
@@ -916,7 +857,9 @@ theorem ScalarHom_one (f : LubinTateF π): (ScalarHom π f f 1).toFun = PowerSer
     h₂ _ (by simp) eq_aux]
 
 
-
+/- [π]_f, f = f -/
+/-- For any two LubinTateF `f, g`, there exist a Formal Group isomorphism
+  `α` from `F_f` to `F_g`. -/
 theorem LubinTateFormalGroup_of_SameClass (f g : LubinTateF π) :
   ∃ (α : FormalGroupIso (LubinTateFormalGroup π f) (LubinTateFormalGroup π g)),
   PowerSeries.subst α.toHom.toFun g.toFun = PowerSeries.subst f.toFun α.toHom.toFun := by
@@ -944,7 +887,8 @@ theorem LubinTateFormalGroup_of_SameClass (f g : LubinTateF π) :
 
 
 
--- Corollary 2.16
+/-- For any two LubinTateF `f, g`, there exist a unique Formal Group strict
+  isomorphism `α` from `F_f` to `F_g`. -/
 theorem LubinTateFormalGroup_of_SameClass' (f g : LubinTateF π) :
   ∃! (α : FormalGroupStrictIso (LubinTateFormalGroup π f) (LubinTateFormalGroup π g)),
   PowerSeries.subst α.toHom.toFun g.toFun = PowerSeries.subst f.toFun α.toHom.toFun := by
@@ -1005,5 +949,6 @@ theorem LubinTateFormalGroup_of_SameClass' (f g : LubinTateF π) :
     exact (FormalGroupStrictIso.ext_iff' _ _ _ _ ).mpr eq₁
 
 
-
 -- formalize the Corollary 2.17, give the definition of `End(F_f)`
+
+-- #lint

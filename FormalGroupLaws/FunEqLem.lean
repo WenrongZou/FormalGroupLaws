@@ -309,14 +309,27 @@ lemma coeff_RecurFun_mul_mem (n : ℕ) :
   f_g (X) = g (X) + ∑ i = 0 to ∞, s (i + 1) * (σ ^ (i + 1)) f _g (X ^ (q ^ (i + 1)))
   -/
 
-lemma coeff_infty_sum [TopologicalSpace K]
-  -- [Preorder (PowerSeries K)] [Preorder K]
-  -- [OrderClosedTopology K] [OrderClosedTopology (PowerSeries K)]
-  (f : ℕ → PowerSeries K) (n : ℕ):
+lemma coeff_infty_sum [TopologicalSpace K] [T2Space K]
+  (f : ℕ → PowerSeries K) (hf : Summable f) (n : ℕ):
   PowerSeries.coeff K n (∑' (i : ℕ), f i) = ∑' (i : ℕ), PowerSeries.coeff K n (f i) := by
-  sorry
-  -- refine Summable.map_tsum hf (PowerSeries.coeff K n) ?_
-  -- exact PowerSeries.WithPiTopology.continuous_coeff K n
+  exact Summable.map_tsum hf (PowerSeries.coeff K n)
+    (PowerSeries.WithPiTopology.continuous_coeff K n)
+
+-- lemma coeff_infty_sum' [TopologicalSpace K] [T2Space K]
+--   (f : ℕ → PowerSeries K) (n : ℕ):
+--   PowerSeries.coeff K n (∑' (i : ℕ), f i) = ∑' (i : ℕ), PowerSeries.coeff K n (f i) := by
+--   by_cases hf : Summable f
+--   · exact Summable.map_tsum hf (PowerSeries.coeff K n)
+--       (PowerSeries.WithPiTopology.continuous_coeff K n)
+--   ·
+--     have aux : (∑' (i : ℕ), f i) = 0 := by
+--       exact tsum_eq_zero_of_not_summable hf
+--     simp [aux]
+--     refine Eq.symm (tsum_eq_zero_of_not_summable ?_)
+
+
+--     sorry
+
 
 theorem tsum_to_finite_aux [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' : K →ₗ[R] K)
   (h : ∀ i, (¬ i ∈ range n) → f i ∈ LinearMap.ker g')
@@ -332,7 +345,7 @@ theorem tsum_to_finite_aux' [TopologicalSpace K] (n : ℕ) (f : ℕ → K) (g' :
 
 
 
-theorem tsum_to_finite [TopologicalSpace K] (n : ℕ) :
+theorem tsum_to_finite [TopologicalSpace K][T2Space K] (n : ℕ) :
   (PowerSeries.coeff K n) (∑' (i : ℕ), (PowerSeries.C K) (s i) *
     (PowerSeries.map (σ ^ i)) (PowerSeries.subst ((PowerSeries.monomial K (q ^ i)) 1)
     (PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g))))
@@ -367,7 +380,7 @@ theorem tsum_to_finite [TopologicalSpace K] (n : ℕ) :
   sorry
 
 include hp_prime hn hq hg in
-theorem Fun_eq_of_RecurFun [TopologicalSpace K]
+theorem Fun_eq_of_RecurFun [TopologicalSpace K] [T2Space K]
   -- [Preorder K] [PartialOrder K] [IsOrderedAddMonoid K]
   -- [CanonicallyOrderedAdd K]
   -- [OrderClosedTopology K]
@@ -415,8 +428,9 @@ theorem Fun_eq_of_RecurFun [TopologicalSpace K]
             simp [eq_zero, zero_pow hd0]
         simp [eq_aux₂]
     simp_rw [eq_aux, tsum_zero]
+    sorry
   by_cases hn_coprime : multiplicity q n = 0
-  · simp [RecurFun, PowerSeries.coeff_mk, coeff_infty_sum]
+  · simp [RecurFun, PowerSeries.coeff_mk]
     conv =>
       lhs
 

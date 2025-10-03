@@ -287,3 +287,56 @@ theorem PowerSeries.trunc_of_subst_trunc' (f : PowerSeries R) (g : PowerSeries R
   (h : PowerSeries.constantCoeff _ g = 0) :
   trunc 2 (subst g f) = PowerSeries.trunc 2 (subst g (trunc 2 f).toPowerSeries) := by
   sorry
+
+
+/-- truncation of total degree `2` of multi variate power series `X (x : σ)` is `X (x : σ)`. -/
+theorem truncTotalDegTwo.X {x : σ}  :
+  (truncTotalDeg 2 (X x)).toMvPowerSeries = X x (R := R) := by
+  ext d
+  simp [truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq, coeff_X]
+  by_cases hd : d = Finsupp.single x 1
+  all_goals simp [hd]
+
+
+/-- Given a formal group law `F (X, Y)` over ring `R`, `F (X, Y)≅ X + Y (mod deg 2)` -/
+theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
+  ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  ext d
+  simp [truncTotalDegHom, truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq]
+  by_cases hd : d = Finsupp.single 0 1
+  · simp [hd, F.lin_coeff_X]
+  · by_cases hd₁ : d = Finsupp.single 1 1
+    · simp [hd₁, F.lin_coeff_Y]
+    · simp [MvPolynomial.coeff_X', if_neg (Ne.symm hd), if_neg (Ne.symm hd₁)]
+      by_cases hd₂ : d = 0
+      · simp [hd₂, F.zero_constantCoeff]
+      · intro h
+        have heq : d 0 + d 1 = d 1 + d 0 := by ring_nf
+        interval_cases (d 0 + d 1)
+        · have d₀eq : d 0 = 0 := by linarith
+          have d₁eq : d 1 = 0 := by linarith
+          have deq_zero : d = 0 := by
+            ext x
+            fin_cases x
+            all_goals simp [d₀eq, d₁eq]
+          contradiction
+        · have d₁eq : (d 0 = 1 ∧ d 1 = 0) ∨ (d 0 = 0 ∧ d 1 = 1) := by
+            omega
+          obtain deq | deq := d₁eq
+          · have hc : d = Finsupp.single 0 1 := by
+              ext x
+              fin_cases x
+              all_goals simp [deq]
+            contradiction
+          · have hc : d = Finsupp.single 1 1 := by
+              ext x
+              fin_cases x
+              all_goals simp [deq]
+            contradiction
+
+/-- Given a multi variate power series `f` and an element `a ∈ R`, let  `fₙ ≡ f mod (deg n)`
+  then `a • f ≡ a • fₙ mod (deg n)`. -/
+theorem truncTotalDeg_smul (f : MvPowerSeries σ R) {a : R} {n : ℕ} : truncTotalDeg n (a • f)
+  = a • truncTotalDeg n f := by
+  ext m
+  simp [coeff_truncTotalDeg]
