@@ -15,6 +15,7 @@ import Mathlib.RingTheory.Ideal.Basic
 import Mathlib.Logic.Function.Iterate
 import Mathlib.Data.Nat.PartENat
 import FormalGroupLaws.SubstInv
+import Mathlib.Algebra.BigOperators.Finprod
 
 
 /-!
@@ -34,11 +35,11 @@ This file defines one dimensional formal group law over a ring `A`, homomorphism
 
 
 -- Definition of Formal Group
-
 -- Assume the coeffiecient ring `R` to be commutative ring.
 variable {R : Type*} [CommRing R] {σ : Type*} (F : MvPowerSeries (Fin 2) R) (α : PowerSeries R)
 
 noncomputable section
+
 
 open MvPowerSeries
 
@@ -150,6 +151,12 @@ abbrev subst_symm : Fin 2 → MvPowerSeries (Fin 2) R
   | ⟨0, _⟩ => X₁
   | ⟨1, _⟩ => X₀
 
+lemma HasSubst_subst_symm : HasSubst (subst_symm (R := R)):= by
+  apply hasSubst_of_constantCoeff_zero
+  intro s
+  fin_cases s
+  all_goals simp [subst_symm]
+
 /-- A map from `Fin 2` to `PowerSeries R`, `0 → X` `1 → 0`-/
 abbrev subst_X₀ : Fin 2 → PowerSeries R
   | ⟨0, _⟩ => PowerSeries.X
@@ -246,8 +253,55 @@ def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup
     lin_coeff_Y := by
       simp [F.lin_coeff_Y]
     assoc := by
+      have constant_zero : constantCoeff _ _ ((MvPowerSeries.map (Fin 2) f) F.toFun) = 0 := by
+        simp [F.zero_constantCoeff]
+      have aux₁ : subst (subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun))
+        ((MvPowerSeries.map (Fin 2) f) F.toFun) =
+        (MvPowerSeries.map (Fin 3) f) (subst (subst_fir F.toFun) F.toFun) := by
+        ext n
+        simp
+        rw [coeff_subst (has_subst_fir F.toFun F.zero_constantCoeff), coeff_subst
+          (has_subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun) constant_zero)]
+        simp
+        have aux₁ : subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun) 0 =
+          (MvPowerSeries.map (Fin 3) f) (subst_fir F.toFun 0) := by
+          simp [subst_fir]
+          ext m
+          simp
+          rw [coeff_subst has_subst_fir_aux, coeff_subst has_subst_fir_aux]
+          simp [subst_fir_aux]
+          have aux' : ∀ (d : Fin 2 →₀ ℕ), (coeff R' m) (Y₀ ^ d 0 * Y₁ ^ d 1) =
+            f ((coeff R m) (Y₀ ^ d 0 * Y₁ ^ d 1)) := by
+            intro d
+
+            sorry
+          simp_rw [aux', ←map_mul]
+          sorry
+        have aux₂ : subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun) 1 =
+          (MvPowerSeries.map (Fin 3) f) (subst_fir F.toFun 1) := by
+          simp [subst_fir]
+        simp_rw [aux₁, aux₂]
+
+
+
+        sorry
+      have aux₂ : subst (subst_sec ((MvPowerSeries.map (Fin 2) f) F.toFun))
+        ((MvPowerSeries.map (Fin 2) f) F.toFun) =
+        (MvPowerSeries.map (Fin 3) f) (subst (subst_sec F.toFun) F.toFun) := by
+        rw [←substAlgHom_apply (has_subst_sec _ constant_zero)]
+        rw [←substAlgHom_apply (has_subst_sec _ F.zero_constantCoeff)]
+
+        sorry
+      rw [←substAlgHom_apply (has_subst_fir _ constant_zero),
+        ←substAlgHom_apply (has_subst_sec _ constant_zero)]
+
+
 
       sorry
+      -- rw [aux₁, aux₂, F.assoc]
+
+      -- rw [←substAlgHom_apply (has_subst_fir _ constant_zero),
+      --   ←substAlgHom_apply (has_subst_sec _ constant_zero)]
 
 
 variable {F : FormalGroup R} {f : PowerSeries R}
