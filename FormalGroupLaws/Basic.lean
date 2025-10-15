@@ -188,6 +188,11 @@ lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
   · simp [hd₀, hf]
   · simp [zero_pow hd₀]
 
+/-- This is a map from `Fin 2` to `ℕ` mapping `0` to `i` and `1` to `j`, which can be used
+  to compute degree of `X^i*X^j`.  -/
+abbrev coeff_two (i j : ℕ) : Fin 2 →₀ ℕ :=
+  Finsupp.single 0 i + Finsupp.single 1 j
+
 
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
@@ -221,11 +226,34 @@ def Gₐ : CommFormalGroup R where
   lin_coeff_X := by
     simp [coeff_X]
     intro h
+    have aux : Finsupp.single (0 : Fin 2) 1 0 = Finsupp.single (1 : Fin 2) 1 0 := by
+      simp [h]
+    simp at aux
+  lin_coeff_Y := by
+    simp [coeff_X]
+    intro h
+    have aux : Finsupp.single (0 : Fin 2) 1 0 = Finsupp.single (1 : Fin 2) 1 0 := by
+      simp [h]
+    simp at aux
+  assoc := by
+    rw [subst_add (has_subst_fir (X₀ + X₁) (by simp [constantCoeff_X])),
+      subst_X (has_subst_fir (X₀ + X₁) (by simp [constantCoeff_X])),
+      subst_X (has_subst_fir (X₀ + X₁) (by simp [constantCoeff_X]))]
+    simp [subst_fir]
+    simp [subst_add has_subst_fir_aux, has_subst_fir_aux, subst_fir_aux]
+    rw [subst_add (has_subst_sec (X₀ + X₁) (by simp [constantCoeff_X])),
+      subst_X (has_subst_sec (X₀ + X₁) (by simp [constantCoeff_X])),
+      subst_X (has_subst_sec (X₀ + X₁) (by simp [constantCoeff_X]))]
+    simp [subst_sec]
+    simp [subst_add has_subst_sec_aux, has_subst_sec_aux, subst_sec_aux]
+    ring
+  comm := by
+    rw [subst_add HasSubst_subst_symm, subst_X HasSubst_subst_symm,
+      subst_X HasSubst_subst_symm]
+    simp [subst_symm]
+    ring
 
-    sorry
-  lin_coeff_Y := sorry
-  assoc := sorry
-  comm := sorry
+
 
 /-- Multiplicative formal group law `Gₘ(X,Y) = X + Y + XY`-/
 def Gₘ : CommFormalGroup R where
@@ -236,12 +264,38 @@ def Gₘ : CommFormalGroup R where
     simp [coeff_X]
     rw [if_neg]
     simp
-
-    sorry
-    sorry
-  lin_coeff_Y := sorry
-  assoc := sorry
-  comm := sorry
+    simp [X_def, monomial_mul_monomial]
+    rw [coeff_monomial, if_neg]
+    simp
+    refine Finsupp.ne_iff.mpr (by use 0; simp)
+  lin_coeff_Y := by
+    simp [coeff_X]
+    rw [if_neg]
+    simp
+    simp [X_def, monomial_mul_monomial]
+    rw [coeff_monomial, if_neg]
+    simp
+    refine Finsupp.ne_iff.mpr (by use 0; simp)
+  assoc := by
+    obtain has_subst₁ := has_subst_fir (X₀ + X₁ + X₀ * X₁ (R := R)) (by simp)
+    obtain has_subst₂ := has_subst_sec (X₀ + X₁ + X₀ * X₁ (R := R)) (by simp)
+    rw [subst_add has_subst₁, subst_add has_subst₁, subst_mul has_subst₁, subst_X has_subst₁,
+      subst_X has_subst₁]
+    simp [subst_fir]
+    rw [subst_add has_subst_fir_aux, subst_add has_subst_fir_aux, subst_mul has_subst_fir_aux,
+      subst_X has_subst_fir_aux, subst_X has_subst_fir_aux]
+    simp [subst_fir_aux]
+    rw [subst_add has_subst₂, subst_add has_subst₂, subst_mul has_subst₂, subst_X has_subst₂,
+      subst_X has_subst₂]
+    simp [subst_sec]
+    rw [subst_add has_subst_sec_aux, subst_add has_subst_sec_aux, subst_mul has_subst_sec_aux,
+      subst_X has_subst_sec_aux, subst_X has_subst_sec_aux]
+    simp [subst_sec_aux]
+    ring
+  comm := by
+    rw [subst_add HasSubst_subst_symm, subst_add HasSubst_subst_symm, subst_mul HasSubst_subst_symm,
+      subst_X HasSubst_subst_symm, subst_X HasSubst_subst_symm]
+    simp [subst_symm]; ring
 
 def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
   FormalGroup R' where
