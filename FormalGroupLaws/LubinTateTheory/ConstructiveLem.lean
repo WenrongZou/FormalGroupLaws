@@ -1,10 +1,4 @@
-import Mathlib.NumberTheory.Padics.ValuativeRel
-import Mathlib.RingTheory.DiscreteValuationRing.Basic
-import Mathlib.Topology.Algebra.Field
-import Mathlib.Topology.Algebra.Valued.ValuativeRel
-import Mathlib.Topology.UniformSpace.Cauchy
-import Mathlib.Topology.UniformSpace.Defs
-import Mathlib.NumberTheory.Padics.ProperSpace
+import Mathlib.NumberTheory.LocalField.Basic
 import Mathlib.Topology.Algebra.Valued.LocallyCompact
 import Mathlib.RingTheory.PowerSeries.Substitution
 import Mathlib.RingTheory.PowerSeries.Trunc
@@ -17,50 +11,21 @@ open ValuativeRel MvPowerSeries Classical
 
 universe u
 
-variable {K : Type u} [Field K] [ValuativeRel K] [UniformSpace K]
+variable {K : Type u} [Field K] [ValuativeRel K] [TopologicalSpace K]
+  [IsNonarchimedeanLocalField K]
   (π : 𝒪[K]) {R : Type*} [CommRing R]
 
-variable (K) in
-class IsNonArchLF : Prop extends
-  IsTopologicalDivisionRing K,
-  LocallyCompactSpace K,
-  CompleteSpace K,
-  IsValuativeTopology K,
-  ValuativeRel.IsNontrivial K,
-  ValuativeRel.IsRankLeOne K,
-  ValuativeRel.IsDiscrete K
-
-variable [IsNonArchLF K]
-
-instance : IsUniformAddGroup K where
-  uniformContinuous_sub := sorry
-
-instance : (Valued.v : Valuation K (ValueGroupWithZero K)).IsNontrivial :=
-  ValuativeRel.isNontrivial_iff_isNontrivial.mp inferInstance
-
-noncomputable instance : (Valued.v : Valuation K (ValueGroupWithZero K)).RankOne where
-  hom := IsRankLeOne.nonempty.some.emb
-  strictMono' := IsRankLeOne.nonempty.some.strictMono
-
-open scoped Valued in
-instance : ProperSpace K :=
-  ProperSpace.of_nontriviallyNormedField_of_weaklyLocallyCompactSpace K
-
-instance : IsDiscreteValuationRing 𝒪[K] :=
-  (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.1
-
-
-section LubinTateF
+noncomputable section LubinTateF
 
 variable (π : 𝒪[K])
 
-instance : Finite 𝓀[K] := (Valued.integer.properSpace_iff_completeSpace_and_isDiscreteValuationRing_integer_and_finite_residueField.mp inferInstance).2.2
-noncomputable instance : Fintype 𝓀[K] := Fintype.ofFinite _
+instance : Fintype (IsLocalRing.ResidueField ↥𝒪[K]) := by
+  exact Fintype.ofFinite (IsLocalRing.ResidueField ↥𝒪[K])
 
 structure LubinTateF where
   toFun : PowerSeries 𝒪[K]
   trunc_degree_two : PowerSeries.trunc 2 toFun = Polynomial.C π * Polynomial.X
-  mod_pi : PowerSeries.C _ π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
+  mod_pi : PowerSeries.C π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
 
 namespace LubinTateF
 
@@ -73,11 +38,11 @@ lemma toMvPowerSeries_trunc_degree_two :
   simpa using F.trunc_degree_two
 
 lemma toMvPowerSeries_mod_pi :
-    MvPowerSeries.C _ _ π ∣ F.toFun - MvPowerSeries.X default ^ Fintype.card 𝓀[K] :=
+    MvPowerSeries.C  π ∣ F.toFun - MvPowerSeries.X default ^ Fintype.card 𝓀[K] :=
   F.mod_pi
 
 /-- constant coefficient of `f` in Lubin Tate `F_π` is zero.-/
-lemma constantCoeff_LubinTateF : PowerSeries.constantCoeff _ F.toFun = 0 := by
+lemma constantCoeff_LubinTateF : PowerSeries.constantCoeff F.toFun = 0 := by
   sorry
 
 
@@ -94,7 +59,7 @@ section Prop_2_11
 namespace MvPowerSeries
 
 lemma C_dvd_iff_forall_dvd_coeff (c : R) (p : MvPowerSeries σ R) :
-    (C _ _) c ∣ p ↔ ∀ n, c ∣ (coeff R n) p := by
+  C c ∣ p ↔ ∀ n, c ∣ (coeff n) p := by
   constructor <;> intro hp
   · intro n
     obtain ⟨d, rfl⟩ := hp
@@ -167,7 +132,7 @@ lemma constructive_lemma_ind_hyp
     have hp_hasSubst : PowerSeries.HasSubst p.toMvPowerSeries := by
       simpa using hp_constantCoeff
     -- construction: (f ∘ p - p ∘ g) / (π^r - 1)π
-    have h_first_term : (C _ _) π ∣ ((PowerSeries.substAlgHom hp_hasSubst) f.toFun - p.toMvPowerSeries ^ Fintype.card 𝓀[K]) := by
+    have h_first_term : C π ∣ ((PowerSeries.substAlgHom hp_hasSubst) f.toFun - p.toMvPowerSeries ^ Fintype.card 𝓀[K]) := by
       -- f(X) - X^q = π * u(X)
       -- show f(p(x1, ..., xn)) - p(x1, ..., xn)^q = π * u(p(x1, ..., xn))
       obtain ⟨u, hu⟩ := f.mod_pi
@@ -178,7 +143,7 @@ lemma constructive_lemma_ind_hyp
         rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
         rfl
     -- show p(g(x)) = p(x1^q, ..., xn^q) mod π
-    have h_second_term_inner {d : ℕ} (i : Fin d) : (C _ _) π ∣ g.toFun.toMvPowerSeries i - X i ^ Fintype.card 𝓀[K] := by
+    have h_second_term_inner {d : ℕ} (i : Fin d) : C π ∣ g.toFun.toMvPowerSeries i - X i ^ Fintype.card 𝓀[K] := by
       obtain ⟨u, hu⟩ := g.mod_pi
       use (PowerSeries.substAlgHom (PowerSeries.HasSubst.X i)) u
       convert congrArg (PowerSeries.substAlgHom (PowerSeries.HasSubst.X (S := 𝒪[K]) i)) hu
@@ -186,7 +151,7 @@ lemma constructive_lemma_ind_hyp
           PowerSeries.subst, PowerSeries.substAlgHom, substAlgHom_apply]
       · rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
         rfl
-    have h_second_term : (C _ _) π ∣ p.toMvPowerSeries.subst g.toFun.toMvPowerSeries - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
+    have h_second_term : C π ∣ p.toMvPowerSeries.subst g.toFun.toMvPowerSeries - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
       -- p is a polynomial so we may use MvPolynomial
       rw [subst_coe, subst_coe]
       -- this means we can write stuff like p.sum!
@@ -197,7 +162,7 @@ lemma constructive_lemma_ind_hyp
       simp_rw [← mul_sub]
       apply dvd_mul_of_dvd_right
       apply dvd_prod_pow_sub_prod_pow_of_dvd_sub h_second_term_inner
-    have h_diff_terms : (C _ _) π ∣ p.toMvPowerSeries ^ Fintype.card 𝓀[K] - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
+    have h_diff_terms : C π ∣ p.toMvPowerSeries ^ Fintype.card 𝓀[K] - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
       sorry
     sorry
     --   sorry

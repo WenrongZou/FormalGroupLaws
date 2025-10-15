@@ -11,7 +11,7 @@ universe u
 variable {K : Type u} [Field K] [ValuativeRel K] [UniformSpace K]
   (π : 𝒪[K]) {R : Type*} [CommRing R]
 
-variable {σ : Type*} {τ : Type*}  [IsNonArchLF K]
+variable {σ : Type*} {τ : Type*}  [IsNonarchimedeanLocalField K]
 
 variable [DecidableEq σ] [Fintype σ] [DecidableEq τ] [Fintype τ]
 
@@ -63,8 +63,8 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
     obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp  f f)
     obtain ⟨h₁, h_hom⟩ := h₁
     calc
-      _ = (constantCoeff (Fin 2) ↥𝒪[K]) (↑((truncTotalDegHom 2)
-        (choose (constructive_lemma π 2 phi_supp f f)))) := by
+      _ = constantCoeff (((truncTotalDegHom 2)
+        (choose (constructive_lemma π 2 phi_supp f f))) : MvPowerSeries (Fin 2) ↥𝒪[K]) (R := ↥𝒪[K]) := by
         unfold truncTotalDegHom
         simp [←coeff_zero_eq_constantCoeff, coeff_truncTotalDeg]
       _ = 0 := by
@@ -74,8 +74,8 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
     obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
     obtain ⟨htrunc, hsubst⟩ := h₁
     rw [←eq_aux]  at htrunc ⊢
-    have eq_aux₁ : (coeff (↥𝒪[K]) (Finsupp.single 0 1)) F_f
-      = (coeff (↥𝒪[K]) (Finsupp.single 0 1)) ϕ₁.toMvPowerSeries := by
+    have eq_aux₁ : (coeff (Finsupp.single 0 1)) F_f
+      = (coeff (Finsupp.single 0 1)) ϕ₁.toMvPowerSeries := by
       rw [←htrunc]
       simp [truncTotalDegHom, coeff_truncTotalDeg]
     rw [eq_aux₁, phi_eq]
@@ -88,8 +88,8 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
     obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp f f)
     obtain ⟨htrunc, hsubst⟩ := h₁
     rw [←eq_aux]  at htrunc ⊢
-    have eq_aux₁ : (coeff (↥𝒪[K]) (Finsupp.single 1 1)) F_f
-      = (coeff (↥𝒪[K]) (Finsupp.single 1 1)) ϕ₁.toMvPowerSeries := by
+    have eq_aux₁ : (coeff (Finsupp.single 1 1)) F_f
+      = (coeff (Finsupp.single 1 1)) ϕ₁.toMvPowerSeries := by
       simp [←htrunc, truncTotalDegHom, coeff_truncTotalDeg]
     rw [eq_aux₁, phi_eq]
     simp
@@ -110,11 +110,11 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
       MvPolynomial.X 1 + MvPolynomial.X 2
     have phi_eq' : φ = MvPolynomial.X (0 : Fin 3) +
       MvPolynomial.X 1 + MvPolynomial.X 2 := by rfl
-    have h_Ff : constantCoeff _ _ F_f = 0 := by
+    have h_Ff : constantCoeff F_f = 0 := by
       rw [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by norm_num),
         hf₁, phi_eq]
       simp
-    have hf_constant : PowerSeries.constantCoeff _ f.toFun = 0 := constantCoeff_LubinTateF _ _
+    have hf_constant : PowerSeries.constantCoeff f.toFun = 0 := constantCoeff_LubinTateF _ _
     have phi_supp' : ∀ i ∈ φ.support, Finset.univ.sum ⇑i = 1 := by
       -- same as above
       intro i
@@ -137,7 +137,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
       intro hi
       obtain h | h | h := hi
       all_goals simp [h]
-    have constantF_f : constantCoeff _ _  F_f = 0  := by
+    have constantF_f : constantCoeff F_f = 0  := by
       rw [←eq_aux] at hf₁
       rw [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by linarith), hf₁, phi_eq]
       simp
@@ -156,7 +156,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
             MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
           = (subst (subst_fir_aux) F_f) + X (2 : Fin 3) := by
           simp
-          have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
+          have has_subst : (constantCoeff F_f) = 0 := by
             rw [←eq_aux] at hf₁
             simp [constantCoeff_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
           rw [subst_add (has_subst_fir _ has_subst), subst_X (has_subst_fir _ has_subst),
@@ -279,7 +279,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
             MvPolynomial (Fin 2) 𝒪[K]) : MvPowerSeries (Fin 2) 𝒪[K]) (R := 𝒪[K]) )
           = X (0 : Fin 3) + (subst (subst_sec_aux) F_f)  := by
           simp
-          have has_subst : (constantCoeff _ (𝒪[K]) F_f) = 0 := by
+          have has_subst : (constantCoeff F_f) = 0 := by
             rw [←eq_aux] at hf₁
             simp [constantCoeff_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
           rw [subst_add (has_subst_sec _ has_subst), subst_X (has_subst_sec _ has_subst),
@@ -382,7 +382,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
 
 namespace LubinTateFormalGroup
 
-omit [UniformSpace K] [IsNonArchLF K] in
+omit [UniformSpace K] [IsNonarchimedeanLocalField K] in
 lemma supp_of_linear_term :
   let ϕ₁ : MvPolynomial (Fin 2) (𝒪[K]) := MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2);
   ∀ i ∈ ϕ₁.support, Finset.univ.sum ⇑i = 1 := by
@@ -419,12 +419,12 @@ def Hom : FormalGroupHom (LubinTateFormalGroup _ f) (LubinTateFormalGroup _ f)
     toFun := f.toFun
     zero_constantCoeff := by
       obtain h₁ := f.trunc_degree_two
-      have coeff_aux₁ : (PowerSeries.constantCoeff ↥𝒪[K])
+      have coeff_aux₁ : (PowerSeries.constantCoeff)
         (PowerSeries.trunc 2 f.toFun) = Polynomial.constantCoeff
         (Polynomial.C π * Polynomial.X) := by
         simp [h₁]
       calc
-        _ = (PowerSeries.constantCoeff ↥𝒪[K]) (PowerSeries.trunc 2 f.toFun) := by
+        _ = PowerSeries.constantCoeff (PowerSeries.trunc 2 f.toFun) (R := ↥𝒪[K]) := by
           simp [PowerSeries.coeff_trunc]
         _ = 0 := by
           simp [coeff_aux₁]
@@ -466,7 +466,7 @@ theorem exist_unique_FormalGroup :
 /-- Given a `f ∈ LubinTateF π`, and `F_f` be the unique Lubin Tate Formal Group associate to
   `f`, then the constant coefficient of `F_f` is zero. -/
 theorem constantCoeff_zero :
-  constantCoeff _ _ (LubinTateFormalGroup π f).toFun = 0 := by
+  constantCoeff (LubinTateFormalGroup π f).toFun = 0 := by
   -- rw [←coeff_zero_eq_constantCoeff]
   simp [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by norm_num),
     FormalGroup.truncTotalDegTwo (LubinTateFormalGroup π f)]
@@ -504,7 +504,7 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly π f g a)
       rw [←hom_a_eq] at h₁ ⊢
       obtain ⟨htrunc, hsubst⟩ := h₁
-      have aux : (PowerSeries.constantCoeff ↥𝒪[K]) hom_a
+      have aux : PowerSeries.constantCoeff hom_a
         = Polynomial.constantCoeff (PowerSeries.trunc 2 hom_a) := by
         rw [Polynomial.constantCoeff_apply, ←PowerSeries.coeff_zero_eq_constantCoeff,
           PowerSeries.coeff_trunc, if_pos (by norm_num)]
@@ -528,7 +528,7 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
           (constantCoeff_zero π f)), truncTotalDeg_smul, LubinTateFormalGroup.truncTotalDegTwo,
           MvPolynomial.smul_eq_C_mul _ a]
         ring
-      have hom_a_constantCoeff : PowerSeries.constantCoeff _ hom_a = 0 := by
+      have hom_a_constantCoeff : PowerSeries.constantCoeff hom_a = 0 := by
         rw [←PowerSeries.coeff_zero_eq_constantCoeff]
         calc
           _ = Polynomial.coeff (PowerSeries.trunc 2 hom_a) 0 := by
@@ -539,7 +539,7 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
       have eq_aux₂ : truncTotalDeg 2 (subst
         hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toFun)
         = MvPolynomial.C a * MvPolynomial.X 0 + MvPolynomial.C a * MvPolynomial.X 1 := by
-        have aux : ∀ (x : Fin 2), constantCoeff _ _ (hom_a.toMvPowerSeries x) = 0 := by
+        have aux : ∀ (x : Fin 2), constantCoeff (hom_a.toMvPowerSeries x) = 0 := by
           intro x
           fin_cases x
           · rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
@@ -778,7 +778,7 @@ theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :
     Polynomial.C (a + b) * Polynomial.X := by
     unfold F₂ FormalGroup.add
     have coeff_zero : ∀ (x : Fin 2),
-    (PowerSeries.constantCoeff ↥𝒪[K]) (FormalGroup.add_aux (ScalarHom π f g a).toFun
+    PowerSeries.constantCoeff (FormalGroup.add_aux (ScalarHom π f g a).toFun
     (ScalarHom π f g b).toFun x) = 0 := by
       intro x
       fin_cases x

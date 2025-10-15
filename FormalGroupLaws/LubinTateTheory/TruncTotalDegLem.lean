@@ -10,7 +10,7 @@ universe u
 variable {K : Type u} [Field K] [ValuativeRel K] [UniformSpace K]
   (π : 𝒪[K]) {R : Type*} [CommRing R]
 
-variable {σ : Type*} {R : Type*} [CommRing R] {τ : Type*}  [IsNonArchLF K]
+variable {σ : Type*} {R : Type*} [CommRing R] {τ : Type*}  [IsNonarchimedeanLocalField K]
 
 variable [DecidableEq σ] [Fintype σ] [DecidableEq τ] [Fintype τ]
 
@@ -33,7 +33,7 @@ theorem constructive_lemma_poly
 /-- Given `g` a multi variate power series with two variables, `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
   as a multi variate power series with two variables, then `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
   as a multi variate power series with three variables, where `X, Y` is first two variables.-/
-lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0) :
+lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0) :
   truncTotalDegHom 2 (subst subst_fir_aux g) =
   truncTotalDegHom 2 (subst (subst_fir_aux (R := R)) (truncTotalDegHom 2 g) (R := R)) := by
 
@@ -42,7 +42,7 @@ lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoe
 /-- Given `g` a multi variate power series with two variables, `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
   as a multi variate power series with two variables, then `g (Y, Z) ≡ g₂ (Y, Z) mod (deg 2)`
   as a multi variate power series with three variables, where `Y, Z` is last two variables.-/
-lemma truncTotalDegHom_of_subst₂' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0):
+lemma truncTotalDegHom_of_subst₂' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0):
   truncTotalDegHom 2 (subst subst_sec_aux g) =
   truncTotalDegHom 2 (subst (subst_sec_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
   sorry
@@ -50,7 +50,7 @@ lemma truncTotalDegHom_of_subst₂' (g : MvPowerSeries (Fin 2) R) (hg : constant
 /-- Given `f, g` to be multi variate power series with two variable, let
   `f₂(X, Y) ≡ f(X,Y) mod (deg 2)`, and the constant coefficient of `g` is zero,
   then `f (g (X, Y), Z) ≡ f₂ (g (X, Y), Z) mod (deg 2)` -/
-lemma truncTotalDegHom_of_subst (f g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0) :
+lemma truncTotalDegHom_of_subst (f g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0) :
   truncTotalDegHom 2 (subst (subst_fir g) f) =
   truncTotalDegHom 2 (subst (subst_fir g) (truncTotalDegHom 2 f) (R := R)) := by
   sorry
@@ -58,20 +58,20 @@ lemma truncTotalDegHom_of_subst (f g : MvPowerSeries (Fin 2) R) (hg : constantCo
 /-- Given `f, g` to be multi variate power series with two variable, let
   `f₂(X, Y) ≡ f(X,Y) mod (deg 2)`, and the constant coefficient of `g` is zero,
   then `f (X, g (Y, Z)) ≡ f₂ (X, g (Y, Z)) mod (deg 2)` -/
-lemma truncTotalDegHom_of_subst₂ (f g : MvPowerSeries (Fin 2) R) (hg : constantCoeff _ _ g = 0) :
+lemma truncTotalDegHom_of_subst₂ (f g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0) :
   truncTotalDegHom 2 (subst (subst_sec g) f) =
   truncTotalDegHom 2 (subst (subst_sec g) (truncTotalDegHom 2 f) (R := R)) := by
   sorry
 
 theorem MvPowerSeries.truncTotalDeg.PowerSeries_subst_n (f : MvPowerSeries σ R) (g : PowerSeries R) (n : ℕ)
-  (hf : constantCoeff _ _ f = 0) : truncTotalDeg n (PowerSeries.subst f g) =
+  (hf : constantCoeff f = 0) : truncTotalDeg n (PowerSeries.subst f g) =
   truncTotalDeg n (PowerSeries.subst f (PowerSeries.trunc n g).toPowerSeries) := by
 
   sorry
 
 theorem MvPowerSeries.truncTotalDeg.MvPowerSeries_subst_two
   (f : σ → MvPowerSeries τ R) (g : MvPowerSeries σ R)
-  (hf : ∀ (x : σ), constantCoeff _ _ (f x) = 0) : truncTotalDeg 2 (subst f g) =
+  (hf : ∀ (x : σ), constantCoeff (f x) = 0) : truncTotalDeg 2 (subst f g) =
   truncTotalDeg 2 (subst f (truncTotalDeg 2 g).toMvPowerSeries) := by sorry
 
 
@@ -143,10 +143,10 @@ lemma eq_single_of_sum_equal_one [Nonempty σ] {x : σ →₀ ℕ} (h : Finset.u
 /-- For any Multi-variable PowerSeries `f`, assume `d ≥ 1` , then constant coefficient of  truncation of
   total degree `d` of `f` is equal to `f` -/
 theorem constantCoeff_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ} (hd : d ≥ 1):
-  constantCoeff _ R f = MvPolynomial.constantCoeff (truncTotalDegHom d f) := by
+  constantCoeff f = MvPolynomial.constantCoeff (truncTotalDegHom d f) := by
   simp [truncTotalDegHom, truncTotalDeg_eq, MvPolynomial.constantCoeff]
   simp_rw [coeff_truncTotalDegEq]
-  rw [show (constantCoeff σ R) f = (coeff R 0) f by simp]
+  rw [show constantCoeff f = (coeff 0) f by simp]
   apply Eq.symm
   rw [Finset.sum_eq_single 0]
   simp
@@ -165,7 +165,7 @@ theorem constantCoeff_of_truncTotalDeg_ge_one (f : MvPowerSeries σ R) {d : ℕ}
 
 
 theorem PowerSeries.trunc_of_subst_trunc (f : MvPowerSeries σ R) (map : σ → PowerSeries R)
-  (h_map : ∀ (x : σ), PowerSeries.constantCoeff _ (map x) = 0) [Nonempty σ] :
+  (h_map : ∀ (x : σ), PowerSeries.constantCoeff (map x) = 0) [Nonempty σ] :
   PowerSeries.trunc 2 (MvPowerSeries.subst map f) = PowerSeries.trunc 2 (MvPowerSeries.subst map
   (truncTotalDeg 2 f).toMvPowerSeries) := by
   ext d
@@ -179,8 +179,8 @@ theorem PowerSeries.trunc_of_subst_trunc (f : MvPowerSeries σ R) (map : σ → 
         MvPowerSeries.coeff_subst (hasSubst_of_constantCoeff_zero h_map)]
       simp
       simp_rw [h_map]
-      have aux₁ : ∑ᶠ (d : σ →₀ ℕ), (MvPowerSeries.coeff R d) f * ∏ x, 0 ^ d x
-        = MvPowerSeries.coeff R 0 f * ∏ x, 0 ^ (0 : σ →₀ ℕ) x := by
+      have aux₁ : ∑ᶠ (d : σ →₀ ℕ), (MvPowerSeries.coeff d) f * ∏ x, 0 ^ d x
+        = MvPowerSeries.coeff 0 f * ∏ x, 0 ^ (0 : σ →₀ ℕ) x := by
         apply finsum_eq_single
         intro n hn
         -- Nonempty σ
@@ -229,14 +229,14 @@ theorem PowerSeries.trunc_of_subst_trunc (f : MvPowerSeries σ R) (map : σ → 
     rw [PowerSeries.coeff_trunc, if_pos (by norm_num), coeff, MvPowerSeries.coeff_subst has_subst₁,
       PowerSeries.coeff_trunc, if_pos (by norm_num), coeff, MvPowerSeries.coeff_subst has_subst₁]
     simp
-    let sum_fun := fun (d : σ →₀ ℕ) => (MvPowerSeries.coeff R d) f * (coeff R 1) (∏ a, map a ^ d a)
+    let sum_fun := fun (d : σ →₀ ℕ) => (MvPowerSeries.coeff d) f * (coeff 1) (∏ a, map a ^ d a)
     apply finsum_congr
     intro x
     by_cases hx_zero : x = 0
     · simp [hx_zero]
     by_cases hx : ∃ i : σ, x = Finsupp.single i 1
     · obtain ⟨i, hi⟩ := hx
-      have eq_aux : (MvPowerSeries.coeff R x) f = MvPolynomial.coeff x (truncTotalDeg 2 f) := by
+      have eq_aux : (MvPowerSeries.coeff x) f = MvPolynomial.coeff x (truncTotalDeg 2 f) := by
         rw [hi, coeff_truncTotalDeg, if_pos (by simp)]
       rw [eq_aux]
     have sum_ge_two : 2 ≤ Finset.univ.sum ⇑x := by
@@ -263,13 +263,13 @@ theorem PowerSeries.trunc_of_subst_trunc (f : MvPowerSeries σ R) (map : σ → 
             omega
         linarith
       contradiction
-    have eq_aux₁ : (MvPowerSeries.coeff R x) f * (coeff R 1) (∏ a, map a ^ x a) = 0 := by
-      have aux : (coeff R 1) (∏ a, map a ^ x a) = 0 := by
+    have eq_aux₁ : (MvPowerSeries.coeff x) f * (coeff 1) (∏ a, map a ^ x a) = 0 := by
+      have aux : (coeff 1) (∏ a, map a ^ x a) = 0 := by
         rw [coeff_prod]
         refine Finset.sum_eq_zero ?_
         intro l hl
         simp at hl
-        have exist_aux : ∃ i, (coeff R (l i)) (map i ^ x i) = 0 := by
+        have exist_aux : ∃ i, (coeff (l i)) (map i ^ x i) = 0 := by
           obtain hl' := eq_single_of_sum_equal_one hl
           obtain ⟨i, hi⟩ := hl'
           have hi' : ∀ j : σ, j ≠ i → l j = 0 := by sorry
@@ -284,7 +284,7 @@ theorem PowerSeries.trunc_of_subst_trunc (f : MvPowerSeries σ R) (map : σ → 
 
 
 theorem PowerSeries.trunc_of_subst_trunc' (f : PowerSeries R) (g : PowerSeries R)
-  (h : PowerSeries.constantCoeff _ g = 0) :
+  (h : PowerSeries.constantCoeff g = 0) :
   trunc 2 (subst g f) = PowerSeries.trunc 2 (subst g (trunc 2 f).toPowerSeries) := by
   sorry
 

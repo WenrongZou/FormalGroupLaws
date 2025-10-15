@@ -18,11 +18,11 @@ TODO: FIX NAME
 TODO: Remove [Fintype σ] typeclass requirement
 -/
 def MvPowerSeries.truncTotalDegEq (n : ℕ) (p : MvPowerSeries σ R) : MvPolynomial σ R :=
-  ∑ m ∈ Finset.univ.finsuppAntidiag n, MvPolynomial.monomial m (coeff R m p)
+  ∑ m ∈ Finset.univ.finsuppAntidiag n, MvPolynomial.monomial m (coeff m p)
 
 lemma MvPowerSeries.truncTotalDegEq_eq (n : ℕ) (p : MvPowerSeries σ R) :
     p.truncTotalDegEq n
-      = ∑ m ∈ Finset.univ.finsuppAntidiag n, MvPolynomial.monomial m (coeff R m p) :=
+      = ∑ m ∈ Finset.univ.finsuppAntidiag n, MvPolynomial.monomial m (coeff m p) :=
   rfl
 
 /-- The part of a multivariate power series with total degree at most n.
@@ -39,25 +39,26 @@ lemma MvPowerSeries.truncTotalDeg_eq (n : ℕ) (p : MvPowerSeries σ R) :
   rfl
 
 theorem coeff_truncTotalDegEq (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
-    (truncTotalDegEq n φ).coeff m = if Finset.univ.sum m = n then coeff R m φ else 0 := by
+    (truncTotalDegEq n φ).coeff m = if Finset.univ.sum m = n then coeff m φ else 0 := by
   simp [truncTotalDegEq, MvPolynomial.coeff_sum]
 
+
 theorem coeff_truncTotalDeg (n : ℕ) (m : σ →₀ ℕ) (φ : MvPowerSeries σ R) :
-    (truncTotalDeg n φ).coeff m = if Finset.univ.sum m < n then coeff R m φ else 0 := by
+    (truncTotalDeg n φ).coeff m = if Finset.univ.sum m < n then coeff m φ else 0 := by
   simp_rw [truncTotalDeg, MvPolynomial.coeff_sum, coeff_truncTotalDegEq,
     Finset.sum_ite_eq, Finset.mem_range]
 
 theorem coeff_truncTotalDegEq_of_totalDeg_eq (n : ℕ) (m : σ →₀ ℕ) (hm : Finset.univ.sum m = n) (φ : MvPowerSeries σ R) :
-    (truncTotalDegEq n φ).coeff m = coeff R m φ := by
+    (truncTotalDegEq n φ).coeff m = coeff m φ := by
   simp only [coeff_truncTotalDegEq, hm, if_true]
 
 theorem coeff_truncTotalDeg_of_totalDeg_lt (n : ℕ) (m : σ →₀ ℕ) (hm : Finset.univ.sum m < n) (φ : MvPowerSeries σ R) :
-    (truncTotalDeg n φ).coeff m = coeff R m φ := by
+    (truncTotalDeg n φ).coeff m = coeff m φ := by
   simp only [coeff_truncTotalDeg, hm, if_true]
 
 theorem truncTotalDegEq_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
   truncTotalDegEq n ϕ
-    = (MvPolynomial.pUnitAlgEquiv _).symm (Polynomial.monomial n (PowerSeries.coeff _ n ϕ)) := by
+    = (MvPolynomial.pUnitAlgEquiv _).symm (Polynomial.monomial n (PowerSeries.coeff n ϕ)) := by
   ext w
   simp [coeff_truncTotalDegEq, MvPolynomial.coeff_X_pow]
   split_ifs with h₁ h₂ h₃

@@ -8,7 +8,7 @@ noncomputable section
 
 open PowerSeries Finset
 
-variable {R : Type*} [CommRing R] (f : PowerSeries R) (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0)
+variable {R : Type*} [CommRing R] (f : PowerSeries R) (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0)
 
 
 theorem subst_comp_eq_id_iff {g : PowerSeries R} (hf : HasSubst f)
@@ -26,28 +26,28 @@ theorem subst_comp_eq_id_iff {g : PowerSeries R} (hf : HasSubst f)
 
 -- Define the inverse function by induction.
 def invFun_aux
-  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0):
   -- b₁ := a₁⁻¹
   ℕ → R × (PowerSeries R)
   | 0 => (0, 0)
-  | 1 => ( (h.unit⁻¹ : Units R), C R ((h.unit⁻¹ : Units R) : R) * X (R := R))
-  | n + 1 =>  (- (h.unit⁻¹) * coeff R (n + 1) (subst ((invFun_aux  h hc n).2) f),
-  (invFun_aux h hc n).2 + C R (- (h.unit⁻¹) *
-  coeff R (n + 1) (subst ((invFun_aux h hc n).2) f)) * (X) ^ (n + 1))
+  | 1 => ( (h.unit⁻¹ : Units R), C ((h.unit⁻¹ : Units R) : R) * X (R := R))
+  | n + 1 =>  (- (h.unit⁻¹) * coeff (n + 1) (subst ((invFun_aux  h hc n).2) f),
+  (invFun_aux h hc n).2 + C (- (h.unit⁻¹) *
+  coeff (n + 1) (subst ((invFun_aux h hc n).2) f)) * (X) ^ (n + 1))
 
 
 lemma coeff_invFun_zero : invFun_aux f h hc 0 = (0, 0) := by
   rfl
 
 lemma coeff_invFun_one : invFun_aux f h hc 1 =
-  (((h.unit⁻¹ : Units R) : R), C R ((h.unit⁻¹ : Units R) : R) * X (R := R))
+  (((h.unit⁻¹ : Units R) : R), C ((h.unit⁻¹ : Units R) : R) * X (R := R))
   := by
   rfl
 
 lemma coeff_invFun {n : ℕ } (hn : n ≠ 0): invFun_aux f h hc (n + 1) =
-  (- (h.unit⁻¹) * coeff R (n + 1) (subst ((invFun_aux f h hc n).2) f),
-  (invFun_aux f h hc n).2 + C R (- (h.unit⁻¹) *
-  coeff R (n + 1) (subst ((invFun_aux f h hc n).2) f)) * (X) ^ (n + 1))
+  (- (h.unit⁻¹) * coeff (n + 1) (subst ((invFun_aux f h hc n).2) f),
+  (invFun_aux f h hc n).2 + C (- (h.unit⁻¹) *
+  coeff (n + 1) (subst ((invFun_aux f h hc n).2) f)) * (X) ^ (n + 1))
   := by
   conv =>
     lhs
@@ -93,7 +93,7 @@ theorem trunc'_of_invFun_aux {n : ℕ} :
 
 -- the constant coefficient of the n-th invFun equal zero, namely `(constantCoeff A) (invFun_aux f h hc k).2 = 0`
 lemma constCoeff_invFunAux_eq_zero {n : ℕ} :
-  constantCoeff R (invFun_aux f h hc n).2 = 0 := by
+  constantCoeff (invFun_aux f h hc n).2 = 0 := by
   rw [←trunc'_of_invFun_aux]
   induction n with
   | zero =>
@@ -102,35 +102,35 @@ lemma constCoeff_invFunAux_eq_zero {n : ℕ} :
     simp [trunc'_of_succ_mk, ih]
 
 -- this lemma only use once, could remove maybe
-lemma HasSubst_aux₀ : HasSubst ((C R) ↑h.unit⁻¹ * X) := by
+lemma HasSubst_aux₀ : HasSubst (C (↑h.unit⁻¹ : R) * X) := by
   refine HasSubst.of_constantCoeff_zero ?_
   simp [X]
 
 lemma coeff_of_subst_of_add_pow (g h: PowerSeries R) (n : ℕ)
-  (hn₀ : n ≠ 0) (a : R) (hg : constantCoeff R g = 0):
-  coeff R n (subst (g + (C R) a * X ^ n) h)
-    = coeff R n (subst g h) + (coeff R 1) h * a := by
+  (hn₀ : n ≠ 0) (a : R) (hg : constantCoeff g = 0):
+  coeff n (subst (g + C a * X ^ n) h)
+    = coeff n (subst g h) + (coeff 1) h * a := by
   -- prove two power series has substitution.
   have HasSubst_aux₁ : HasSubst g := HasSubst.of_constantCoeff_zero hg
-  have HasSubst_aux₂ : HasSubst (g + (C R) a * X ^ n) := by
+  have HasSubst_aux₂ : HasSubst (g + C a * X ^ n) := by
     refine HasSubst.of_constantCoeff_zero ?_
     simpa [X, constantCoeff_X, zero_pow hn₀, hg]
   rw [coeff_subst' HasSubst_aux₁, coeff_subst' HasSubst_aux₂]
-  have aux : ∑ᶠ (d : ℕ), (coeff R d) h • (coeff R n) ((g + (C R) a * X ^ n) ^ d) -
-  ∑ᶠ (d : ℕ), (coeff R d) h • (coeff R n) (g ^ d) = (coeff R 1) h * a := by
+  have aux : ∑ᶠ (d : ℕ), (coeff d) h • (coeff n) ((g + C a * X ^ n) ^ d) -
+  ∑ᶠ (d : ℕ), (coeff d) h • (coeff n) (g ^ d) = (coeff 1) h * a := by
     rw [←finsum_sub_distrib, finsum_eq_single _ 1]
     simp; ring
     intro m hm
-    have eq_aux : (coeff R n) ((g + (C R) a * X ^ n) ^ m) =
-      (coeff R n) (g ^ m) := by
+    have eq_aux : (coeff n) ((g + C a * X ^ n) ^ m) =
+      (coeff n) (g ^ m) := by
       by_cases hm₀ : m = 0
       rw [hm₀]
       simp
       have hm₂ : m ≥ 2 := by omega
       rw [coeff_pow, coeff_pow]
       have coeff_aux : ∀ l ∈ (range m).finsuppAntidiag n,
-        ∏ i ∈ range m, (coeff R (l i)) (g + (C R) a
-        * X ^ n) =  ∏ i ∈ range m, (coeff R (l i)) g := by
+        ∏ i ∈ range m, (coeff (l i)) (g + C a
+        * X ^ n) =  ∏ i ∈ range m, (coeff (l i)) g := by
         intro l hl
         by_cases hi : ∃ i₀ ∈ range m, l i₀ = n
         obtain ⟨i₀, hi₀, hi₁⟩ := hi
@@ -163,10 +163,10 @@ lemma coeff_of_subst_of_add_pow (g h: PowerSeries R) (n : ℕ)
           linarith
           simp
         obtain ⟨j, hj₀, hj⟩ := ljzero
-        have zero_aux₁ : (coeff R (l j)) (g + (C R) a * X ^ n) = 0 := by
+        have zero_aux₁ : (coeff (l j)) (g + C a * X ^ n) = 0 := by
           rw [hj]
           simp [hg, zero_pow hn₀]
-        have zero_aux₂ : (coeff R (l j)) (g) = 0 := by
+        have zero_aux₂ : (coeff (l j)) (g) = 0 := by
           rw [hj]
           simp [hg]
         rw [prod_eq_zero hj₀ zero_aux₁, prod_eq_zero hj₀ zero_aux₂]
@@ -247,36 +247,36 @@ theorem subst_inv_aux₁ {n : ℕ} :
       simp
       intro m hm
       -- to prove (coeff R m) f • (coeff R 1) (((C R) ↑h.unit⁻¹ * X) ^ m) = 0
-      have coeff_zero : (coeff R 1) (((C R) ↑h.unit⁻¹ * X) ^ m) = 0 := by
+      have coeff_zero : (coeff 1) ((C (↑h.unit⁻¹ : R) * X) ^ m) = 0 := by
         rw [mul_pow, ←map_pow, coeff_C_mul_X_pow, if_neg (Ne.symm hm)]
       simp [coeff_zero]
       have dgetwo : ¬ d ≤ 1 := by
         omega
       rw [if_neg dgetwo, if_neg dgetwo]
     simp [invFun_aux]
-    have aux : (trunc' k) (-((C R) ↑h.unit⁻¹ *
-      (C R) ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
+    have aux : (trunc' k) (-(C (↑h.unit⁻¹ : R) *
+      C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
       X ^ (k + 1))) = 0 := by
       simp [trunc']
       ext d
       by_cases hd : d ≤ k
-      have eq_aux : ((C R) (↑h.unit⁻¹ : R) *
-        (C R) ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
-        X ^ (k + 1)) = (C R) ((↑h.unit⁻¹ : R) * ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f)))
+      have eq_aux : (C (↑h.unit⁻¹ : R) *
+        C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
+        X ^ (k + 1)) = C ((↑h.unit⁻¹ : R) * ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)))
         * X ^ (k + 1) := by
         simp
       · simp [coeff_truncFun', eq_aux, coeff_X_pow, if_neg (show d ≠ k + 1 by linarith), mul_zero]
       · simp [PowerSeries.coeff_truncFun', if_neg hd]
     rw [trunc'_of_succ, trunc'_of_subst k _ _ (by simp [constCoeff_invFunAux_eq_zero f h hc]), map_add, aux, add_zero, ←trunc'_of_subst k _ _ (constCoeff_invFunAux_eq_zero f h hc), ih]
     have zero_aux : (Polynomial.monomial (k + 1))
-      ((coeff R (k + 1)) (subst ((invFun_aux f h hc k).2 + -((C R) ↑h.unit⁻¹ *
-      (C R) ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
+      ((coeff (k + 1)) (subst ((invFun_aux f h hc k).2 + -(C (↑h.unit⁻¹ : R) *
+      C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
         X ^ (k + 1))) f)) = 0 := by
       simp
-      have eq_aux : -((C R) (↑h.unit⁻¹ : R) *
-        (C R) ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
-        X ^ (k + 1)) = (C R) (-(↑h.unit⁻¹ : R) *
-        ((coeff R (k + 1)) (subst (invFun_aux f h hc k).2 f))) * X ^ (k + 1) := by
+      have eq_aux : -(C (↑h.unit⁻¹ : R) *
+        C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
+        X ^ (k + 1)) = C (-(↑h.unit⁻¹ : R) *
+        ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f))) * X ^ (k + 1) := by
         simp
       rw [eq_aux, coeff_of_subst_of_add_pow _ _ _ _ _ (constCoeff_invFunAux_eq_zero f h hc)]
       simp [←mul_assoc]
@@ -286,14 +286,14 @@ theorem subst_inv_aux₁ {n : ℕ} :
 
 
 theorem subst_inv_aux
-  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0)
+  (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0)
    : ∃ (g : PowerSeries R), subst g f = X
-    ∧ constantCoeff R g = 0 ∧ IsUnit (coeff R 1 g) := by
+    ∧ constantCoeff g = 0 ∧ IsUnit (coeff 1 g) := by
   let g : PowerSeries R := mk (fun n => (invFun_aux f h hc n).1)
   use g
   have substDomain_g : HasSubst g := by
     apply HasSubst.of_constantCoeff_zero
-    have zero_coeff : (constantCoeff) R g = 0 := by
+    have zero_coeff : (constantCoeff) g = 0 := by
       simp [g, invFun_aux]
     unfold constantCoeff at zero_coeff
     simp [zero_coeff]
@@ -307,7 +307,7 @@ theorem subst_inv_aux
   simp [g, invFun_aux]
 
 theorem exist_subst_inv_aux {g : PowerSeries R}
-  (hg₃ : IsUnit (coeff R 1 g)) (hg₂ : constantCoeff R g = 0) :
+  (hg₃ : IsUnit (coeff 1 g)) (hg₂ : constantCoeff g = 0) :
   subst g f = X → subst f g = X := by
   intro hg₁
   obtain ⟨g', hg₁', hg₂', hg₃'⟩ := subst_inv_aux g hg₃ hg₂
@@ -338,9 +338,9 @@ theorem exist_subst_inv_aux {g : PowerSeries R}
   and if `f(X) = u * X + ⋯` where `u ∈ Aˣ`, then there is `g ∈ A ⟦X⟧`,
   such that `f ∘ g = id` and `g ∘ f = id`. -/
 theorem exist_subst_inv
-  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0):
   ∃ (g : PowerSeries R), (subst f ∘ subst g = id ∧ subst g ∘ subst f = id
-  ∧ constantCoeff R g = 0) := by
+  ∧ constantCoeff g = 0) := by
   obtain ⟨g, hg₁, hg₂, hg₃⟩ := subst_inv_aux f h hc
   refine ⟨g, ?_, (subst_comp_eq_id_iff _ (HasSubst.of_constantCoeff_zero hg₂)
     (HasSubst.of_constantCoeff_zero hc)).mpr hg₁, hg₂⟩
@@ -351,9 +351,9 @@ theorem exist_subst_inv
 
 
 theorem exist_unique_subst_inv_aux
-  (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
+  (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0):
   ∃! (g : PowerSeries R), subst f ∘ subst g = id ∧ subst g ∘ subst f = id
-  ∧ constantCoeff R g = 0 := by
+  ∧ constantCoeff g = 0 := by
   refine existsUnique_of_exists_of_unique ?_ ?_
   · obtain ⟨g, h₁, h₂, h₃⟩ := exist_subst_inv _ h hc
     exact ⟨g, h₁, h₂, h₃⟩
@@ -369,8 +369,8 @@ theorem exist_unique_subst_inv_aux
       (HasSubst.of_constantCoeff_zero' hg₁'')] at eq_aux'
     exact eq_aux'
 
-theorem exist_unique_subst_inv_left (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
-  ∃! (g : PowerSeries R), subst f ∘ subst g = id ∧ constantCoeff _ g = 0 := by
+theorem exist_unique_subst_inv_left (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0):
+  ∃! (g : PowerSeries R), subst f ∘ subst g = id ∧ constantCoeff g = 0 := by
   obtain ⟨g, h₁, h₂⟩ := exist_unique_subst_inv_aux _ h hc
   use g
   simp
@@ -386,8 +386,8 @@ theorem exist_unique_subst_inv_left (h : IsUnit (coeff R 1 f)) (hc : constantCoe
       ←subst_X (a := g) (R := R) (HasSubst.of_constantCoeff_zero' h₁.2.2), aux']
 
 
-theorem exist_unique_subst_inv_right (h : IsUnit (coeff R 1 f)) (hc : constantCoeff R f = 0):
-  ∃! (g : PowerSeries R), subst g ∘ subst f = id ∧ constantCoeff _ g = 0 := by
+theorem exist_unique_subst_inv_right (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0):
+  ∃! (g : PowerSeries R), subst g ∘ subst f = id ∧ constantCoeff g = 0 := by
   obtain ⟨g, h₁, h₂⟩ := exist_unique_subst_inv_aux _ h hc
   use g
   simp

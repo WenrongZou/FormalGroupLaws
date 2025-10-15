@@ -94,7 +94,7 @@ abbrev subst_sec : Fin 2 → MvPowerSeries (Fin 3) R
   | ⟨0, _⟩ => Y₀
   | ⟨1, _⟩ => subst (subst_sec_aux) F
 
-lemma has_subst_fir (hF : constantCoeff _ R F = 0) : MvPowerSeries.HasSubst (subst_fir F):= by
+lemma has_subst_fir (hF : constantCoeff F = 0) : MvPowerSeries.HasSubst (subst_fir F):= by
   refine hasSubst_of_constantCoeff_zero ?_
   intro s
   by_cases hs0 : s = 0
@@ -120,7 +120,7 @@ lemma has_subst_fir (hF : constantCoeff _ R F = 0) : MvPowerSeries.HasSubst (sub
     · simp [zero_pow x_or]
   · simp [show s = 1 by omega, subst_fir]
 
-lemma has_subst_sec (hF : constantCoeff _ R F = 0) : MvPowerSeries.HasSubst (subst_sec F):= by
+lemma has_subst_sec (hF : constantCoeff F = 0) : MvPowerSeries.HasSubst (subst_sec F):= by
   refine hasSubst_of_constantCoeff_zero ?_
   intro s
   by_cases hs0 : s = 0
@@ -175,7 +175,7 @@ abbrev PowerSeries.toMvPowerSeries (f : PowerSeries R) (i : σ) : MvPowerSeries 
   PowerSeries.subst (MvPowerSeries.X i) f
 
 lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
-  (hf : PowerSeries.constantCoeff R f = 0) :
+  (hf : PowerSeries.constantCoeff f = 0) :
   HasSubst (f.toMvPowerSeries (σ := σ)) (S := R) := by
   refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
   intro x
@@ -193,15 +193,20 @@ lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
 abbrev coeff_two (i j : ℕ) : Fin 2 →₀ ℕ :=
   Finsupp.single 0 i + Finsupp.single 1 j
 
+/-- This is a map from `Fin 3` to `ℕ` mapping `0` to `i` and `1` to `j`, `2` to `k` which can be used
+  to compute degree of `X^i*Y^j*Z^k`.  -/
+abbrev coeff_three (i j k: ℕ) : Fin 3 →₀ ℕ :=
+  Finsupp.single 0 i + Finsupp.single 1 j + Finsupp.single 2 k
+
 
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
 @[ext]
 structure FormalGroup where
   toFun : MvPowerSeries (Fin 2) R
-  zero_constantCoeff : constantCoeff (Fin 2) R toFun = 0
-  lin_coeff_X : coeff R (Finsupp.single 0 1) toFun = 1
-  lin_coeff_Y : coeff R (Finsupp.single 1 1) toFun = 1
+  zero_constantCoeff : constantCoeff toFun = 0
+  lin_coeff_X : coeff (Finsupp.single 0 1) toFun = 1
+  lin_coeff_Y : coeff (Finsupp.single 1 1) toFun = 1
   assoc : subst (subst_fir toFun) toFun = subst (subst_sec toFun) toFun
   --  Associativity of the Formal Group : `F (F (X, Y), Z) = F (X, F (Y, Z))`.
 
@@ -264,7 +269,7 @@ def Gₘ : CommFormalGroup R where
     simp [coeff_X]
     rw [if_neg]
     simp
-    simp [X_def, monomial_mul_monomial]
+    simp [X, monomial_mul_monomial]
     rw [coeff_monomial, if_neg]
     simp
     refine Finsupp.ne_iff.mpr (by use 0; simp)
@@ -272,7 +277,7 @@ def Gₘ : CommFormalGroup R where
     simp [coeff_X]
     rw [if_neg]
     simp
-    simp [X_def, monomial_mul_monomial]
+    simp [X, monomial_mul_monomial]
     rw [coeff_monomial, if_neg]
     simp
     refine Finsupp.ne_iff.mpr (by use 0; simp)
@@ -299,7 +304,7 @@ def Gₘ : CommFormalGroup R where
 
 def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
   FormalGroup R' where
-    toFun := MvPowerSeries.map _ f F.toFun
+    toFun := MvPowerSeries.map _ F.toFun
     zero_constantCoeff := by
       simp only [constantCoeff_map, F.zero_constantCoeff, map_zero]
     lin_coeff_X := by
@@ -307,50 +312,59 @@ def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup
     lin_coeff_Y := by
       simp [F.lin_coeff_Y]
     assoc := by
-      have constant_zero : constantCoeff _ _ ((MvPowerSeries.map (Fin 2) f) F.toFun) = 0 := by
+      have constant_zero : constantCoeff ((MvPowerSeries.map f) F.toFun) = 0 := by
         simp [F.zero_constantCoeff]
-      have aux₁ : subst (subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun))
-        ((MvPowerSeries.map (Fin 2) f) F.toFun) =
-        (MvPowerSeries.map (Fin 3) f) (subst (subst_fir F.toFun) F.toFun) := by
+      have aux₁ : subst (subst_fir ((MvPowerSeries.map  f) F.toFun))
+        ((MvPowerSeries.map f) F.toFun) =
+        (MvPowerSeries.map f) (subst (subst_fir F.toFun) F.toFun) := by
         ext n
         simp
-        rw [coeff_subst (has_subst_fir F.toFun F.zero_constantCoeff), coeff_subst
-          (has_subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun) constant_zero)]
+        rw [coeff_subst (has_subst_fir F.toFun F.zero_constantCoeff)]
+        rw [coeff_subst
+          (has_subst_fir ((MvPowerSeries.map f) F.toFun) constant_zero)]
+        -- obtain h1 := (coeff_subst_finite (R := R) (has_subst_fir F.toFun F.zero_constantCoeff))
+        -- have h : (Function.support
+        --   ((fun d ↦ (coeff R d) F.toFun • (coeff R n) (d.prod fun s e ↦ subst_fir F.toFun s ^ e)) ∘
+        --     PLift.down)).Finite := by
+        --   obtain h' := h1 F.toFun n
+        --   sorry
+        -- rw [finsum_def', dif_pos h]
         simp
-        have aux₁ : subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun) 0 =
-          (MvPowerSeries.map (Fin 3) f) (subst_fir F.toFun 0) := by
+        have aux₁ : subst_fir ((MvPowerSeries.map f) F.toFun) 0 =
+          (MvPowerSeries.map f) (subst_fir F.toFun 0) := by
           simp [subst_fir]
           ext m
           simp
           rw [coeff_subst has_subst_fir_aux, coeff_subst has_subst_fir_aux]
-          simp [subst_fir_aux]
-          have aux' : ∀ (d : Fin 2 →₀ ℕ), (coeff R' m) (Y₀ ^ d 0 * Y₁ ^ d 1) =
-            f ((coeff R m) (Y₀ ^ d 0 * Y₁ ^ d 1)) := by
-            intro d
+          rw [finsum_def', finsum_def', dif_pos, dif_pos]
 
-            sorry
+          simp [subst_fir_aux]
+          have aux' : ∀ (d : Fin 2 →₀ ℕ), (coeff m) (Y₀ ^ d 0 * Y₁ ^ d 1) =
+            f ((coeff m) (Y₀ ^ d 0 * Y₁ ^ d 1)) := by
+            intro d
+            by_cases meq : m = Finsupp.single 0 (d 0) + Finsupp.single 1 (d 1)
+            · simp [X_pow_eq, monomial_mul_monomial]
+              rw [coeff_monomial, coeff_monomial, if_pos meq, if_pos meq, map_one]
+            simp [X_pow_eq, monomial_mul_monomial]
+            rw [coeff_monomial, coeff_monomial, if_neg meq, if_neg meq, map_zero]
           simp_rw [aux', ←map_mul]
           sorry
-        have aux₂ : subst_fir ((MvPowerSeries.map (Fin 2) f) F.toFun) 1 =
-          (MvPowerSeries.map (Fin 3) f) (subst_fir F.toFun 1) := by
+          sorry
+          sorry
+        have aux₂ : subst_fir ((MvPowerSeries.map f) F.toFun) 1 =
+          (MvPowerSeries.map f) (subst_fir F.toFun 1) := by
           simp [subst_fir]
         simp_rw [aux₁, aux₂]
-
-
-
+        simp [subst_fir]
         sorry
-      have aux₂ : subst (subst_sec ((MvPowerSeries.map (Fin 2) f) F.toFun))
-        ((MvPowerSeries.map (Fin 2) f) F.toFun) =
-        (MvPowerSeries.map (Fin 3) f) (subst (subst_sec F.toFun) F.toFun) := by
-        rw [←substAlgHom_apply (has_subst_sec _ constant_zero)]
-        rw [←substAlgHom_apply (has_subst_sec _ F.zero_constantCoeff)]
-
+      have aux₂ : subst (subst_sec ((MvPowerSeries.map f) F.toFun))
+        ((MvPowerSeries.map f) F.toFun) =
+        (MvPowerSeries.map f) (subst (subst_sec F.toFun) F.toFun) := by
+        -- rw [←substAlgHom_apply (has_subst_sec _ constant_zero)]
+        -- rw [←substAlgHom_apply (has_subst_sec _ F.zero_constantCoeff)]
         sorry
       rw [←substAlgHom_apply (has_subst_fir _ constant_zero),
         ←substAlgHom_apply (has_subst_sec _ constant_zero)]
-
-
-
       sorry
       -- rw [aux₁, aux₂, F.assoc]
 
@@ -361,12 +375,12 @@ def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup
 variable {F : FormalGroup R} {f : PowerSeries R}
 
 @[simp]
-lemma PowerSeries.coeff_coe  (n : ℕ) : MvPowerSeries.coeff R (Finsupp.single () n) f
-  = PowerSeries.coeff R n f := rfl
+lemma PowerSeries.coeff_coe  (n : ℕ) : MvPowerSeries.coeff (Finsupp.single () n) f
+  = PowerSeries.coeff n f := rfl
 
 @[simp]
-lemma PowerSeries.constantCoeff_coe : MvPowerSeries.constantCoeff Unit R f =
-  PowerSeries.constantCoeff R f := rfl
+lemma PowerSeries.constantCoeff_coe : MvPowerSeries.constantCoeff f =
+  PowerSeries.constantCoeff f := rfl
 
 lemma has_subst_X₀ : HasSubst (subst_X₀ (R := R)) := by
   refine hasSubst_of_constantCoeff_zero ?_
@@ -383,10 +397,10 @@ lemma has_subst_X₁ : HasSubst (subst_X₁ (R := R)) := by
 
 /-- The first coefficient of `F(X, 0)` is `1`. -/
 lemma FormalGroup.coeff_of_X₀_of_subst_X₀ :
-  PowerSeries.coeff R 1 (subst subst_X₀ F.toFun) = 1 := by
+  PowerSeries.coeff 1 (subst subst_X₀ F.toFun) (R := R) = 1 := by
   simp [PowerSeries.coeff, coeff_subst has_subst_X₀]
-  have eq_aux : ∀ (d : Fin 2 →₀ ℕ), d ≠ (Finsupp.single 0 1) → (coeff R d) F.toFun *
-    (PowerSeries.coeff R 1) (subst_X₀ 0 ^ d 0 * subst_X₀ 1 ^ d 1) = 0 := by
+  have eq_aux : ∀ (d : Fin 2 →₀ ℕ), d ≠ (Finsupp.single 0 1) → (coeff d) F.toFun *
+    (PowerSeries.coeff 1) (subst_X₀ 0 ^ d 0 * subst_X₀ 1 ^ d 1) = 0 := by
     intro d hd_neq
     by_cases hd : d 1 = 0
     · -- the case `d 1 = 0`
@@ -411,8 +425,8 @@ lemma FormalGroup.coeff_of_X₀_of_subst_X₀ :
             · have aux : x = 1 := by omega
               simp [aux, hd]
           contradiction
-        have aux (f : PowerSeries R): PowerSeries.coeff R 1 f =
-          coeff R (Finsupp.single () 1) f := by
+        have aux (f : PowerSeries R): PowerSeries.coeff 1 f =
+          coeff (Finsupp.single () 1) f := by
           exact rfl
         intro hc
         by_contra
@@ -425,10 +439,10 @@ lemma FormalGroup.coeff_of_X₀_of_subst_X₀ :
 
 /-- The first coefficient of `F(0, X)` is `1`. -/
 lemma FormalGroup.coeff_of_X₁_of_subst_X₁ :
-  PowerSeries.coeff R 1 (subst subst_X₁ F.toFun) = 1 := by
+  PowerSeries.coeff 1 (subst subst_X₁ F.toFun) (R := R) = 1 := by
   simp [PowerSeries.coeff, coeff_subst has_subst_X₁]
-  have eq_aux : ∀ (d : Fin 2 →₀ ℕ), d ≠ (Finsupp.single 1 1) → (coeff R d) F.toFun *
-    (PowerSeries.coeff R 1) (subst_X₁ 0 ^ d 0 * subst_X₁ 1 ^ d 1) = 0 := by
+  have eq_aux : ∀ (d : Fin 2 →₀ ℕ), d ≠ (Finsupp.single 1 1) → (coeff d) F.toFun *
+    (PowerSeries.coeff 1) (subst_X₁ 0 ^ d 0 * subst_X₁ 1 ^ d 1) = 0 := by
     intro d hd_neq
     by_cases hd : d 0 = 0
     · -- the case `d 0 = 0`
@@ -461,7 +475,7 @@ lemma FormalGroup.coeff_of_X₁_of_subst_X₁ :
 
 /-- The constant coefficient of `F(X, 0)` is `0`. -/
 lemma FormalGroup.constantCoeff_of_subst_X₀ :
-  PowerSeries.constantCoeff R (subst subst_X₀ F.toFun) = 0 := by
+  PowerSeries.constantCoeff (subst subst_X₀ F.toFun) (R := R) = 0 := by
   rw [PowerSeries.constantCoeff, constantCoeff_subst has_subst_X₀]
   apply finsum_eq_zero_of_forall_eq_zero
   intro d
@@ -484,7 +498,7 @@ lemma FormalGroup.constantCoeff_of_subst_X₀ :
 
 /-- The constant coefficient of `F(0, X)` is `0`. -/
 lemma FormalGroup.constantCoeff_of_subst_X₁ :
-  PowerSeries.constantCoeff R (subst subst_X₁ F.toFun) = 0 := by
+  PowerSeries.constantCoeff (subst subst_X₁ F.toFun) (R := R) = 0 := by
   rw [PowerSeries.constantCoeff, constantCoeff_subst has_subst_X₁]
   apply finsum_eq_zero_of_forall_eq_zero
   intro d
@@ -777,7 +791,7 @@ lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : HasSubst f) :
  -/
 theorem FormalGroup.subst_X_eq_X  :
   subst subst_X₀ F.toFun = PowerSeries.X (R := R) := by
-  have h₀ : IsUnit (PowerSeries.coeff R 1 (subst subst_X₀ F.toFun)) := by
+  have h₀ : IsUnit (PowerSeries.coeff 1 (subst subst_X₀ F.toFun) (R := R)) := by
     simp [coeff_of_X₀_of_subst_X₀]
   obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ constantCoeff_of_subst_X₀
   have eq_aux :
@@ -794,7 +808,7 @@ theorem FormalGroup.subst_X_eq_X  :
 /-- Given a formal group law F, F(0, X) = X. -/
 theorem FormalGroup.subst_X₁_eq_X₁ :
   subst subst_X₁ F.toFun = PowerSeries.X (R := R) := by
-  have h₀ : IsUnit (PowerSeries.coeff R 1 (subst subst_X₁ F.toFun)) := by
+  have h₀ : IsUnit (PowerSeries.coeff 1 (subst subst_X₁ F.toFun) (R := R)) := by
     simp [coeff_of_X₁_of_subst_X₁]
   obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ constantCoeff_of_subst_X₁
   have eq_aux :
@@ -814,7 +828,7 @@ theorem FormalGroup.subst_X₁_eq_X₁ :
 @[ext]
 structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   toFun : PowerSeries R
-  zero_constantCoeff : PowerSeries.constantCoeff R toFun = 0
+  zero_constantCoeff : PowerSeries.constantCoeff toFun = 0
   hom : PowerSeries.subst (G₁.toFun) toFun = subst (R := R) toFun.toMvPowerSeries G₂.toFun
 
 end
@@ -838,7 +852,7 @@ structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
   is called strict isomorphism if `a₁ = 1`.-/
 @[ext]
 structure FormalGroupStrictIso (G₁ G₂ : FormalGroup R) extends FormalGroupIso G₁ G₂ where
-  one_coeff_one : coeff R 1 toHom.toFun = 1
+  one_coeff_one : coeff 1 toHom.toFun = 1
 
 theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
   α = β ↔  α.toHom = β.toHom := by
