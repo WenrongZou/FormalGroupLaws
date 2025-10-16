@@ -5,17 +5,17 @@ import Mathlib.Algebra.Module.Submodule.Ker
 import Mathlib.GroupTheory.MonoidLocalization.Away
 import Mathlib.GroupTheory.OrderOfElement
 
-open Submodule MvPowerSeries TensorProduct LinearMap
-
 noncomputable section
 
 /- Main Result : In this file, we prove that for any one dimensional formal group law `F(X, Y)`
   over coefficient ring `R`, `F(X, Y)` is commutative formal group law if and
   only if `R` doest contain a nonzero element which is both torsion and nilpotent.-/
 
-variable {R : Type*} [CommRing R] (F : FormalGroup R)
+variable {R : Type*} [CommRing R] (F : FormalGroup R) [Nontrivial R]
 
 namespace FormalGroup
+
+open Submodule MvPowerSeries TensorProduct LinearMap
 
 
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
@@ -118,42 +118,132 @@ theorem comm_of_isDomain [IsDomain R] : F.comm := by
 
 def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
   (rNeq : r ≠ 0) :
-  FormalGroup R where
+  FormalGroup R :=
+  let n := addOrderOf r
+  have ngtone : n ≠ 1 := by
+    by_contra hn; simp [n] at hn; contradiction
+  let p := Nat.minFac n
+  let b := (n / p) • r
+  have bNil : IsNilpotent b := IsNilpotent.smul rNil (n / p)
+  let m := nilpotencyClass b
+  let c := b ^ (m - 1)
+  have bneq₀ : b ≠ 0 := by
+    have pos_aux : n / p > 0 := Nat.div_pos_iff.mpr
+      ⟨Nat.minFac_pos n, Nat.minFac_le (IsOfFinAddOrder.addOrderOf_pos rTor)⟩
+    obtain neq := Nat.ne_zero_of_lt pos_aux
+    refine nsmul_ne_zero_of_lt_addOrderOf neq (Nat.div_lt_self
+      (IsOfFinAddOrder.addOrderOf_pos rTor) ?_)
+    exact Nat.Prime.one_lt (Nat.minFac_prime_iff.mpr ngtone)
+  {
   toFun := by
     let n := addOrderOf r
     have ngtone : n ≠ 1 := by
       by_contra hn; simp [n] at hn; contradiction
     obtain p := Nat.minFac n
     let b := (n / p) • r
-    have bNil : IsNilpotent b := by sorry
+    have bNil : IsNilpotent b := IsNilpotent.smul rNil (n / p)
     let m := nilpotencyClass b
     let c := b ^ (m - 1)
     exact X₀ + X₁ + (C c) * X₀ * X₁ ^ p
   zero_constantCoeff := by simp
   lin_coeff_X := by
     simp
-    rw [coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp))]
-    rw [X₀, X, X_pow_eq, mul_assoc, monomial_mul_monomial]
+    rw [coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp)),
+      X₀, X, X_pow_eq, mul_assoc, monomial_mul_monomial]
     simp
     have aux' : ((addOrderOf r / (addOrderOf r).minFac) : MvPowerSeries (Fin 2) R) =
       C (addOrderOf r / (addOrderOf r).minFac) (R := R) := by
       exact rfl
-    have aux : (((addOrderOf r / (addOrderOf r).minFac) : MvPowerSeries (Fin 2) R) * C r) ^
-      (nilpotencyClass (↑(addOrderOf r / (addOrderOf r).minFac) * r) - 1) =
-      C ((((addOrderOf r / (addOrderOf r).minFac) : R) * r) ^
-      (nilpotencyClass (↑(addOrderOf r / (addOrderOf r).minFac) * r) - 1))  := by
-      rw [aux']
-      have aux'' : (C (addOrderOf r / (addOrderOf r).minFac : R) * C r)
-        = C (((addOrderOf r / (addOrderOf r).minFac : R) * r)) (R := R) (σ := Fin 2) := by
-        simp
-      rw [aux'', map_pow]
-    rw [aux, coeff_C_mul, coeff_monomial, if_neg, mul_zero]
+    have aux'' : (C (addOrderOf r / (addOrderOf r).minFac : R) * C r)
+      = C (((addOrderOf r / (addOrderOf r).minFac : R) * r)) (R := R) (σ := Fin 2) := by
+      simp
+    rw [aux', aux'', ←map_pow, coeff_C_mul, coeff_monomial, if_neg, mul_zero]
     simp
-    have addOrderNeq : (addOrderOf r) ≠ 1 := by
-      simp [rNeq]
     refine Nat.ne_zero_iff_zero_lt.mpr (Nat.minFac_pos _)
-  lin_coeff_Y := sorry
-  assoc := sorry
+  lin_coeff_Y := by
+    simp
+    rw [coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp)),
+      X₀, X, X_pow_eq, mul_assoc, monomial_mul_monomial]
+    simp
+    have aux' : ((addOrderOf r / (addOrderOf r).minFac) : MvPowerSeries (Fin 2) R) =
+      C (addOrderOf r / (addOrderOf r).minFac) (R := R) := by
+      exact rfl
+    have aux'' : (C (addOrderOf r / (addOrderOf r).minFac : R) * C r)
+      = C (((addOrderOf r / (addOrderOf r).minFac : R) * r)) (R := R) (σ := Fin 2) := by
+      simp
+    rw [aux', aux'', ←map_pow, coeff_C_mul, coeff_monomial, if_neg, mul_zero]
+    refine Finsupp.ne_iff.mpr ?_
+    use 1
+    simp
+    by_contra hc
+    obtain hc' := Nat.minFac_eq_one_iff.mp (Eq.symm hc)
+    simp at hc'
+    contradiction
+  assoc := by
+    simp only
+    rw [show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
+      show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
+    obtain has_subst₁ := has_subst_fir (X₀ + X₁ + c • X₀ * X₁ ^ p) (R := R) (by simp)
+    obtain has_subst₂ := has_subst_sec (X₀ + X₁ + c • (X₀ * X₁ ^ p)) (R := R)  (by simp)
+    rw [←smul_eq_C_mul, subst_add has_subst₁, subst_add has_subst₁, subst_mul has_subst₁, subst_X has_subst₁,
+      subst_X has_subst₁, subst_smul has_subst₁, subst_X has_subst₁,
+      subst_pow has_subst₁, subst_X has_subst₁]
+    simp [subst_fir]
+    simp_rw [subst_add has_subst_fir_aux, subst_smul has_subst_fir_aux, subst_mul has_subst_fir_aux,
+      subst_pow has_subst_fir_aux, subst_X has_subst_fir_aux, subst_fir_aux]
+    simp_rw [subst_add has_subst₂, subst_smul has_subst₂, subst_mul has_subst₂,
+      subst_pow has_subst₂, subst_X has_subst₂, subst_sec, subst_add has_subst_sec_aux,
+      subst_smul has_subst_sec_aux, subst_mul has_subst_sec_aux, subst_pow has_subst_sec_aux,
+      subst_X has_subst_sec_aux, subst_sec_aux]
+    have aux : (C c (σ := Fin 3)) ^ 2  = 0 := by
+      have aux' : c ^ 2 = 0 := by
+        rw [show c = b ^ (m - 1) by rfl, ←pow_mul]
+        have bNil' : b ^ m = 0 := pow_nilpotencyClass bNil
+        have mgetwo : m ≥ 2 := by
+          obtain mneq₀ := pos_nilpotencyClass_iff.mpr bNil
+          have mneq₁ : m ≠ 1 := by
+            by_contra hc
+            obtain hc' := nilpotencyClass_eq_one.mp hc
+            contradiction
+          omega
+        have le_aux : m ≤ (m - 1) * 2 := by omega
+        exact pow_eq_zero_of_le le_aux bNil'
+      simp [←map_pow, aux']
+    have eq_aux₁ : c • ((Y₀ + Y₁ + c • (Y₀ * Y₁ ^ p)) * Y₂ ^ p) =
+      c • Y₀ * (Y₂ (R := R)) ^ p + c • Y₁ * Y₂ ^ p := by
+      simp [smul_eq_C_mul]
+      ring_nf
+      simp [aux]
+    have eq_aux₂ : c • (Y₀ * (Y₁ + Y₂ + c • (Y₁ * Y₂ ^ p)) ^ p) =
+      c • Y₀ * (Y₁ (R := R)) ^ p + c • Y₀ * Y₂ ^ p := by
+      simp [smul_eq_C_mul]
+      ring_nf
+      have eq_aux : (C c * Y₁ * Y₂ ^ p + Y₁ + Y₂) ^ p =
+        (Y₁ (R := R)) ^ p + Y₂ ^ p := by
+        rw [add_pow]
+        have almost_zero : ∀ m ∈ Finset.range (p + 1), m ≠ 0 ∧ m ≠ p →
+          (C c * (Y₁ (R := R)) * Y₂ ^ p + Y₁) ^ m * Y₂ ^ (p - m) *
+          (p.choose m : MvPowerSeries (Fin 3) R) = 0 := by
+          sorry
+        have pneq₀ : 0 ≠ p :=
+          Ne.symm (Nat.Prime.ne_zero (Nat.minFac_prime_iff.mpr ngtone))
+        rw [Finset.sum_eq_add_of_mem 0 p (by simp) (by simp) pneq₀ almost_zero]
+        simp
+        rw [add_pow]
+        have almost_zero' : ∀ m ∈ Finset.range (p + 1), m ≠ 0 ∧ m ≠ p →
+          (C c * (Y₁) * Y₂ ^ p) ^ m * Y₁ ^ (p - m) *
+          (p.choose m : MvPowerSeries (Fin 3) R) = 0 := by
+
+          sorry
+        rw [Finset.sum_eq_add_of_mem 0 p (by simp) (by simp) pneq₀ almost_zero']
+        simp
+        sorry
+      rw [eq_aux]
+      ring_nf
+    simp_rw [eq_aux₁, eq_aux₂, smul_eq_C_mul]
+    ring_nf
+  }
+
 
 
 theorem no_nonzero_torsion_nilpotent_of_comm :
@@ -164,6 +254,22 @@ theorem no_nonzero_torsion_nilpotent_of_comm :
   obtain ⟨r, rNil, rTor, rNeq⟩ := h
   simp
   use (counter_example_F r rNil rTor rNeq)
+  intro hc
+  let p  := Nat.minFac (addOrderOf r)
+  have coeff_neq : (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
+    (counter_example_F r rNil rTor rNeq).toFun ≠ (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
+    (subst subst_symm (counter_example_F r rNil rTor rNeq).toFun) := by
+    simp [counter_example_F]
+    rw [coeff_X, if_neg, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp))]
+
+    sorry
+    · refine Finsupp.ne_iff.mpr ?_
+      use 1
+      simp
+      refine Nat.ne_zero_iff_zero_lt.mpr (Nat.minFac_pos (addOrderOf r))
+  obtain hc' := MvPowerSeries.ext_iff.mp hc (Finsupp.single 0 1 + Finsupp.single 1 p)
+  contradiction
+
   -- rintro h_comm ⟨r, rNil, rTor, rneq⟩
   -- obtain ⟨m, hm⟩ := rNil
   -- have addOrder_ge_two : addOrderOf r ≥ 2 := by
@@ -171,7 +277,6 @@ theorem no_nonzero_torsion_nilpotent_of_comm :
   --     by_contra hc; simp at hc; contradiction
   --   omega
 
-  sorry
 
 
 variable (R) in
