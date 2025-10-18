@@ -5,6 +5,7 @@ Ongoing project (Master thesis project) formalizing formal group laws.
 Adivisor : María Inés de Frutos-Fernández
 
 Reference:
+
 · Silverman, The Arithmetic of Elliptic Curves (2nd edition) - Chapter 4.
 
 · Lubin--Tate, Formal Complex Multiplication in Local Fields.
