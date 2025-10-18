@@ -5,6 +5,7 @@ import Mathlib.Algebra.Module.Submodule.Ker
 import Mathlib.GroupTheory.MonoidLocalization.Away
 import Mathlib.GroupTheory.OrderOfElement
 import Mathlib.Data.Nat.Choose.Dvd
+import Mathlib.RingTheory.TensorProduct.Basic
 
 noncomputable section
 
@@ -369,16 +370,8 @@ variable (R) in
 The canonical `ℤ`-linear map from a ring `R` to `R ⊗[ℤ] ℚ`
 that sends an element `r` to `r ⊗ 1`.
 -/
-def canonicalMapToTensorRat : R →ₗ[ℤ] (R ⊗[ℤ] ℚ) :=
-  {
-      toFun := fun r => r ⊗ₜ[ℤ] (1 : ℚ)
-      map_add' := by
-        intros x y
-        simp [TensorProduct.add_tmul]
-      map_smul' := by
-        intros n x
-        simp [TensorProduct.smul_tmul']
-    }
+def canonicalMapToTensorRat : R →ₐ[ℤ] (R ⊗[ℤ] ℚ) :=
+  Algebra.TensorProduct.includeLeft
 
 /--
 The kernel of the canonical map `r ↦ r ⊗ 1` from a ring `R` to `R ⊗[ℤ] ℚ`

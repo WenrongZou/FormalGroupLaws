@@ -20,16 +20,25 @@ import Mathlib.Algebra.BigOperators.Finprod
 
 /-!
 
-## One Dimensional Formal Group
-This file defines one dimensional formal group law over a ring `A`, homomorphism and isomorphism between two formal group.
-
 ## Adivisor : María Inés de Frutos-Fernández
 
 ## Reference:
 · Silverman, The Arithmetic of Elliptic Curves (2nd edition) - Chapter 4.
-· Lubin--Tate, Formal Complex Multiplication in Local Fields.
+· Lubin-Tate, Formal Complex Multiplication in Local Fields.
 · Hazewinkel, Formal Groups and Applications. Start with Chapters 1 and 2. Later you can look at some parts of Chapters 4 and 6.
 
+## Contents in this file.
+This file defines one dimensional formal group law over a ring `R`, homomorphism and isomorphism
+between two formal group, coefficient base change of formal group.
+
+In this file, I define one formal group law to be
+a two variable power series `F`, with properties:
+· the zero coefficient of `F` is zero.
+· the coefficient of `X` is one.
+· the coefficient of `Y` is one.
+· associativity condition : `F(F(X,Y), Z) = F(X, F(Y,Z))`.
+In this file, I also prove in this definition of Formal Group Law `F`, it follows that
+`F(X,0) = X` and `F(0,Y) = Y`.
 -/
 
 
