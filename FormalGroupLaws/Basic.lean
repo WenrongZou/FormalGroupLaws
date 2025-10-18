@@ -302,7 +302,7 @@ def Gₘ : CommFormalGroup R where
       subst_X HasSubst_subst_symm, subst_X HasSubst_subst_symm]
     simp [subst_symm]; ring
 
--- try AddMonoidHom.map_finsum
+
 def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
   FormalGroup R' where
     toFun := MvPowerSeries.map _ F.toFun

@@ -4,6 +4,7 @@ import Mathlib.RingTheory.Nilpotent.Lemmas
 import Mathlib.Algebra.Module.Submodule.Ker
 import Mathlib.GroupTheory.MonoidLocalization.Away
 import Mathlib.GroupTheory.OrderOfElement
+import Mathlib.Data.Nat.Choose.Dvd
 
 noncomputable section
 
@@ -17,7 +18,7 @@ namespace FormalGroup
 
 open Submodule MvPowerSeries TensorProduct LinearMap
 
-
+omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij = a_ji`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm :
@@ -68,6 +69,7 @@ theorem comm_iff_coeff_symm :
         · simp at ha; use 0; simp [Ne.symm ha]
       simp [aux]
 
+omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij - a_ji = 0`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm' :
@@ -115,7 +117,8 @@ theorem comm_of_isDomain [IsDomain R] : F.comm := by
   · exact hc ((comm_of_exists_nonzero_hom_to_comm _ _ h ) Gₘ.comm)
 
 
-
+/-- This is a counter example that given `r` is a nonzero nilpotent and `ℤ-torsion`,
+  there is a non-commutative formal group law. -/
 def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
   (rNeq : r ≠ 0) :
   FormalGroup R :=
@@ -195,20 +198,38 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
       subst_pow has_subst₂, subst_X has_subst₂, subst_sec, subst_add has_subst_sec_aux,
       subst_smul has_subst_sec_aux, subst_mul has_subst_sec_aux, subst_pow has_subst_sec_aux,
       subst_X has_subst_sec_aux, subst_sec_aux]
+    have pPrime : p.Prime := Nat.minFac_prime_iff.mpr ngtone
+    have mgetwo : m ≥ 2 := by
+      obtain mneq₀ := pos_nilpotencyClass_iff.mpr bNil
+      have mneq₁ : m ≠ 1 := by
+        by_contra hc
+        obtain hc' := nilpotencyClass_eq_one.mp hc
+        contradiction
+      omega
+    have cpow_aux : c ^ 2 = 0 := by
+      rw [show c = b ^ (m - 1) by rfl, ←pow_mul]
+      have bNil' : b ^ m = 0 := pow_nilpotencyClass bNil
+      have le_aux : m ≤ (m - 1) * 2 := by omega
+      exact pow_eq_zero_of_le le_aux bNil'
     have aux : (C c (σ := Fin 3)) ^ 2  = 0 := by
-      have aux' : c ^ 2 = 0 := by
-        rw [show c = b ^ (m - 1) by rfl, ←pow_mul]
-        have bNil' : b ^ m = 0 := pow_nilpotencyClass bNil
-        have mgetwo : m ≥ 2 := by
-          obtain mneq₀ := pos_nilpotencyClass_iff.mpr bNil
-          have mneq₁ : m ≠ 1 := by
-            by_contra hc
-            obtain hc' := nilpotencyClass_eq_one.mp hc
-            contradiction
-          omega
-        have le_aux : m ≤ (m - 1) * 2 := by omega
-        exact pow_eq_zero_of_le le_aux bNil'
-      simp [←map_pow, aux']
+      simp [←map_pow, cpow_aux]
+    have cpow_zero : c ^ p = 0 := by
+      exact pow_eq_zero_of_le (Nat.Prime.two_le pPrime) cpow_aux
+    have cTor : p * c = 0 := by
+      have aux' : p * b = 0 := by
+        simp [show b = (n / p) • r by rfl, ←mul_assoc]
+        have : (p : R) * ↑(n / p) = n := by
+          norm_cast
+          congr
+          exact Nat.mul_div_cancel' (Nat.minFac_dvd n)
+        obtain h₁ := addOrderOf_nsmul_eq_zero r
+        simp at h₁
+        rw [this, h₁]
+      have add_aux : m - 1 = 1 + (m - 2) := by
+        omega
+      rw [show c = b ^ (m - 1) by rfl, add_aux, pow_add]
+      ring_nf
+      simp [aux']
     have eq_aux₁ : c • ((Y₀ + Y₁ + c • (Y₀ * Y₁ ^ p)) * Y₂ ^ p) =
       c • Y₀ * (Y₂ (R := R)) ^ p + c • Y₁ * Y₂ ^ p := by
       simp [smul_eq_C_mul]
@@ -218,28 +239,71 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
       c • Y₀ * (Y₁ (R := R)) ^ p + c • Y₀ * Y₂ ^ p := by
       simp [smul_eq_C_mul]
       ring_nf
-      have eq_aux : (C c * Y₁ * Y₂ ^ p + Y₁ + Y₂) ^ p =
-        (Y₁ (R := R)) ^ p + Y₂ ^ p := by
-        rw [add_pow]
-        have almost_zero : ∀ m ∈ Finset.range (p + 1), m ≠ 0 ∧ m ≠ p →
-          (C c * (Y₁ (R := R)) * Y₂ ^ p + Y₁) ^ m * Y₂ ^ (p - m) *
-          (p.choose m : MvPowerSeries (Fin 3) R) = 0 := by
-          sorry
-        have pneq₀ : 0 ≠ p :=
+      have C_mul_p_aux : C c * (p : MvPowerSeries (Fin 3) R) =
+        C (p * c) := by
+        simp [mul_comm]
+      have eq_aux : (C c * (Y₁ (R := R)) * Y₂ ^ p + Y₁ + Y₂) ^ p =
+        ∑ m ∈ Finset.range (p + 1), Y₁ ^ m * Y₂ ^ (p - m)
+        * (p.choose m : MvPowerSeries (Fin 3) R) := by
+        rw [add_pow, Finset.sum_congr rfl]
+        intro i hi
+        simp at hi
+        by_cases hi_zero : i = 0
+        · simp [hi_zero]
+        by_cases hip : i = p
+        · simp [hip]
+          rw [add_pow, Finset.sum_eq_single 0]
+          · simp
+          · intro j hj₁ hj₂
+            by_cases hjp : j = p
+            · simp [hjp]
+              rw [mul_pow, mul_pow, ←map_pow]
+              simp [cpow_zero]
+            simp at hj₁
+            have pdvd : p ∣ p.choose j := Nat.Prime.dvd_choose_self pPrime (by omega) (by omega)
+            obtain ⟨t, ht⟩ := pdvd
+            rw [ht, show j = 1 + (j - 1) by omega, pow_add]
+            simp
+            calc
+              _ = Y₁ * Y₂ ^ p * (C c * Y₁ * Y₂ ^ p) ^ (j - 1)
+                * Y₁ ^ (p - (1 + (j - 1))) * (C c * ↑p * ↑t) := by
+                ring
+              _ = 0 := by
+                simp [C_mul_p_aux, cTor]
+          simp
+        have pdvd : p ∣ p.choose i := Nat.Prime.dvd_choose_self pPrime hi_zero (by omega)
+        obtain ⟨j, hj⟩ := pdvd
+        rw [add_pow, Finset.sum_mul, Finset.sum_mul, Finset.sum_eq_single 0]
+        · simp
+        · intro b hb₁ hb₂
+          nth_rw 1 [show b = b - 1 + 1 by omega]
+          rw [hj, pow_add]
+          calc
+            _ = (C c * Y₁ * Y₂ ^ p) ^ (b - 1) * (Y₁ * Y₂ ^ p) * Y₁ ^ (i - b)
+              * ↑(i.choose b) * Y₂ ^ (p - i) * ↑(C c * p * j) := by
+              simp
+              ring
+            _ = 0 := by
+              simp [C_mul_p_aux, cTor]
+        · simp
+      have pneq₀ : 0 ≠ p :=
           Ne.symm (Nat.Prime.ne_zero (Nat.minFac_prime_iff.mpr ngtone))
-        rw [Finset.sum_eq_add_of_mem 0 p (by simp) (by simp) pneq₀ almost_zero]
-        simp
-        rw [add_pow]
-        have almost_zero' : ∀ m ∈ Finset.range (p + 1), m ≠ 0 ∧ m ≠ p →
-          (C c * (Y₁) * Y₂ ^ p) ^ m * Y₁ ^ (p - m) *
-          (p.choose m : MvPowerSeries (Fin 3) R) = 0 := by
 
-          sorry
-        rw [Finset.sum_eq_add_of_mem 0 p (by simp) (by simp) pneq₀ almost_zero']
-        simp
-        sorry
-      rw [eq_aux]
-      ring_nf
+      rw [eq_aux, Finset.mul_sum, Finset.sum_eq_add_of_mem 0 p (by simp) (by simp) pneq₀]
+      · simp
+        ring
+      · intro i hi₁ ⟨hi₂, hi₃⟩
+        simp at hi₁
+        have pdvd : p ∣ p.choose i := Nat.Prime.dvd_choose_self pPrime (by omega) (by omega)
+        obtain ⟨t, ht⟩ := pdvd
+        rw [ht]
+        calc
+          _ = (Y₀ (R := R)) * (Y₁ ^ i * Y₂ ^ (p - i) *
+            ((C c (R := R)) * (p : MvPowerSeries (Fin 3) R))) * ↑t := by
+            simp
+            ring
+          _ = 0 := by
+            simp [C_mul_p_aux, cTor]
     simp_rw [eq_aux₁, eq_aux₂, smul_eq_C_mul]
     ring_nf
   }
@@ -261,7 +325,16 @@ theorem no_nonzero_torsion_nilpotent_of_comm :
     (subst subst_symm (counter_example_F r rNil rTor rNeq).toFun) := by
     simp [counter_example_F]
     rw [coeff_X, if_neg, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp))]
-
+    let n := addOrderOf r
+    have ngtone : n ≠ 1 := by
+      by_contra hn; simp [n] at hn; contradiction
+    let p := Nat.minFac n
+    let b := (n / p) • r
+    have bNil : IsNilpotent b := IsNilpotent.smul rNil (n / p)
+    let m := nilpotencyClass b
+    let c := b ^ (m - 1)
+    -- rw [show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
+    --   show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
     sorry
     · refine Finsupp.ne_iff.mpr ?_
       use 1
