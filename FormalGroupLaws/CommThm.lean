@@ -309,7 +309,8 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
   }
 
 
-
+/-- Given a coefficient ring `R`, if for any formal group law `F` over `R` is commutative,
+  then this ring does not have a nonzero element is nilpotent and `ℤ`-torsion at the same time. -/
 theorem no_nonzero_torsion_nilpotent_of_comm :
   (∀ (F : FormalGroup R), F.comm) →  ¬ (∃ r : R, IsNilpotent r ∧ addOrderOf r ≠ 0 ∧ r ≠ 0) := by
   contrapose
@@ -319,36 +320,47 @@ theorem no_nonzero_torsion_nilpotent_of_comm :
   simp
   use (counter_example_F r rNil rTor rNeq)
   intro hc
-  let p  := Nat.minFac (addOrderOf r)
+  let n := addOrderOf r
+  have ngtone : n ≠ 1 := by
+    by_contra hn; simp [n] at hn; contradiction
+  let p := Nat.minFac n
+  let b := (n / p) • r
+  have bNil : IsNilpotent b := IsNilpotent.smul rNil (n / p)
+  let m := nilpotencyClass b
+  let c := b ^ (m - 1)
   have coeff_neq : (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
     (counter_example_F r rNil rTor rNeq).toFun ≠ (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
     (subst subst_symm (counter_example_F r rNil rTor rNeq).toFun) := by
-    simp [counter_example_F]
-    rw [coeff_X, if_neg, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp))]
-    let n := addOrderOf r
-    have ngtone : n ≠ 1 := by
-      by_contra hn; simp [n] at hn; contradiction
-    let p := Nat.minFac n
-    let b := (n / p) • r
-    have bNil : IsNilpotent b := IsNilpotent.smul rNil (n / p)
-    let m := nilpotencyClass b
-    let c := b ^ (m - 1)
-    -- rw [show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
-    --   show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
-    sorry
+    simp [counter_example_F, show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
+      show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
+    have eq_aux : subst subst_symm (X₀ + X₁ + C c * X₀ * X₁ ^ p) =
+      (X₁) + X₀ + C c * X₁ * X₀ ^ p := by
+      simp_rw [subst_add HasSubst_subst_symm, ←smul_eq_C_mul, subst_mul HasSubst_subst_symm,
+        subst_smul HasSubst_subst_symm, subst_pow HasSubst_subst_symm, subst_X HasSubst_subst_symm]
+    rw [eq_aux, coeff_X, if_neg, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp))]
+    simp
+    rw [coeff_X, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp)), if_neg ]
+    simp [mul_assoc]
+    have eq_aux₁ : (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
+      ((X₀ (R := R)) * X₁ ^ p) = 1 := by
+      simp [X_pow_eq, coeff_add_mul_monomial, coeff_X]
+    have eq_aux₂ : (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
+      ((X₁ (R := R)) * X₀ ^ p) = 0 := by
+      rw [X_pow_eq, X₁, X, monomial_mul_monomial, coeff_monomial, if_neg]
+      refine Finsupp.ne_iff.mpr ?_
+      use 1
+      simp
+      exact Nat.Prime.ne_one (Nat.minFac_prime_iff.mpr ngtone)
+    simp [eq_aux₁, eq_aux₂]
+    exact pow_pred_nilpotencyClass bNil
+    · simp
+      exact (Nat.Prime.ne_zero (Nat.minFac_prime_iff.mpr ngtone))
     · refine Finsupp.ne_iff.mpr ?_
       use 1
       simp
       refine Nat.ne_zero_iff_zero_lt.mpr (Nat.minFac_pos (addOrderOf r))
   obtain hc' := MvPowerSeries.ext_iff.mp hc (Finsupp.single 0 1 + Finsupp.single 1 p)
   contradiction
-
-  -- rintro h_comm ⟨r, rNil, rTor, rneq⟩
-  -- obtain ⟨m, hm⟩ := rNil
-  -- have addOrder_ge_two : addOrderOf r ≥ 2 := by
-  --   have addOrder_neq : addOrderOf r ≠ 1 := by
-  --     by_contra hc; simp at hc; contradiction
-  --   omega
 
 
 
@@ -420,8 +432,8 @@ lemma lem1 : ringChar (Localization.Away (0 : R)) = 0 := by
   sorry
 
 
-/-- for any one dimensional formal group law `F(X, Y)`
-  over coefficient ring `R`, `F(X, Y)` is commutative formal group law if and
+/-- Given a coefficient ring `R`, for any one dimensional formal group law `F(X, Y)`
+  over `R`, `F(X, Y)` is commutative formal group law if and
   only if `R` does not contain a nonzero element which is both torsion and nilpotent.-/
 theorem comm_iff_no_nonzero_torsion_nilpotent :
   (∀ (F : FormalGroup R), F.comm) ↔ ¬ (∃ r : R,  IsNilpotent r ∧ addOrderOf r ≠ 0 ∧ r ≠ 0) := by
