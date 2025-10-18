@@ -10,8 +10,8 @@ open MvPowerSeries Classical
 
 variable {R : Type*} [CommRing R] {σ : Type*}
 
-theorem PowerSeries.constantCoeff_def (f : PowerSeries R) : PowerSeries.constantCoeff R f =
-  MvPowerSeries.constantCoeff Unit R f := by
+theorem PowerSeries.constantCoeff_def (f : PowerSeries R) : PowerSeries.constantCoeff f =
+  MvPowerSeries.constantCoeff f := by
   simp [PowerSeries.constantCoeff]
 
 lemma subst_self (f : MvPowerSeries (Fin 2) R):
@@ -43,31 +43,28 @@ theorem subst_assoc (f g: PowerSeries  R)
   simp [←PowerSeries.subst_comp_subst hg hh]
 
 lemma substDomain_aux {g : PowerSeries R}
- (hb3 : (PowerSeries.constantCoeff R) g = 0) (G₁ : FormalGroup R)
+ (hb3 : (PowerSeries.constantCoeff) g = 0) (G₁ : FormalGroup R)
   : PowerSeries.HasSubst (subst g.toMvPowerSeries G₁.toFun) := by
   refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
   rw [constantCoeff_subst]
   simp
-  have eq_zero_aux : ∀ (d : Fin 2 →₀ ℕ), (coeff R d) G₁.toFun *
-      ((constantCoeff (Fin 2) R) (PowerSeries.subst (X 0) g) ^ d 0 *
-    (constantCoeff (Fin 2) R) (PowerSeries.subst (X 1) g) ^ d 1) =
+  have eq_zero_aux : ∀ (d : Fin 2 →₀ ℕ), (coeff d) G₁.toFun *
+      (constantCoeff (PowerSeries.subst (X (0 : Fin 2) (R := R)) g (S := R)) ^ d 0 *
+    constantCoeff (PowerSeries.subst (X (1 : Fin 2)) g) ^ d 1) =
     0 := by
     intro d
     by_cases hd : d = 0
     · simp [hd, G₁.zero_constantCoeff]
     · by_cases hd₀ : d 0 ≠ 0
-      · have zero_aux : (constantCoeff (Fin 2) R) (PowerSeries.subst (X 0) g) ^ d 0 = 0 := by
+      · have zero_aux : constantCoeff (PowerSeries.subst (X (0 : Fin 2) (R := R)) g (S := R)) ^ d 0 = 0 := by
           rw [PowerSeries.constantCoeff_subst (PowerSeries.HasSubst.X 0)]
-          have zero_aux : ∀ (n : ℕ), (n ≠ 0) →  (constantCoeff (Fin 2) R) (X 0 ^ n) = 0 := by
-            intro n hn
-            simp [hn]
-          have zero_aux' : ∑ᶠ (d : ℕ), (PowerSeries.coeff R d) g • (constantCoeff (Fin 2) R) (X 0 ^ d) = 0 := by
+          have zero_aux' : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) g • constantCoeff ((X (0 : Fin 2) (R := R)) ^ d) = 0 := by
             conv =>
               rhs
               rw [←finsum_zero (α := ℕ)]
             congr
             funext n
-            simp [zero_aux n]
+            simp
             by_cases hn : n = 0
             simp [hn, hb3]
             simp [hn]
@@ -85,18 +82,15 @@ lemma substDomain_aux {g : PowerSeries R}
           simp [ha, hd₀]
           have ha' : a = 1 := by omega
           simp [ha', h']
-        have zero_aux : (constantCoeff (Fin 2) R) (PowerSeries.subst (X 1) g) ^ d 1 = 0 := by
+        have zero_aux : constantCoeff (PowerSeries.subst (X (1 : Fin 2) (R := R)) g) ^ d 1 = 0 := by
           rw [PowerSeries.constantCoeff_subst (PowerSeries.HasSubst.X 1)]
-          have zero_aux : ∀ (n : ℕ), (n ≠ 0) →  (constantCoeff (Fin 2) R) (X 1 ^ n) = 0 := by
-            intro n hn
-            simp [hn]
-          have zero_aux' : ∑ᶠ (d : ℕ), (PowerSeries.coeff R d) g • (constantCoeff (Fin 2) R) (X 1 ^ d) = 0 := by
+          have zero_aux' : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) g • constantCoeff ((X (1 : Fin 2) (R := R)) ^ d) = 0 := by
             conv =>
               rhs
               rw [←finsum_zero (α := ℕ)]
             congr
             funext n
-            simp [zero_aux n]
+            simp
             by_cases hn : n = 0
             simp [hn, hb3]
             simp [hn]
@@ -113,7 +107,7 @@ lemma substDomain_aux {g : PowerSeries R}
   intro x
   by_cases hx : x = 0
   simp [hx]
-  have const_zero : ((constantCoeff (Fin 2) R) (PowerSeries.subst (X 0) g)) = 0 := by
+  have const_zero : (constantCoeff (PowerSeries.subst (X (0 : Fin 2) (R := R)) g)) = 0 := by
     rw [PowerSeries.constantCoeff_subst (PowerSeries.HasSubst.X 0)]
     simp
     conv =>
@@ -127,7 +121,7 @@ lemma substDomain_aux {g : PowerSeries R}
   simp [const_zero]
   have hx' : x = 1 := by omega
   simp [hx']
-  have const_zero : ((constantCoeff (Fin 2) R) (PowerSeries.subst (X 1) g)) = 0 := by
+  have const_zero : (constantCoeff (PowerSeries.subst (X (1 : Fin 2) (R := R)) g)) = 0 := by
     rw [PowerSeries.constantCoeff_subst (PowerSeries.HasSubst.X 1)]
     simp
     conv =>
@@ -142,7 +136,7 @@ lemma substDomain_aux {g : PowerSeries R}
 
 
 lemma isIso_iff_substDomain_aux {A : Type*} [CommRing A] {g : PowerSeries A}
-  (hb3 : (PowerSeries.constantCoeff A) g = 0)
+  (hb3 : (PowerSeries.constantCoeff) g = 0)
   : HasSubst (g.toMvPowerSeries (σ := Fin 2))  := by
   -- apply substDomain_of_constantCoeff_nilpotent
   refine hasSubst_of_constantCoeff_zero ?_
@@ -150,7 +144,7 @@ lemma isIso_iff_substDomain_aux {A : Type*} [CommRing A] {g : PowerSeries A}
   intro x
   by_cases hx : x = 0
   · rw [hx]
-    have zero_aux : ((constantCoeff (Fin 2) A) (g.toMvPowerSeries 0)) = 0 := by
+    have zero_aux : (constantCoeff (g.toMvPowerSeries (0 : Fin 2))) = 0 := by
       rw [PowerSeries.constantCoeff_subst]
       conv =>
         rhs; rw [←finsum_zero (α := ℕ)]
@@ -162,7 +156,7 @@ lemma isIso_iff_substDomain_aux {A : Type*} [CommRing A] {g : PowerSeries A}
     simp [zero_aux]
   · have hx' : x = 1 := by omega
     rw [hx']
-    have zero_aux : ((constantCoeff (Fin 2) A) (g.toMvPowerSeries 1)) = 0 := by
+    have zero_aux : ((constantCoeff) (g.toMvPowerSeries (1 : Fin 2))) = 0 := by
       rw [PowerSeries.constantCoeff_subst]
       conv =>
         rhs; rw [←finsum_zero (α := ℕ)]
@@ -176,7 +170,7 @@ lemma isIso_iff_substDomain_aux {A : Type*} [CommRing A] {g : PowerSeries A}
 
 lemma isIso_iff_aux {A : Type*} [CommRing A] {G₁ G₂ : FormalGroup A}
   (α : FormalGroupHom G₁ G₂)  {g : PowerSeries A}
-  (hb3 : (PowerSeries.constantCoeff A) g = 0):
+  (hb3 : (PowerSeries.constantCoeff) g = 0):
   MvPowerSeries.subst (PowerSeries.toMvPowerSeries (PowerSeries.subst g α.toFun)) G₂.toFun =
   PowerSeries.subst (subst g.toMvPowerSeries G₁.toFun) α.toFun := by
   obtain h1 := α.hom
@@ -192,7 +186,7 @@ lemma isIso_iff_aux {A : Type*} [CommRing A] {G₁ G₂ : FormalGroup A}
     rw [←subst_comp_subst]
     simp only [Function.comp_apply]
     refine hasSubst_of_constantCoeff_zero ?_
-    simp [←MvPowerSeries.coeff_zero_eq_constantCoeff, G₁.zero_constantCoeff]
+    simp [G₁.zero_constantCoeff]
     exact isIso_iff_substDomain_aux hb3
   have eq_aux2 : subst g.toMvPowerSeries (subst  α.toFun.toMvPowerSeries G₂.toFun) =
     subst (PowerSeries.toMvPowerSeries (PowerSeries.subst g α.toFun)) G₂.toFun := by
@@ -229,7 +223,7 @@ lemma isIso_iff_aux {A : Type*} [CommRing A] {G₁ G₂ : FormalGroup A}
 
 
 theorem isIso_of_isUnit_coeff_one {G₁ G₂ : FormalGroup R} (α : FormalGroupHom G₁ G₂)
-  (h : IsUnit (PowerSeries.coeff R 1 α.toFun)) :
+  (h : IsUnit (PowerSeries.coeff 1 α.toFun)) :
   ∃ (α₁ : FormalGroupIso G₁ G₂), α₁.toHom = α := by
   obtain ⟨g, hg1, hg2, hg3⟩ := PowerSeries.exist_subst_inv α.toFun h α.zero_constantCoeff
   have has_subst₁ : PowerSeries.HasSubst g := PowerSeries.HasSubst.of_constantCoeff_zero' hg3
@@ -286,7 +280,7 @@ theorem isIso_of_isUnit_coeff_one {G₁ G₂ : FormalGroup R} (α : FormalGroupH
 
 
 theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupIso G₁ G₂) :
-  IsUnit (PowerSeries.coeff R 1 α.toHom.toFun) := by
+  IsUnit (PowerSeries.coeff 1 α.toHom.toFun) := by
   have subdomain_a : PowerSeries.HasSubst α.toHom.toFun := by
     apply PowerSeries.HasSubst.of_constantCoeff_zero
     rw [←α.toHom.zero_constantCoeff]
@@ -300,13 +294,13 @@ theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupI
   obtain coeff_eq := PowerSeries.ext_iff.mp h₁ 1
   simp at coeff_eq
 
-  have coeff_eq_mul : (PowerSeries.coeff R 1) (PowerSeries.subst α.invHom.toFun α.toHom.toFun)
-    = (PowerSeries.coeff R 1 α.toHom.toFun) • (PowerSeries.coeff R 1 α.invHom.toFun) := by
+  have coeff_eq_mul : (PowerSeries.coeff 1) (PowerSeries.subst α.invHom.toFun α.toHom.toFun)
+    = (PowerSeries.coeff 1 α.toHom.toFun) • (PowerSeries.coeff 1 α.invHom.toFun) := by
     unfold PowerSeries.coeff
 
     rw [PowerSeries.coeff_subst subdomain_b α.toHom.toFun (Finsupp.single (Unit.unit : Unit) 1)]
-    have supp_aux : ∑ᶠ (d : ℕ), (PowerSeries.coeff R d) α.toHom.toFun • (coeff R (Finsupp.single () 1)) (α.invHom.toFun ^ d)
-      = (PowerSeries.coeff R 1) α.toHom.toFun • (coeff R (Finsupp.single () 1)) (α.invHom.toFun ^ 1) := by
+    have supp_aux : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) α.toHom.toFun • (coeff (Finsupp.single () 1)) (α.invHom.toFun ^ d)
+      = (PowerSeries.coeff 1) α.toHom.toFun • (coeff (Finsupp.single () 1)) (α.invHom.toFun ^ 1) := by
       apply finsum_eq_single
       intro n hn
       by_cases hn_zero : n = 0
@@ -314,13 +308,13 @@ theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupI
         simp [hn_zero]
       · -- the case n ≠ 0
 
-        have coeff_zero : (coeff R (Finsupp.single () 1)) (α.invHom.toFun ^ n) = 0 := by
+        have coeff_zero : (coeff (Finsupp.single () 1)) (α.invHom.toFun ^ n) = 0 := by
           have aux : (Finsupp.single () 1) () = 1 := by simp
           rw [←PowerSeries.coeff_def]
           have hn_ge : n ≥ 2 := by omega
           rw [PowerSeries.coeff_pow]
           have zero_aux : ∀ l ∈ (Finset.range n).finsuppAntidiag 1,
-            ∏ i ∈ Finset.range n, (PowerSeries.coeff R (l i)) α.invHom.toFun = 0 := by
+            ∏ i ∈ Finset.range n, (PowerSeries.coeff (l i)) α.invHom.toFun = 0 := by
             intro l hl
             have exist_zero : ∃ i ∈ (Finset.range n), l i = 0 := by
               by_contra h'
@@ -359,8 +353,8 @@ theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupI
   unfold IsUnit
   let u : Rˣ :=
     {
-      val := (PowerSeries.coeff R 1) α.toHom.toFun
-      inv := (PowerSeries.coeff R 1) α.invHom.toFun
+      val := (PowerSeries.coeff 1) α.toHom.toFun
+      inv := (PowerSeries.coeff 1) α.invHom.toFun
       val_inv := by
         simp [coeff_eq_mul]
       inv_val := by
@@ -370,7 +364,7 @@ theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupI
   use u
 
 
-variable (f : PowerSeries R) (h : IsUnit (PowerSeries.coeff R 1 f)) (hc : PowerSeries.constantCoeff R f = 0)
+variable (f : PowerSeries R) (h : IsUnit (PowerSeries.coeff 1 f)) (hc : PowerSeries.constantCoeff f = 0)
 
 def subst_invFun : PowerSeries R := choose (PowerSeries.exist_subst_inv f h hc)
 
