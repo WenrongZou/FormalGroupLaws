@@ -7,6 +7,8 @@ open ValuativeRel MvPowerSeries Classical FormalGroup
 
 universe u
 
+-- TODO : use homogeneousComponent to define truncation of total degree
+
 variable {K : Type u} [Field K] [ValuativeRel K] [UniformSpace K]
   (π : 𝒪[K]) {R : Type*} [CommRing R]
 
