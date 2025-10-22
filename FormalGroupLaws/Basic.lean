@@ -49,7 +49,6 @@ variable {R : Type*} [CommRing R] {σ : Type*} (F : MvPowerSeries (Fin 2) R) (α
 
 noncomputable section
 
-
 open MvPowerSeries
 
 abbrev X₀ : MvPowerSeries (Fin 2) R := X (0 : Fin 2)
@@ -204,7 +203,7 @@ abbrev coeff_two (i j : ℕ) : Fin 2 →₀ ℕ :=
 
 /-- This is a map from `Fin 3` to `ℕ` mapping `0` to `i` and `1` to `j`, `2` to `k` which can be used
   to compute degree of `X^i*Y^j*Z^k`.  -/
-abbrev coeff_three (i j k: ℕ) : Fin 3 →₀ ℕ :=
+abbrev coeff_three (i j k : ℕ) : Fin 3 →₀ ℕ :=
   Finsupp.single 0 i + Finsupp.single 1 j + Finsupp.single 2 k
 
 
@@ -225,13 +224,36 @@ structure CommFormalGroup extends FormalGroup R where
   comm : toFun = MvPowerSeries.subst (subst_symm) toFun
 -- Commutativity F (X, Y) = F (Y, X)
 
+namespace FormalGroup
+
 /-- Given a formal group `F`, `F.comm` is a proposition that `F(X,Y) = F(Y,X)`-/
-def FormalGroup.comm (F : FormalGroup R) : Prop :=
+def comm (F : FormalGroup R) : Prop :=
   F.toFun = MvPowerSeries.subst subst_symm F.toFun
 
 /-- A commutative formal group law is a formal group law.-/
 instance : Coe (CommFormalGroup R) (FormalGroup R) where
   coe := CommFormalGroup.toFormalGroup
+
+
+abbrev subst_map₂ (f₀ f₁ : MvPowerSeries σ R) : Fin 2 → MvPowerSeries σ R
+  | ⟨0, _⟩ => f₀
+  | ⟨1, _⟩ => f₁
+
+/-- addition of two multi variate power series under the formal group `F` sense, namely
+  `f₀ + [F] f₁ := F (f₀, f₁)` -/
+abbrev add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries σ R :=
+  subst (subst_map₂ f₀ f₁) F.toFun
+
+
+/-- `f₀ +[F] f₁` means `FormalGroup.add F f₀ f₁`. -/
+scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 =>
+  add F f₀ f₁
+
+/-- The addition under the sense of formal group `F` is associative. -/
+theorem add_assoc (F : FormalGroup R) :
+  Y₀ +[F] Y₁ +[F] Y₂ = Y₀ +[F] (Y₁ +[F] Y₂) := by
+  rw [add, F.assoc]
+
 
 /-- Additive formal group law `Gₐ(X,Y) = X + Y`-/
 def Gₐ : CommFormalGroup R where
@@ -311,8 +333,10 @@ def Gₘ : CommFormalGroup R where
       subst_X HasSubst_subst_symm, subst_X HasSubst_subst_symm]
     simp [subst_symm]; ring
 
-
-def FormalGroup.map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
+/-- Given a algebra map `f : R →+* R'` and a formal group law `F` over `R`, then `f_* F` is a
+  formal group law formal group law over `R'`.
+  -/
+def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
   FormalGroup R' where
     toFun := MvPowerSeries.map _ F.toFun
     zero_constantCoeff := by
@@ -448,7 +472,7 @@ lemma has_subst_X₁ : HasSubst (subst_X₁ (R := R)) := by
 
 
 /-- The first coefficient of `F(X, 0)` is `1`. -/
-lemma FormalGroup.coeff_of_X₀_of_subst_X₀ :
+lemma coeff_of_X₀_of_subst_X₀ :
   PowerSeries.coeff 1 (subst subst_X₀ F.toFun) (R := R) = 1 := by
   simp [PowerSeries.coeff, coeff_subst has_subst_X₀]
   have eq_aux : ∀ (d : Fin 2 →₀ ℕ), d ≠ (Finsupp.single 0 1) → (coeff d) F.toFun *
@@ -490,7 +514,7 @@ lemma FormalGroup.coeff_of_X₀_of_subst_X₀ :
 
 
 /-- The first coefficient of `F(0, X)` is `1`. -/
-lemma FormalGroup.coeff_of_X₁_of_subst_X₁ :
+lemma coeff_of_X₁_of_subst_X₁ :
   PowerSeries.coeff 1 (subst subst_X₁ F.toFun) (R := R) = 1 := by
   simp [PowerSeries.coeff, coeff_subst has_subst_X₁]
   have eq_aux : ∀ (d : Fin 2 →₀ ℕ), d ≠ (Finsupp.single 1 1) → (coeff d) F.toFun *
@@ -526,7 +550,7 @@ lemma FormalGroup.coeff_of_X₁_of_subst_X₁ :
 
 
 /-- The constant coefficient of `F(X, 0)` is `0`. -/
-lemma FormalGroup.constantCoeff_of_subst_X₀ :
+lemma constantCoeff_of_subst_X₀ :
   PowerSeries.constantCoeff (subst subst_X₀ F.toFun) (R := R) = 0 := by
   rw [PowerSeries.constantCoeff, constantCoeff_subst has_subst_X₀]
   apply finsum_eq_zero_of_forall_eq_zero
@@ -549,7 +573,7 @@ lemma FormalGroup.constantCoeff_of_subst_X₀ :
 
 
 /-- The constant coefficient of `F(0, X)` is `0`. -/
-lemma FormalGroup.constantCoeff_of_subst_X₁ :
+lemma constantCoeff_of_subst_X₁ :
   PowerSeries.constantCoeff (subst subst_X₁ F.toFun) (R := R) = 0 := by
   rw [PowerSeries.constantCoeff, constantCoeff_subst has_subst_X₁]
   apply finsum_eq_zero_of_forall_eq_zero
@@ -827,21 +851,21 @@ lemma self_comp_aux' :
 
 
 /-- Given a power series `f`, if substition `f` into any power series is identity, then `f = X`-/
-lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : HasSubst f) :
+lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : PowerSeries.HasSubst f) :
   PowerSeries.subst f = id ↔ f = PowerSeries.X := by
   constructor
   · intro h
-    rw [←subst_X hf (R := R), h, id_eq]
+    rw [←PowerSeries.subst_X hf (R := R), h, id_eq]
   · intro h
     rw [h]
     funext g
-    simp [←map_algebraMap_eq_subst_X]
+    simp [←PowerSeries.map_algebraMap_eq_subst_X]
 
 
 /--
   Given a formal group law `F`, `F(X,0) = X`.
  -/
-theorem FormalGroup.subst_X_eq_X  :
+theorem subst_X_eq_X  :
   subst subst_X₀ F.toFun = PowerSeries.X (R := R) := by
   have h₀ : IsUnit (PowerSeries.coeff 1 (subst subst_X₀ F.toFun) (R := R)) := by
     simp [coeff_of_X₀_of_subst_X₀]
@@ -858,7 +882,7 @@ theorem FormalGroup.subst_X_eq_X  :
 
 
 /-- Given a formal group law `F`, `F(0, X) = X`. -/
-theorem FormalGroup.subst_X₁_eq_X₁ :
+theorem subst_X₁_eq_X₁ :
   subst subst_X₁ F.toFun = PowerSeries.X (R := R) := by
   have h₀ : IsUnit (PowerSeries.coeff 1 (subst subst_X₁ F.toFun) (R := R)) := by
     simp [coeff_of_X₁_of_subst_X₁]
@@ -883,11 +907,8 @@ structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   zero_constantCoeff : PowerSeries.constantCoeff toFun = 0
   hom : PowerSeries.subst (G₁.toFun) toFun = subst (R := R) toFun.toMvPowerSeries G₂.toFun
 
-end
-
 section FormalGroupIso
 
-open PowerSeries
 
 -- create a section
 
@@ -904,7 +925,7 @@ structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
   is called strict isomorphism if `a₁ = 1`.-/
 @[ext]
 structure FormalGroupStrictIso (G₁ G₂ : FormalGroup R) extends FormalGroupIso G₁ G₂ where
-  one_coeff_one : coeff 1 toHom.toFun = 1
+  one_coeff_one : PowerSeries.coeff 1 toHom.toFun = 1
 
 theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
   α = β ↔  α.toHom = β.toHom := by
@@ -919,7 +940,7 @@ theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : Forma
     have eq_aux₂ : (PowerSeries.subst β.toHom.toFun) ∘ (PowerSeries.subst β.invHom.toFun) = id := by
       exact β.left_inv
     have eq_aux₃ : α.invHom.toFun = β.invHom.toFun := by
-      obtain ⟨g, h₁, h₂⟩ := exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
+      obtain ⟨g, h₁, h₂⟩ := PowerSeries.exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
         β.toHom.zero_constantCoeff
       simp at h₂
       rw [h₂ _ eq_aux₁ α.invHom.zero_constantCoeff, h₂ _ eq_aux₂ β.invHom.zero_constantCoeff]

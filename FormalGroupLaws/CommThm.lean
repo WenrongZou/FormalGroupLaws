@@ -107,6 +107,7 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
 theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
   (h : ∃ (α : FormalGroupHom F F'), α.toFun ≠ 0) :
   F'.comm → F.comm := by
+
   sorry
 
 /-- Assume that `R` is an integral domain, any one dimensional formal group law is
