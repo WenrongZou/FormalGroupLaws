@@ -6,6 +6,7 @@ import Mathlib.GroupTheory.MonoidLocalization.Away
 import Mathlib.GroupTheory.OrderOfElement
 import Mathlib.Data.Nat.Choose.Dvd
 import Mathlib.RingTheory.TensorProduct.Basic
+import FormalGroupLaws.AddInverse
 
 noncomputable section
 
