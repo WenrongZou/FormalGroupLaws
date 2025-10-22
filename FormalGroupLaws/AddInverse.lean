@@ -3,7 +3,7 @@ import Mathlib.Algebra.Group.Pointwise.Finset.BigOperators
 
 noncomputable section
 
-variable {R : Type*} [CommRing R] (f g : PowerSeries R) (F : FormalGroup R) {σ : Type*}
+variable {R : Type*} [CommRing R] [Nontrivial R] (f g : PowerSeries R) (F : FormalGroup R) {σ : Type*}
   (φ : MvPowerSeries (Fin 2) R) (n : ℕ)
 
 
@@ -38,13 +38,14 @@ lemma Finset.sum_fin_eq_sum_range' {β : Type*} [AddCommMonoid β] {n : ℕ}  (f
   simp at hi
   rw [dif_pos hi]
 
+omit [Nontrivial R] in
 lemma HasSubst.addInv_aux : MvPowerSeries.HasSubst (subst_map₂ X (addInv_X F)) := by
   refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
   intro x; fin_cases x
   · simp [subst_map₂]
   · simp [subst_map₂, addInv_X]; rfl
 
-
+omit [Nontrivial R] in
 lemma addInv_trunc_aux :
   trunc (n + 1) (addInv_X F) = ∑ i : Fin (n + 1), Polynomial.C (addInv_aux F i.1)
   * Polynomial.X ^ i.1
@@ -61,13 +62,13 @@ lemma addInv_trunc_aux :
     simp [Polynomial.X_pow_eq_monomial, addInv_X]
 
 
-
+omit [Nontrivial R] in
 lemma coeff_subst_map₂_eq_subst_subst_map₂_trunc :
   coeff n (MvPowerSeries.subst (subst_map₂ f g) φ) =
   coeff n (MvPowerSeries.subst (subst_map₂ (trunc (n + 1) f) (trunc (n + 1) g)) φ) := by
 
   sorry
-
+omit [Nontrivial R] in
 lemma coeff_subst_addInv_trunc (hn : n ≠ 0) :
   coeff n (MvPowerSeries.subst (subst_map₂ X (addInv_X F)) F.toFun) =
   coeff n (MvPowerSeries.subst (subst_map₂ X (trunc (n + 1) (addInv_X F))) F.toFun) := by
@@ -77,15 +78,15 @@ lemma coeff_subst_addInv_trunc (hn : n ≠ 0) :
   simp [coeff_subst_map₂_eq_subst_subst_map₂_trunc, trunc_X_aux]
 
 
-lemma FormalGroup.coeff_X₀_pow {k : ℕ} (hk : k ≥ 2) :
-  MvPowerSeries.coeff (Finsupp.single 0 k) F.toFun = 0 := by
-  sorry
+-- lemma FormalGroup.coeff_X₀_pow {k : ℕ} (hk : k ≥ 2) :
+--   MvPowerSeries.coeff (Finsupp.single 0 k) F.toFun = 0 := by
+--   sorry
 
 
 
-lemma FormalGroup.coeff_X₁_pow {k : ℕ} (hk : k ≥ 2) :
-  MvPowerSeries.coeff (Finsupp.single 1 k) F.toFun = 0 := by
-  sorry
+-- lemma FormalGroup.coeff_X₁_pow {k : ℕ} (hk : k ≥ 2) :
+--   MvPowerSeries.coeff (Finsupp.single 1 k) F.toFun = 0 := by
+--   sorry
 
 
 
@@ -113,9 +114,61 @@ lemma coeff_n_aux (n : ℕ):
   | succ k ih =>
     by_cases hk₀ : k = 0
     ·
-      simp [hk₀]
+      simp [hk₀, show range 2 = {0, 1} by rfl]
 
-      sorry
+      rw [coeff, MvPowerSeries.coeff_subst]
+      unfold addInv_aux
+      simp [subst_map₂]
+      have supp_eq : (Function.support (fun d => (MvPowerSeries.coeff d) F.toFun
+        * (coeff 1) (X ^ d 0 * (-X) ^ d 1))) = {Finsupp.single (0 : Fin 2) 1,
+        Finsupp.single (1 : Fin 2) 1}
+        := by
+        refine Function.support_eq_iff.mpr ?_
+        constructor
+        · intro x hx
+          simp at hx
+          obtain hx | hx := hx
+          · simp [hx, F.lin_coeff_X]
+          · simp [hx, F.lin_coeff_Y]
+        intro  x hx
+        simp at hx
+        obtain ⟨neq₁, neq₂⟩ := hx
+        by_cases hx₀ : x 0 = 0
+        · by_cases hx₁ : x 1 = 0
+          · have x_zero : x = 0 := by
+              ext i; fin_cases i <;> simp [hx₀, hx₁]
+            simp [x_zero, F.zero_constantCoeff]
+          have xge₁ : x 1 ≥ 2 := by
+            by_contra hc
+            have xeq : x 1 = 1 := by omega
+            have xeq' : x = Finsupp.single 1 1 := by
+              ext i; fin_cases i <;> simp [hx₀, xeq]
+            contradiction
+          simp [hx₀, neg_pow X _]
+          rw [coeff_mul_X_pow', if_neg (by linarith)]
+          simp
+        rw [coeff_X_pow_mul']
+        by_cases hx₁ : x 0 = 1
+        · rw [if_pos (by linarith)]
+          by_cases hx₂ : x 1 = 0
+          · have xeq : x = Finsupp.single 0 1 := by
+              ext i; fin_cases i <;> simp [hx₂, hx₁]
+            contradiction
+          simp [hx₁, zero_pow hx₂]
+        have xgt : ¬ x 0 ≤ 1 := by omega
+        simp [if_neg xgt]
+      have supp_fin : (Function.support (fun d => (MvPowerSeries.coeff d) F.toFun
+        * (coeff 1) (X ^ d 0 * (-X) ^ d 1))).Finite := by
+        simp [supp_eq]
+      rw [finsum_eq_sum _ supp_fin]
+      simp_all
+      rw [sum_pair (Finsupp.ne_iff.mpr (by use 0; simp))]
+      simp [F.lin_coeff_X, F.lin_coeff_Y]
+      · refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
+        intro s; fin_cases s
+        · rw [addInv_aux, subst_map₂]; simp
+        · unfold addInv_aux subst_map₂
+          simp
     have has_subst₁ (m : ℕ) : MvPowerSeries.HasSubst (subst_map₂ X (∑ i ∈ range (m + 1),
       C (addInv_aux F i) * X ^ i)) := by
       refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
@@ -133,6 +186,14 @@ lemma coeff_n_aux (n : ℕ):
     simp [subst_map₂]
     generalize hB : ∑ i ∈ range (k + 1), C (addInv_aux F i) * X ^ i = B
     simp [sum_range_add, hB]
+    have constantCoeff_of_B : constantCoeff B = 0 := by
+      rw [←hB, map_sum]
+      apply sum_eq_zero
+      intro x hx
+      rw [←smul_eq_C_mul, constantCoeff_smul, map_pow, constantCoeff_X, smul_eq_mul]
+      by_cases hx' : x = 0
+      · simp [hx', show addInv_aux F 0 = 0 by rfl]
+      · simp [zero_pow hx']
     obtain has_subst' := has_subst₁ k
     rw [hB] at has_subst'
     have eq_aux {d : Fin 2 →₀ ℕ} : (coeff (k + 1)) (X ^ d 0 *
@@ -140,7 +201,66 @@ lemma coeff_n_aux (n : ℕ):
       + if d = Finsupp.single 1 1 then (addInv_aux F (k + 1)) else 0 := by
       split_ifs with hd
       · simp [hd, ←hB, coeff_X_pow]
-      sorry
+      rw [coeff_X_pow_mul', coeff_X_pow_mul']
+      split_ifs with hd₁
+      ·
+        by_cases hd₂ : d 0 = 0
+        ·
+          simp [hd₂]
+          rw [add_pow, map_sum, sum_eq_single (d 1)]
+          simp
+          · intro i hi₀ hi₁
+            simp at hi₀
+            rw [mul_pow, ←pow_mul, ←map_pow]
+            calc
+              _ = (coeff (k + 1)) (B ^ i * (C ((addInv_aux F (k + 1)) ^ (d 1 - i)) * X ^ ((k + 1)
+                * (d 1 - i))) * (C ((d 1).choose i : R))) := by
+                rfl
+              _ = (coeff (k + 1)) (C ((addInv_aux F (k + 1)) ^ (d 1 - i))
+                * (C ((d 1).choose i : R)) * B ^ i * X ^ ((k + 1) * (d 1 - i))) := by
+                ring_nf
+              _ = _ := by
+                rw [←map_mul, mul_assoc, coeff_C_mul, coeff_mul_X_pow']
+                by_cases hi' : i = d 1 - 1
+                · have d_minus : d 1 - i = 1 := by omega
+                  have ine_zero : i ≠ 0 := by
+                    by_contra hc
+                    have deq : d = Finsupp.single 1 1 := by
+                      ext s; fin_cases s <;> simp [hd₂]; omega
+                    contradiction
+                  simp [d_minus, constantCoeff_of_B, zero_pow ine_zero]
+                have d_minus_ge : d 1 - i ≥ 2 := by
+                  omega
+                have gt_aux : ¬ (k + 1) * (d 1 - i) ≤ k + 1 := by
+                  simp
+                  omega
+                rw [if_neg gt_aux]
+                simp
+          simp
+        -- have lt_aux : (k + 1 - d 0) < k + 1 := by omega
+        rw [add_pow, map_sum, sum_eq_single (d 1)]
+        · simp
+        · intro i hi₀ hi₁
+          simp at hi₀
+          rw [mul_pow, ←pow_mul, ←map_pow]
+          calc
+            _ = (coeff (k + 1 - d 0)) (B ^ i * (C ((addInv_aux F (k + 1)) ^ (d 1 - i)) * X ^ ((k + 1)
+              * (d 1 - i))) * (C ((d 1).choose i : R))) := by
+              rfl
+            _ = (coeff (k + 1 - d 0)) (C ((addInv_aux F (k + 1)) ^ (d 1 - i))
+              * (C ((d 1).choose i : R)) * B ^ i * X ^ ((k + 1) * (d 1 - i))) := by
+              ring_nf
+            _ = _ := by
+              rw [←map_mul, mul_assoc, coeff_C_mul, coeff_mul_X_pow', if_neg]
+              · simp
+              · simp
+                calc
+                  _ < k + 1 := by omega
+                  _ ≤ _ := by
+                    have le_aux : d 1 - i ≥ 1 := by omega
+                    exact Nat.le_mul_of_pos_right (k + 1) le_aux
+        · simp
+      simp
     simp_rw [eq_aux, mul_add]
     rw [finsum_add_distrib]
     nth_rw 2 [finsum_eq_single _ (Finsupp.single 1 1)]
@@ -161,90 +281,6 @@ lemma coeff_n_aux (n : ℕ):
         simp at hd
         simp [if_neg hd]
       exact Set.Finite.subset (Set.finite_singleton (Finsupp.single 1 1)) aux
-
-
-
-
-    -- have eq_aux {d : Fin 2 →₀ ℕ} : (coeff (k + 1)) (X ^ d 0 *
-    --   (B + C (addInv_aux F (k + 1)) * X ^ (k + 1)) ^ d 1) = if d = Finsupp.single 1 1
-    --   then (coeff (k + 1)) (X ^ d 0 * B ^ d 1) + (addInv_aux F (k + 1)) else (coeff (k + 1)) (X ^ d 0 * B ^ d 1) := by
-    --   split_ifs with hd
-    --   · simp [hd, ←hB, coeff_X_pow]
-    --   sorry
-    -- sorry
-    -- sorry
-    -- sorry
-
-    /- -- by_cases hd₀ : d 0 = 0
-      -- · simp [hd₀]
-      --   rw [add_pow, map_sum, sum_eq_single (d 1)]
-      --   · simp
-      --   · intro i hi₁ hi₂
-
-
-
-      -- rw [coeff_mul, coeff_mul]
-      -- simp_rw [coeff_X_pow]
-      -- rw [sum_congr rfl]
-      -- intro x hx
-
-      -- by_cases hx₁ : x.1 = d 0
-      -- · simp [if_pos hx₁]
-      --   simp at hx
-      --   rw [add_pow, map_sum, sum_eq_single (d 1)]
-      --   · simp
-      --   · simp
-      --     intro i hi₀ hi₁
-      --     rw [mul_pow, ←mul_assoc, mul_comm (B ^ i), ←map_pow, mul_assoc, mul_assoc,
-      --       coeff_C_mul, ←pow_mul, ]
-      --     have eq_aux : (coeff x.2) (B ^ i * (X ^ ((k + 1) * (d 1 - i)))) = 0 := by
-      --       rw [coeff_mul_X_pow', if_neg]
-      --       simp
-      --       have d_aux : d 1 - i ≥ 1 := by
-      --         omega-/
-
-
-      -- by_cases hd₀ : d 1 = 0
-      -- · simp [hd₀]
-
-      -- rw [coeff_mul, coeff_mul]
-      -- simp_rw [coeff_X_pow]
-      -- rw [sum_congr rfl]
-      -- intro x hx
-      -- by_cases hx₁ : x.1 = d 0
-      -- · simp [if_pos hx₁]
-      --   simp at hx
-      --   rw [add_pow, map_sum, sum_eq_single (d 1)]
-      --   · simp
-      --   · simp
-      --     intro i hi₀ hi₁
-      --     rw [mul_pow, ←mul_assoc, mul_comm (B ^ i), ←map_pow, mul_assoc, mul_assoc,
-      --       coeff_C_mul, ←pow_mul, ]
-      --     have eq_aux : (coeff x.2) (B ^ i * (X ^ ((k + 1) * (d 1 - i)))) = 0 := by
-      --       rw [coeff_mul_X_pow', if_neg]
-      --       simp
-      --       have d_aux : d 1 - i ≥ 1 := by
-      --         omega
-
-
-        --     sorry
-
-        --   rw [coeff_mul_X_pow']
-
-        --   sorry
-        -- sorry
-
-    --   simp [if_neg hx₁]
-    -- simp_rw [eq_aux]
-
-    -- have eq_aux {d : Fin 2 →₀ ℕ} : (MvPowerSeries.coeff d) F.toFun * (coeff (k + 1)) (X ^ d 0 *
-    --   (B + C (addInv_aux F (k + 1)) * X ^ (k + 1)) ^ d 1) = if d = Finsupp.single 1 1
-    --   then (MvPowerSeries.coeff d) F.toFun * (addInv_aux F (k + 1)) else
-    --   (MvPowerSeries.coeff d) F.toFun * (coeff (k + 1)) (X ^ d 0 * B ^ d 1) := by
-    --   split_ifs with hd₁
-    --   · simp [hd₁, ←hB, coeff_X_pow]
-    --   ·
-    --     sorry
 
 
 /- Given a formal group law `F` over coefficient ring `R`, there exist a power series
@@ -296,160 +332,3 @@ def addInv (F : FormalGroup R) (f : MvPowerSeries σ R) : MvPowerSeries σ R :=
 /-- Given any formal group law `F`, `X + [F] addInv (X) = 0`. -/
 theorem FormalGroup.X_add_addInv_X_eq_zero : X +[F] addInv_X (F) = 0 := by
   simp [add, subst_addInv_eq_zero]
-
-
-
-
-
-
-
-
-
-
-  -- have aux : ∑ (x : Fin (n + 1)), ((Polynomial.C (addInv_aux F ↑x)) : PowerSeries R)
-  --   * ↑Polynomial.X ^ ↑x
-  --   ∑ (x : Fin (n + 1)), ((Polynomial.C (addInv_aux F ↑x)) * Polynomial.X ^ ↑x : PowerSeries R) := sorry
-
-
-  -- obtain (_|_|n) := n
-  -- · simp [addInv]
-  -- · simp [addInv, trunc, Finset.sum_range, X_eq]
-  --   unfold addInv_aux
-  --   simp
-  -- ·
-  --   simp [trunc]
-  --   rw [Finset.sum_range_add]
-
-
-
-
-
-
-
-
-
-
-  -- rw [← this, coeff_subst', coeff_subst']
-  -- · congr! 3 with m
-  --   generalize hB : (∑ i : Fin (n + 1), (C R) (substInvFun P ↑i) * X ^ i.1) = B
-  --   have : X ^ (n + 1) ∣ mk (substInvFun P) - B := by
-  --     rw [X_pow_dvd_iff]
-  --     intro m hm
-  --     simp +contextual [← hB, coeff_X_pow, Finset.sum_eq_single (⟨m, hm⟩ : Fin (n + 1)),
-  --       Fin.ext_iff, @eq_comm _ m]
-  --   obtain ⟨Q, hQ⟩ := this.trans (sub_dvd_pow_sub_pow _ _ m)
-  --   simp [substInv, sub_eq_iff_eq_add.mp hQ, coeff_X_pow_mul']
-  -- · simp [HasSubst, X, zero_pow_eq, C, substInvFun]
-  -- · show IsNilpotent (mk (substInvFun P) 0)
-  --   simp [HasSubst, mk, substInvFun]
-
-
-
--- lemma addInv_aux_zero :
---   (addInv_aux F 0) = (0, 0) := by
---   unfold addInv_aux
---   simp
-
--- lemma addInv_aux_one :
---   (addInv_aux F 1) = (-1, -PowerSeries.X) := by
---   unfold addInv_aux
---   simp
-
--- lemma addInv_aux_n (n : ℕ) (hn : n ≠ 0) :
---   (addInv_aux F (n + 1)) = (- (PowerSeries.coeff (n + 1 : ℕ) (MvPowerSeries.subst (addInv_map ((addInv_aux F n).2)) F.toFun)),
---     (addInv_aux F n ).2 + PowerSeries.C (- (PowerSeries.coeff (n + 1 : ℕ) (subst (addInv_map (addInv_aux F n).2) F.toFun))) * (PowerSeries.X ^ (n + 1))) := by
---   conv =>
---     lhs
---     unfold addInv_aux
---   simp
-
--- lemma addInv_aux_trunc (n : ℕ)
---   : let ι : PowerSeries R :=  PowerSeries.mk (fun n => (addInv_aux F n).1)
---   PowerSeries.trunc' n ι = (addInv_aux F n).2
---   := by sorry
-
-
-
-
--- lemma addInv_aux_trunc₁ {A : Type*} [CommRing A] (F : FormalGroup A) (n : ℕ) (hn : n ≥ 1)
---   :
---   PowerSeries.trunc'_map n (addInv_map AddInv)  = (addInv_map (addInv_aux F n).2) := by
---   unfold addInv_map
---   simp
---   funext x
---   by_cases hx : x = 0
---   unfold PowerSeries.trunc'_map
---   simp [hx]
---   unfold PowerSeries.trunc'
---   ext m
---   simp [PowerSeries.coeff_truncFun']
---   intro hm₁
---   have hm' : m > 1 := by linarith
---   rw [PowerSeries.coeff_X, if_neg]
---   linarith
---   have hx : x = 1 := by omega
---   unfold PowerSeries.trunc'_map
---   simp [hx]
---   rw [addInv_aux_trunc]
-
--- -- lemma trunc'_of_mk {A : Type*} [CommRing A] (f : ℕ → A) (n : ℕ) :
--- --   PowerSeries.trunc' (n + 1) (PowerSeries.mk f) = PowerSeries.trunc'
--- --   n (PowerSeries.mk f) + (Polynomial.C (f (n + 1))) * (Polynomial.X) ^ (n + 1)
-
-
--- theorem inv_exist {A : Type*} [CommRing A] {F : FormalGroup A} :
--- ∃! (ι : PowerSeries A), PowerSeries.coeff  A 1 ι = - 1 ∧
--- MvPowerSeries.subst (addInv_map ι) F.toFun  = 0 := by
---   let ι : PowerSeries A :=  PowerSeries.mk (fun n => (addInv_aux F n).1)
---   use ι
---   constructor
---   -- prove `ι` satisfies the property
---   ·
---     constructor
---     unfold ι
---     unfold addInv_aux
---     simp
---     apply PowerSeries.eq_of_forall_trunc'_eq
---     intro n
---     have hsub : SubstDomain (addInv_map ι) := by sorry
---     rw [PowerSeries.trunc'_of_subst_mv _ _ _ hsub]
---     induction n with
---     | zero =>
---       simp
-
-
-
-
---       sorry
---     | succ k ih =>
---       by_cases hk : k = 0
---       rw [hk]
---       simp
-
---       sorry
---       simp
---       unfold ι
---       rw [addInv_aux_trunc₁ F (k + 1) (by omega)]
---       have aux₁ : (PowerSeries.trunc' (k + 1))
---         (subst (addInv_map (addInv_aux F (k + 1)).2) F.toFun) =
---         (PowerSeries.trunc' k (subst (addInv_map (addInv_aux F (k + 1)).2) F.toFun)) + Polynomial.C (PowerSeries.coeff A (k + 1) (subst (addInv_map (addInv_aux F (k + 1)).2) F.toFun)) * Polynomial.X ^ (k + 1) := by
---           sorry
---       rw [aux₁, PowerSeries.trunc'_of_subst_mv]
---       have aux₂ : (PowerSeries.trunc'_map k (addInv_map (addInv_aux F (k + 1)).2))
---         =  (PowerSeries.trunc'_map k (addInv_map ι)) := by sorry
---       rw [aux₂, ih]
---       simp
---       have zero_aux : (PowerSeries.coeff A (k + 1))
---         (subst (addInv_map (addInv_aux F (k + 1)).2) F.toFun) = 0 := by sorry
---       rw [zero_aux]
---       simp
---       -- prove substDomain
---       refine substDomain_of_constantCoeff_zero ?_
---       intro s
-
---       sorry
-
-
---   -- prove the uniqueness of `ι`.
---   ·
---     sorry
