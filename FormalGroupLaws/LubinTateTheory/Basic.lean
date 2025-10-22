@@ -739,24 +739,6 @@ theorem ScalarHom.subst_eq (f g : LubinTateF π) (a : 𝒪[K]) :
 
 -- #check [ a ] π f g
 
-
-def FormalGroup.add_aux (f₀ f₁ : MvPowerSeries σ R) : Fin 2 → MvPowerSeries σ R
-  | ⟨0, _⟩ => f₀
-  | ⟨1, _⟩ => f₁
-
-/-- addition of two multi variate power series under the formal group `F` sense, namely
-  `f₀ + [F] f₁ := F (f₀, f₁)` -/
-def FormalGroup.add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries σ R :=
-  subst (FormalGroup.add_aux f₀ f₁) F.toFun
-
-namespace FormalGroup
-
-/-- `f₀ +[F] f₁` means `FormalGroup.add F f₀ f₁`. -/
-scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 =>
-  FormalGroup.add F f₀ f₁
-
-end FormalGroup
-
 open scoped FormalGroup
 
 
