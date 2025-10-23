@@ -2,7 +2,7 @@
 
 Ongoing project (Master thesis project) formalizing formal group laws. 
 
-Adivisor : María Inés de Frutos-Fernández
+Adivisor : Dr. María Inés de Frutos-Fernández and Prof. Floris van Doorn
 
 Reference:
 
