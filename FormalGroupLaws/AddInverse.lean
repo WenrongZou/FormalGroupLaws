@@ -61,13 +61,57 @@ lemma addInv_trunc_aux :
     rw [sum_range_add _ (k + 1) 1]
     simp [Polynomial.X_pow_eq_monomial, addInv_X]
 
+omit [Nontrivial R] in
+lemma HasSubst.has_subst_map₂ (hf : constantCoeff f = 0) (hg : constantCoeff g = 0) :
+  MvPowerSeries.HasSubst (subst_map₂ f g) := by
+  refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
+  intro s; fin_cases s <;> simp [hf, hg]
+
 
 omit [Nontrivial R] in
-lemma coeff_subst_map₂_eq_subst_subst_map₂_trunc :
+lemma coeff_subst_map₂_eq_subst_subst_map₂_trunc (hf : constantCoeff f = 0)
+  (hg : constantCoeff g = 0) :
   coeff n (MvPowerSeries.subst (subst_map₂ f g) φ) =
   coeff n (MvPowerSeries.subst (subst_map₂ (trunc (n + 1) f) (trunc (n + 1) g)) φ) := by
+  rw [coeff, MvPowerSeries.coeff_subst (HasSubst.has_subst_map₂ _ _ hf hg),
+    MvPowerSeries.coeff_subst (HasSubst.has_subst_map₂ _ _ (by simp [coeff_trunc, hf])
+    (by simp [coeff_trunc, hg]))]
+  simp; apply finsum_congr
+  intro d
+  simp [subst_map₂]
+  congr! 1
+  rw [coeff_mul, coeff_mul, sum_congr rfl]
+  intro x hx
+  simp at hx
+  congr! 1
+  · rw [coeff_pow, coeff_pow, sum_congr rfl]
+    simp
+    intro l hl₁ hl₂
+    rw [prod_congr rfl]
+    intro s hs
+    have aux : l s < n + 1 := by
+      calc
+        _ ≤ (range (d 0)).sum ⇑l := by
+          exact Finset.single_le_sum_of_canonicallyOrdered hs
+        _ < n + 1 := by
+          linarith
+    rw [coeff_trunc, if_pos aux]
+  · rw [coeff_pow, coeff_pow, sum_congr rfl]
+    simp
+    intro l hl₁ hl₂
+    rw [prod_congr rfl]
+    intro s hs
+    have aux : l s < n + 1 := by
+      calc
+        _ ≤ (range (d 1)).sum ⇑l := by
+          exact Finset.single_le_sum_of_canonicallyOrdered hs
+        _ < n + 1 := by
+          linarith
+    rw [coeff_trunc, if_pos aux]
 
-  sorry
+
+
+
 omit [Nontrivial R] in
 lemma coeff_subst_addInv_trunc (hn : n ≠ 0) :
   coeff n (MvPowerSeries.subst (subst_map₂ X (addInv_X F)) F.toFun) =
@@ -75,7 +119,12 @@ lemma coeff_subst_addInv_trunc (hn : n ≠ 0) :
   have trunc_X_aux : trunc (n + 1) X = Polynomial.X (R := R):= by
     refine trunc_X_of ?_
     omega
-  simp [coeff_subst_map₂_eq_subst_subst_map₂_trunc, trunc_X_aux]
+  have constant_aux : constantCoeff (addInv_X F) = 0 := by
+    simp [addInv_X]
+    rfl
+  rw [coeff_subst_map₂_eq_subst_subst_map₂_trunc _ _ _ _ constantCoeff_X constant_aux]
+  simp [ trunc_X_aux]
+
 
 
 -- lemma FormalGroup.coeff_X₀_pow {k : ℕ} (hk : k ≥ 2) :
