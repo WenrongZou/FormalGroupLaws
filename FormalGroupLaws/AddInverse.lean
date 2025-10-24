@@ -9,19 +9,8 @@ variable {R : Type*} [CommRing R] [Nontrivial R] (f g : PowerSeries R) (F : Form
 
 open PowerSeries FormalGroup Finset
 
--- abbrev addInv_map : Fin 2 → PowerSeries R
---   | ⟨0, _⟩ => PowerSeries.X
---   | ⟨1, _⟩ => f
 
--- abbrev addInv_aux (F : FormalGroup R) : ℕ → R × (PowerSeries R)
---   | 0 => (0, 0)
---   | 1 => (-1, -PowerSeries.X)
---   | n + 1 => (- (PowerSeries.coeff (n + 1 : ℕ) (MvPowerSeries.subst
---     (addInv_map ((addInv_aux F n).2)) F.toFun)), (addInv_aux F n ).2 + PowerSeries.C
---     (- (PowerSeries.coeff (n + 1 : ℕ) (subst (addInv_map (addInv_aux F n).2) F.toFun)))
---     * (PowerSeries.X ^ (n + 1)))
-
-abbrev addInv_aux (F : FormalGroup R): ℕ → R
+abbrev FormalGroup.addInv_aux (F : FormalGroup R): ℕ → R
   | 0 => 0
   | 1 => -1
   | n + 1 => - (coeff (n + 1 : ℕ) (MvPowerSeries.subst
@@ -29,7 +18,7 @@ abbrev addInv_aux (F : FormalGroup R): ℕ → R
 
 /-- Given a formal group law `F` over coefficient ring `R`, there exist unique power series `ι`,
   such that `F(X, ι(X)) = 0`. -/
-def addInv_X := mk (fun n => (addInv_aux F n))
+def FormalGroup.addInv_X := PowerSeries.mk (fun n => (FormalGroup.addInv_aux F n))
 
 lemma Finset.sum_fin_eq_sum_range' {β : Type*} [AddCommMonoid β] {n : ℕ}  (f : ℕ → β):
   ∑ i : Fin n, f i.1 = ∑ i ∈ range n, f i := by
@@ -333,7 +322,7 @@ lemma coeff_n_aux (n : ℕ):
 
 
 /- Given a formal group law `F` over coefficient ring `R`, there exist a power series
-  `addInv F`, such that `F(X, (addInv F)) = 0`. -/
+  `addInv F`, such that `F(X, (addInv_X F)) = 0`. -/
 theorem subst_addInv_eq_zero : MvPowerSeries.subst (subst_map₂ X (addInv_X F)) F.toFun = 0 := by
   ext n
   by_cases hn : n = 0

@@ -106,7 +106,7 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
   formal group law over `R`, if `F'(X,Y)` is commutative and there exist a nonzero
   homomorphism from `F(X,Y)` to `F'(X,Y)`, then `F(X,Y)` is commutative.-/
 theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
-  (h : ∃ (α : FormalGroupHom F F'), α.toFun ≠ 0) :
+  (α : FormalGroupHom F F') (ha : α.toFun ≠ 0) :
   F'.comm → F.comm := by
 
   sorry
@@ -115,16 +115,15 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
   commutative. -/
 theorem comm_of_isDomain [IsDomain R] : F.comm := by
   by_contra hc
-  obtain h | h := exists_nonzero_hom_to_Ga_or_Gm_of_not_comm F hc
-  · exact hc ((comm_of_exists_nonzero_hom_to_comm _ _ h ) Gₐ.comm)
-  · exact hc ((comm_of_exists_nonzero_hom_to_comm _ _ h ) Gₘ.comm)
+  obtain ⟨α, ha⟩| ⟨α, ha⟩ := exists_nonzero_hom_to_Ga_or_Gm_of_not_comm F hc
+  · exact hc ((comm_of_exists_nonzero_hom_to_comm _ _ α ha ) Gₐ.comm)
+  · exact hc ((comm_of_exists_nonzero_hom_to_comm _ _ α ha ) Gₘ.comm)
 
 
 /-- This is a counter example that given `r` is a nonzero nilpotent and `ℤ-torsion`,
   there is a non-commutative formal group law. -/
 def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
-  (rNeq : r ≠ 0) :
-  FormalGroup R :=
+  (rNeq : r ≠ 0) : FormalGroup R :=
   let n := addOrderOf r
   have ngtone : n ≠ 1 := by
     by_contra hn; simp [n] at hn; contradiction
