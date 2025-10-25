@@ -36,8 +36,8 @@ theorem constructive_lemma_poly
   as a multi variate power series with two variables, then `g (X, Y) ≡ g₂ (X, Y) mod (deg 2)`
   as a multi variate power series with three variables, where `X, Y` is first two variables.-/
 lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0) :
-  truncTotalDegHom 2 (subst subst_fir_aux g) =
-  truncTotalDegHom 2 (subst (subst_fir_aux (R := R)) (truncTotalDegHom 2 g) (R := R)) := by
+  truncTotalDegHom 2 (subst ![Y₀, Y₁] g) =
+  truncTotalDegHom 2 (subst ![Y₀, Y₁ (R := R)] (truncTotalDegHom 2 g) (R := R)) := by
 
   sorry
 
@@ -45,24 +45,24 @@ lemma truncTotalDegHom_of_subst' (g : MvPowerSeries (Fin 2) R) (hg : constantCoe
   as a multi variate power series with two variables, then `g (Y, Z) ≡ g₂ (Y, Z) mod (deg 2)`
   as a multi variate power series with three variables, where `Y, Z` is last two variables.-/
 lemma truncTotalDegHom_of_subst₂' (g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0):
-  truncTotalDegHom 2 (subst subst_sec_aux g) =
-  truncTotalDegHom 2 (subst (subst_sec_aux (R := R)) (truncTotalDegHom 2 g) (R := R) ):= by
+  truncTotalDegHom 2 (subst ![Y₁, Y₂] g) =
+  truncTotalDegHom 2 (subst ![Y₁, Y₂ (R := R)] (truncTotalDegHom 2 g) (R := R) ):= by
   sorry
 
 /-- Given `f, g` to be multi variate power series with two variable, let
   `f₂(X, Y) ≡ f(X,Y) mod (deg 2)`, and the constant coefficient of `g` is zero,
   then `f (g (X, Y), Z) ≡ f₂ (g (X, Y), Z) mod (deg 2)` -/
 lemma truncTotalDegHom_of_subst (f g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0) :
-  truncTotalDegHom 2 (subst (subst_fir g) f) =
-  truncTotalDegHom 2 (subst (subst_fir g) (truncTotalDegHom 2 f) (R := R)) := by
+  truncTotalDegHom 2 (subst ![subst ![Y₀, Y₁] g, Y₂] f) =
+  truncTotalDegHom 2 (subst ![subst ![Y₀, Y₁] g, Y₂ (R := R)] (truncTotalDegHom 2 f) (R := R)) := by
   sorry
 
 /-- Given `f, g` to be multi variate power series with two variable, let
   `f₂(X, Y) ≡ f(X,Y) mod (deg 2)`, and the constant coefficient of `g` is zero,
   then `f (X, g (Y, Z)) ≡ f₂ (X, g (Y, Z)) mod (deg 2)` -/
 lemma truncTotalDegHom_of_subst₂ (f g : MvPowerSeries (Fin 2) R) (hg : constantCoeff g = 0) :
-  truncTotalDegHom 2 (subst (subst_sec g) f) =
-  truncTotalDegHom 2 (subst (subst_sec g) (truncTotalDegHom 2 f) (R := R)) := by
+  truncTotalDegHom 2 (subst ![Y₀, subst ![Y₁, Y₂] g] f) =
+  truncTotalDegHom 2 (subst ![Y₀, subst ![Y₁, Y₂ (R := R)] g] (truncTotalDegHom 2 f) (R := R)) := by
   sorry
 
 theorem MvPowerSeries.truncTotalDeg.PowerSeries_subst_n (f : MvPowerSeries σ R) (g : PowerSeries R) (n : ℕ)
