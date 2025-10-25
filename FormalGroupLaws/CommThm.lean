@@ -29,8 +29,8 @@ theorem comm_iff_coeff_symm :
   -- forward direction
   · intro h i j
     obtain h' := MvPowerSeries.ext_iff.mp h (coeff_two i j)
-    rw [h', coeff_subst HasSubst_subst_symm]
-    simp [subst_symm]
+    rw [h', coeff_subst has_subst_swap]
+    simp
     have aux : (coeff (coeff_two i j)) ((X₁ (R := R)) ^ j * X₀ ^ i)  = 1 := by
       simp [coeff_two, X_pow_eq, monomial_mul_monomial]
       rw [coeff_monomial, if_pos (by rw [add_comm])]
@@ -52,15 +52,15 @@ theorem comm_iff_coeff_symm :
       refine Finsupp.ext ?_
       intro a; fin_cases a; all_goals simp [coeff_two]
     nth_rw 1 [n_eq]
-    rw [h, coeff_subst HasSubst_subst_symm, finsum_eq_single _  (coeff_two (n 1) (n 0))]
-    · simp [subst_symm]
+    rw [h, coeff_subst has_subst_swap, finsum_eq_single _  (coeff_two (n 1) (n 0))]
+    · simp
       have aux : (coeff n) ((X₁ (R := R)) ^ n 1 * X₀ ^ n 0) = 1 := by
         simp [X_pow_eq, monomial_mul_monomial]
         rw [coeff_monomial, if_pos]
         refine Finsupp.ext ?_
         intro a; fin_cases a; all_goals simp
       simp [aux]
-    · intro d hd; simp [subst_symm]
+    · intro d hd; simp
       have aux : (coeff n) ((X₁ (R := R)) ^ d 0 * X₀ ^ d 1) = 0 := by
         simp [X_pow_eq, monomial_mul_monomial]
         rw [coeff_monomial, if_neg]
@@ -188,18 +188,18 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
     simp only
     rw [show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
       show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
-    obtain has_subst₁ := has_subst_fir (X₀ + X₁ + c • X₀ * X₁ ^ p) (R := R) (by simp)
-    obtain has_subst₂ := has_subst_sec (X₀ + X₁ + c • (X₀ * X₁ ^ p)) (R := R)  (by simp)
+    obtain has_subst₁ := has_subst_aux₁ (X₀ + X₁ + c • X₀ * X₁ ^ p) (R := R) (by simp)
+    obtain has_subst₂ := has_subst_aux₂ (X₀ + X₁ + c • (X₀ * X₁ ^ p)) (R := R)  (by simp)
     rw [←smul_eq_C_mul, subst_add has_subst₁, subst_add has_subst₁, subst_mul has_subst₁, subst_X has_subst₁,
       subst_X has_subst₁, subst_smul has_subst₁, subst_X has_subst₁,
       subst_pow has_subst₁, subst_X has_subst₁]
-    simp [subst_fir]
-    simp_rw [subst_add has_subst_fir_aux, subst_smul has_subst_fir_aux, subst_mul has_subst_fir_aux,
-      subst_pow has_subst_fir_aux, subst_X has_subst_fir_aux, subst_fir_aux]
+    simp
+    simp [subst_add has_subst_XY, subst_smul has_subst_XY, subst_mul has_subst_XY,
+      subst_pow has_subst_XY, subst_X has_subst_XY]
     simp_rw [subst_add has_subst₂, subst_smul has_subst₂, subst_mul has_subst₂,
-      subst_pow has_subst₂, subst_X has_subst₂, subst_sec, subst_add has_subst_sec_aux,
-      subst_smul has_subst_sec_aux, subst_mul has_subst_sec_aux, subst_pow has_subst_sec_aux,
-      subst_X has_subst_sec_aux, subst_sec_aux]
+      subst_pow has_subst₂, subst_X has_subst₂, subst_add has_subst_YZ,
+      subst_smul has_subst_YZ, subst_mul has_subst_YZ, subst_pow has_subst_YZ,
+      subst_X has_subst_YZ]
     have pPrime : p.Prime := Nat.minFac_prime_iff.mpr ngtone
     have mgetwo : m ≥ 2 := by
       obtain mneq₀ := pos_nilpotencyClass_iff.mpr bNil
@@ -306,6 +306,7 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
             ring
           _ = 0 := by
             simp [C_mul_p_aux, cTor]
+    simp
     simp_rw [eq_aux₁, eq_aux₂, smul_eq_C_mul]
     ring_nf
   }
@@ -332,13 +333,13 @@ theorem no_nonzero_torsion_nilpotent_of_comm :
   let c := b ^ (m - 1)
   have coeff_neq : (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
     (counter_example_F r rNil rTor rNeq).toFun ≠ (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
-    (subst subst_symm (counter_example_F r rNil rTor rNeq).toFun) := by
+    (subst ![X₁,X₀] (counter_example_F r rNil rTor rNeq).toFun) := by
     simp [counter_example_F, show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
       show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
-    have eq_aux : subst subst_symm (X₀ + X₁ + C c * X₀ * X₁ ^ p) =
+    have eq_aux : subst ![X₁,X₀] (X₀ + X₁ + C c * X₀ * X₁ ^ p) =
       (X₁) + X₀ + C c * X₁ * X₀ ^ p := by
-      simp_rw [subst_add HasSubst_subst_symm, ←smul_eq_C_mul, subst_mul HasSubst_subst_symm,
-        subst_smul HasSubst_subst_symm, subst_pow HasSubst_subst_symm, subst_X HasSubst_subst_symm]
+      simp [subst_add has_subst_swap, ←smul_eq_C_mul, subst_mul has_subst_swap,
+        subst_smul has_subst_swap, subst_pow has_subst_swap, subst_X has_subst_swap]
     rw [eq_aux, coeff_X, if_neg, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp))]
     simp
     rw [coeff_X, coeff_X, if_neg (Finsupp.ne_iff.mpr (by use 0; simp)), if_neg ]

@@ -14,7 +14,7 @@ abbrev FormalGroup.addInv_aux (F : FormalGroup R): ℕ → R
   | 0 => 0
   | 1 => -1
   | n + 1 => - (coeff (n + 1 : ℕ) (MvPowerSeries.subst
-    (subst_map₂ X (∑ i : Fin (n + 1), C (addInv_aux F i.1) * X ^ i.1)) F.toFun))
+    ![X, (∑ i : Fin (n + 1), C (addInv_aux F i.1) * X ^ i.1)] F.toFun))
 
 /-- Given a formal group law `F` over coefficient ring `R`, there exist unique power series `ι`,
   such that `F(X, ι(X)) = 0`. -/
@@ -28,11 +28,11 @@ lemma Finset.sum_fin_eq_sum_range' {β : Type*} [AddCommMonoid β] {n : ℕ}  (f
   rw [dif_pos hi]
 
 omit [Nontrivial R] in
-lemma HasSubst.addInv_aux : MvPowerSeries.HasSubst (subst_map₂ X (addInv_X F)) := by
+lemma HasSubst.addInv_aux : MvPowerSeries.HasSubst ![X, (addInv_X F)] := by
   refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
   intro x; fin_cases x
-  · simp [subst_map₂]
-  · simp [subst_map₂, addInv_X]; rfl
+  · simp
+  · simp [addInv_X]; rfl
 
 omit [Nontrivial R] in
 lemma addInv_trunc_aux :
@@ -50,24 +50,23 @@ lemma addInv_trunc_aux :
     rw [sum_range_add _ (k + 1) 1]
     simp [Polynomial.X_pow_eq_monomial, addInv_X]
 
-omit [Nontrivial R] in
-lemma HasSubst.has_subst_map₂ (hf : constantCoeff f = 0) (hg : constantCoeff g = 0) :
-  MvPowerSeries.HasSubst (subst_map₂ f g) := by
-  refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
-  intro s; fin_cases s <;> simp [hf, hg]
+-- omit [Nontrivial R] in
+-- lemma HasSubst.has_subst_map₂ (hf : constantCoeff f = 0) (hg : constantCoeff g = 0) :
+--   MvPowerSeries.HasSubst (subst_map₂ f g) := by
+--   refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
+--   intro s; fin_cases s <;> simp [hf, hg]
 
 
 omit [Nontrivial R] in
 lemma coeff_subst_map₂_eq_subst_subst_map₂_trunc (hf : constantCoeff f = 0)
   (hg : constantCoeff g = 0) :
-  coeff n (MvPowerSeries.subst (subst_map₂ f g) φ) =
-  coeff n (MvPowerSeries.subst (subst_map₂ (trunc (n + 1) f) (trunc (n + 1) g)) φ) := by
-  rw [coeff, MvPowerSeries.coeff_subst (HasSubst.has_subst_map₂ _ _ hf hg),
-    MvPowerSeries.coeff_subst (HasSubst.has_subst_map₂ _ _ (by simp [coeff_trunc, hf])
+  coeff n (MvPowerSeries.subst ![f, g] φ) =
+  coeff n (MvPowerSeries.subst ![(trunc (n + 1) f), (trunc (n + 1) g)] φ) := by
+  rw [coeff, MvPowerSeries.coeff_subst (HasSubst.FinPairing  hf hg),
+    MvPowerSeries.coeff_subst (HasSubst.FinPairing  (by simp [coeff_trunc, hf])
     (by simp [coeff_trunc, hg]))]
   simp; apply finsum_congr
   intro d
-  simp [subst_map₂]
   congr! 1
   rw [coeff_mul, coeff_mul, sum_congr rfl]
   intro x hx
@@ -103,8 +102,8 @@ lemma coeff_subst_map₂_eq_subst_subst_map₂_trunc (hf : constantCoeff f = 0)
 
 omit [Nontrivial R] in
 lemma coeff_subst_addInv_trunc (hn : n ≠ 0) :
-  coeff n (MvPowerSeries.subst (subst_map₂ X (addInv_X F)) F.toFun) =
-  coeff n (MvPowerSeries.subst (subst_map₂ X (trunc (n + 1) (addInv_X F))) F.toFun) := by
+  coeff n (MvPowerSeries.subst ![X, (addInv_X F)] F.toFun) =
+  coeff n (MvPowerSeries.subst ![X, (trunc (n + 1) (addInv_X F))] F.toFun) := by
   have trunc_X_aux : trunc (n + 1) X = Polynomial.X (R := R):= by
     refine trunc_X_of ?_
     omega
@@ -129,14 +128,14 @@ lemma coeff_subst_addInv_trunc (hn : n ≠ 0) :
 
 
 lemma coeff_n_aux (n : ℕ):
-  coeff n (MvPowerSeries.subst (subst_map₂ X (∑ i : Fin (n + 1),
-  C (addInv_aux F i.1) * X ^ i.1)) F.toFun) = 0 := by
+  coeff n (MvPowerSeries.subst ![X, (∑ i : Fin (n + 1),
+  C (addInv_aux F i.1) * X ^ i.1)] F.toFun) = 0 := by
   rw [sum_fin_eq_sum_range' (fun i => (C (addInv_aux F i) * X ^ i))]
   induction n with
   | zero =>
     simp
     rw [constantCoeff, MvPowerSeries.constantCoeff_subst, show (addInv_aux F 0) = 0 by rfl]
-    simp [subst_map₂]
+    simp
     apply finsum_eq_zero_of_forall_eq_zero
     intro d
     by_cases hd₀ : d 0 ≠ 0
@@ -148,7 +147,7 @@ lemma coeff_n_aux (n : ℕ):
     · refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
       intro x
       fin_cases x
-      all_goals simp [subst_map₂, show (addInv_aux F 0) = 0 by rfl]
+      all_goals simp [show (addInv_aux F 0) = 0 by rfl]
   | succ k ih =>
     by_cases hk₀ : k = 0
     ·
@@ -156,7 +155,7 @@ lemma coeff_n_aux (n : ℕ):
 
       rw [coeff, MvPowerSeries.coeff_subst]
       unfold addInv_aux
-      simp [subst_map₂]
+      simp
       have supp_eq : (Function.support (fun d => (MvPowerSeries.coeff d) F.toFun
         * (coeff 1) (X ^ d 0 * (-X) ^ d 1))) = {Finsupp.single (0 : Fin 2) 1,
         Finsupp.single (1 : Fin 2) 1}
@@ -204,15 +203,15 @@ lemma coeff_n_aux (n : ℕ):
       simp [F.lin_coeff_X, F.lin_coeff_Y]
       · refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
         intro s; fin_cases s
-        · rw [addInv_aux, subst_map₂]; simp
-        · unfold addInv_aux subst_map₂
+        · rw [addInv_aux]; simp
+        · unfold addInv_aux
           simp
-    have has_subst₁ (m : ℕ) : MvPowerSeries.HasSubst (subst_map₂ X (∑ i ∈ range (m + 1),
-      C (addInv_aux F i) * X ^ i)) := by
+    have has_subst₁ (m : ℕ) : MvPowerSeries.HasSubst ![X, (∑ i ∈ range (m + 1),
+      C (addInv_aux F i) * X ^ i)] := by
       refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
       intro x; fin_cases x
-      · simp [subst_map₂]
-      · simp [subst_map₂]
+      · simp
+      · simp
         refine sum_eq_zero ?_
         intro i hi
         by_cases hi₀ : i ≠ 0
@@ -221,7 +220,7 @@ lemma coeff_n_aux (n : ℕ):
           rfl
     rw [coeff, MvPowerSeries.coeff_subst (has_subst₁ (k + 1))]
     simp_rw [PowerSeries.coeff_coe]
-    simp [subst_map₂]
+    simp
     generalize hB : ∑ i ∈ range (k + 1), C (addInv_aux F i) * X ^ i = B
     simp [sum_range_add, hB]
     have constantCoeff_of_B : constantCoeff B = 0 := by
@@ -309,7 +308,7 @@ lemma coeff_n_aux (n : ℕ):
     · intro d hd
       simp [if_neg hd]
     · obtain h := MvPowerSeries.coeff_subst_finite (has_subst₁ k) F.toFun
-      simp [hB, subst_map₂] at h
+      simp [hB] at h
       exact h (Finsupp.single () (k + 1))
     · have aux : (Function.support fun d ↦
         (MvPowerSeries.coeff d) F.toFun * if d = Finsupp.single 1 1 then addInv_aux F (k + 1) else 0)
@@ -323,7 +322,7 @@ lemma coeff_n_aux (n : ℕ):
 
 /- Given a formal group law `F` over coefficient ring `R`, there exist a power series
   `addInv F`, such that `F(X, (addInv_X F)) = 0`. -/
-theorem subst_addInv_eq_zero : MvPowerSeries.subst (subst_map₂ X (addInv_X F)) F.toFun = 0 := by
+theorem subst_addInv_eq_zero : MvPowerSeries.subst ![X, (addInv_X F)] F.toFun = 0 := by
   ext n
   by_cases hn : n = 0
   · simp [hn]
@@ -332,12 +331,10 @@ theorem subst_addInv_eq_zero : MvPowerSeries.subst (subst_map₂ X (addInv_X F))
     apply finsum_eq_zero_of_forall_eq_zero
     intro d
     by_cases hd₀ : d 0 ≠ 0
-    · have eq_aux : constantCoeff (subst_map₂ X (addInv_X F) 0) = 0 := by
-        simp [subst_map₂]
-      simp [eq_aux, zero_pow hd₀]
+    · simp [zero_pow hd₀]
     by_cases hd₁ : d 1 ≠ 0
-    · have eq_aux : constantCoeff (subst_map₂ X (addInv_X F) 1) = 0 := by
-        simp [subst_map₂, addInv_X]; rfl
+    · have eq_aux : constantCoeff F.addInv_X = 0 := by
+        simp [addInv_X]; rfl
       simp [eq_aux, zero_pow hd₁]
     simp_all
     have d_eq_zero : d = 0 := by
