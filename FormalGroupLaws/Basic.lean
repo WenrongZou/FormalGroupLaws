@@ -260,7 +260,16 @@ scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 =>
   add F f₀ f₁
 
 /-- The addition under the sense of formal group `F` is associative. -/
-theorem add_assoc (F : FormalGroup R) :
+theorem add_assoc {F : FormalGroup R} (Z₀ Z₁ Z₂ : MvPowerSeries σ R):
+  Z₀ +[F] Z₁ +[F] Z₂ = Z₀ +[F] (Z₁ +[F] Z₂) := by
+  sorry
+
+theorem add_comm {F : FormalGroup R} (hF : F.comm) (Z₀ Z₁ : MvPowerSeries σ R):
+  Z₀ +[F] Z₁ = Z₁ +[F] Z₀ := sorry
+
+
+/-- The addition under the sense of formal group `F` is associative. -/
+theorem add_assoc' (F : FormalGroup R) :
   Y₀ +[F] Y₁ +[F] Y₂ = Y₀ +[F] (Y₁ +[F] Y₂) := by
   rw [add, F.assoc]
 

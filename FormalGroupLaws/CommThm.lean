@@ -14,11 +14,11 @@ noncomputable section
   over coefficient ring `R`, `F(X, Y)` is commutative formal group law if and
   only if `R` doest contain a nonzero element which is both torsion and nilpotent.-/
 
-variable {R : Type*} [CommRing R] (F : FormalGroup R) [Nontrivial R]
+variable {R : Type*} [CommRing R] (F : FormalGroup R) [Nontrivial R] {σ : Type*}
 
 namespace FormalGroup
 
-open Submodule MvPowerSeries TensorProduct LinearMap
+open Algebra Submodule MvPowerSeries TensorProduct LinearMap
 
 omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
@@ -33,7 +33,7 @@ theorem comm_iff_coeff_symm :
     simp
     have aux : (coeff (coeff_two i j)) ((X₁ (R := R)) ^ j * X₀ ^ i)  = 1 := by
       simp [coeff_two, X_pow_eq, monomial_mul_monomial]
-      rw [coeff_monomial, if_pos (by rw [add_comm])]
+      rw [coeff_monomial, if_pos (by rw [AddCommMagma.add_comm])]
     rw [finsum_eq_single _ (coeff_two j i)]
     · simp [aux]
     · intro n hn
@@ -89,7 +89,7 @@ theorem comm_iff_coeff_symm' :
 /--  Over a coefficient ring `R` of characteristic zero,
 if `R` contains no nonzero element that is both torsion and nilpotent,
 then any one-dimensional formal group law over `R` is commutative. -/
-theorem comm_of_char_zero_and_no_torsion_nilpotent (h : ringChar R = 0) :
+theorem comm_of_char_zero_and_no_torsion_nilpotent (h : IsAddTorsionFree R) :
   ¬ ∃ r : R, r ≠ 0 ∧ IsNilpotent r ∧ addOrderOf r ≠ 0 → F.comm := by
   sorry
 
@@ -101,6 +101,23 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
   (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
   sorry
 
+def commutator : MvPowerSeries (Fin 2) R :=
+  X₀ +[F] X₁ +[F] (addInv F X₀) +[F] (addInv F X₁)
+
+lemma add_addInv_eq_zero (f : MvPowerSeries σ R) :
+  f +[F] addInv F f = 0 := sorry
+
+lemma zero_add_eq_self (f : MvPowerSeries σ R) :
+  0 +[F] f= 0 := sorry
+
+lemma commutator_eq_zero_of_comm (F : FormalGroup R) (hF : F.comm) :
+  commutator F = 0 := by
+  conv =>
+    lhs
+    rw [commutator, add_assoc X₀, add_comm hF X₁, ←add_assoc X₀,
+      add_addInv_eq_zero, add_assoc, add_addInv_eq_zero, zero_add_eq_self]
+
+
 
 /-- Assume that `R` is an integral domain, `F(X,Y)` and `F'(X,Y)` are one dimensional
   formal group law over `R`, if `F'(X,Y)` is commutative and there exist a nonzero
@@ -108,6 +125,7 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
 theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
   (α : FormalGroupHom F F') (ha : α.toFun ≠ 0) :
   F'.comm → F.comm := by
+  intro hF'
 
   sorry
 
@@ -373,7 +391,7 @@ The canonical `ℤ`-linear map from a ring `R` to `R ⊗[ℤ] ℚ`
 that sends an element `r` to `r ⊗ 1`.
 -/
 def canonicalMapToTensorRat : R →ₐ[ℤ] (R ⊗[ℤ] ℚ) :=
-  Algebra.TensorProduct.includeLeft
+  includeLeft
 
 /--
 The kernel of the canonical map `r ↦ r ⊗ 1` from a ring `R` to `R ⊗[ℤ] ℚ`
