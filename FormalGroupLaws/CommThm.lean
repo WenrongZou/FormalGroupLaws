@@ -107,16 +107,60 @@ def commutator : MvPowerSeries (Fin 2) R :=
 lemma add_addInv_eq_zero (f : MvPowerSeries σ R) :
   f +[F] addInv F f = 0 := sorry
 
+lemma add_addInv_eq_zero' (f : MvPowerSeries σ R) :
+  addInv F f +[F] f = 0 := sorry
+
 lemma zero_add_eq_self (f : MvPowerSeries σ R) :
-  0 +[F] f= 0 := sorry
+  0 +[F] f = f := sorry
 
-lemma commutator_eq_zero_of_comm (F : FormalGroup R) (hF : F.comm) :
-  commutator F = 0 := by
-  conv =>
-    lhs
-    rw [commutator, add_assoc X₀, add_comm hF X₁, ←add_assoc X₀,
-      add_addInv_eq_zero, add_assoc, add_addInv_eq_zero, zero_add_eq_self]
+lemma zero_add_eq_self' (f : MvPowerSeries σ R) :
+  f +[F] 0 = f := sorry
 
+lemma comm_iff_commutator_eq_zero :
+  F.comm ↔ commutator F = 0 := by
+  constructor
+  · intro hF
+    conv =>
+      lhs
+      rw [commutator, add_assoc X₀, add_comm hF X₁, ←add_assoc X₀,
+        add_addInv_eq_zero, add_assoc, add_addInv_eq_zero, zero_add_eq_self]
+  · intro h
+    rw [commutator] at h
+    unfold comm
+    calc
+      _ = X₀ +[F] X₁ +[F] addInv F X₀ +[F] addInv F X₁ +[F] X₁ +[F] X₀ := by
+        rw [add_assoc <| X₀ +[F] X₁ +[F] addInv F X₀, add_addInv_eq_zero', zero_add_eq_self',
+          add_assoc <| X₀ +[F] X₁, add_addInv_eq_zero', zero_add_eq_self']
+        have aux : ![X₀, X₁] = (X : Fin 2 → MvPowerSeries (Fin 2) R) := by
+          simp [@funext_iff]
+        simp [add, aux, ←map_algebraMap_eq_subst_X]
+      _ = X₁ +[F] X₀ := by
+        rw [h, zero_add_eq_self]
+
+
+-- variable (G G' : FormalGroup R) {α : FormalGroupHom G G'} in
+-- scoped[FormalGroup] notation:65 α:65 " •[" G:0 "] " f:66 =>
+--   PowerSeries.subst f α.toFun
+
+lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} (f g : MvPowerSeries σ R):
+  PowerSeries.subst (f +[G₁] g) α.toFun = (PowerSeries.subst f α.toFun) +[G₂]
+    (PowerSeries.subst g α.toFun) := sorry
+
+/- Let `α` be a formal group homomorphism from `F(X,Y)` to `F'(X,Y)`, if `F'` is commutative
+  then `α (commutator F) = 0` -/
+lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' : F'.comm):
+  PowerSeries.subst (commutator F) α.toFun = 0 := by
+  simp [commutator, hom_add]
+  rw [add_assoc <| PowerSeries.subst X₀ α.toFun, add_comm hF' <| PowerSeries.subst X₁ α.toFun,
+    ←add_assoc, ←hom_add, add_addInv_eq_zero, add_assoc, ←hom_add, add_addInv_eq_zero, ←hom_add,
+    zero_add_eq_self]
+  ext d
+  simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
+  apply finsum_eq_zero_of_forall_eq_zero
+  intro x
+  by_cases hx : x = 0
+  · simp [hx, α.zero_constantCoeff]
+  · simp [zero_pow hx]
 
 
 /-- Assume that `R` is an integral domain, `F(X,Y)` and `F'(X,Y)` are one dimensional
@@ -126,6 +170,19 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
   (α : FormalGroupHom F F') (ha : α.toFun ≠ 0) :
   F'.comm → F.comm := by
   intro hF'
+  by_contra hc
+  have commutator_neZero : commutator F ≠ 0 := by
+    by_contra hc'
+    obtain h := (comm_iff_commutator_eq_zero _).mpr hc'
+    contradiction
+  have exist_n : ∃ n, homogeneousComponent n F.commutator ≠ 0 := by
+    by_contra hc'
+    simp at hc'
+    have h : F.commutator = 0 := by
+
+      sorry
+
+    sorry
 
   sorry
 
