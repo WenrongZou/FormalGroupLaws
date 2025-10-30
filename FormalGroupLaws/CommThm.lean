@@ -7,6 +7,7 @@ import Mathlib.GroupTheory.OrderOfElement
 import Mathlib.Data.Nat.Choose.Dvd
 import Mathlib.RingTheory.TensorProduct.Basic
 import FormalGroupLaws.AddInverse
+import Mathlib.RingTheory.MvPowerSeries.Order
 
 noncomputable section
 
@@ -99,13 +100,63 @@ theorem comm_of_char_zero_and_no_torsion_nilpotent (h : IsAddTorsionFree R) :
 theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
   (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
   (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
+
   sorry
 
 def commutator : MvPowerSeries (Fin 2) R :=
   X₀ +[F] X₁ +[F] (addInv F X₀) +[F] (addInv F X₁)
 
-lemma add_addInv_eq_zero (f : MvPowerSeries σ R) :
-  f +[F] addInv F f = 0 := sorry
+lemma HasSubst.powerseries_commutator : PowerSeries.HasSubst F.commutator := sorry
+
+lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (hf : constantCoeff f = 0) :
+  f +[F] addInv F f = 0 := by
+  have eq_aux : PowerSeries.X +[F] addInv F PowerSeries.X = (0 : PowerSeries R)  := by
+    have aux : addInv F PowerSeries.X = addInv_X F := by
+      unfold addInv
+      rw [←PowerSeries.map_algebraMap_eq_subst_X]
+      simp
+    rw [aux, X_add_addInv_X_eq_zero]
+  calc
+    _ = PowerSeries.subst f (PowerSeries.X +[F] addInv F PowerSeries.X) := by
+      unfold add
+      have has_subst₁ : HasSubst ![PowerSeries.X, addInv F PowerSeries.X] := by
+        refine HasSubst.FinPairing ?_ ?_
+        simp
+        rw [addInv, PowerSeries.subst, constantCoeff_subst
+          (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X'))]
+        simp
+        apply finsum_eq_zero_of_forall_eq_zero
+        intro x
+        by_cases hx : x = 0
+        · simp [hx]
+          exact rfl
+        rw [zero_pow]
+        simp
+        by_contra hc
+        have xeq : x = 0 := by
+          exact Eq.symm (Finsupp.ext fun a ↦ _root_.id (Eq.symm hc))
+        contradiction
+      rw [PowerSeries.subst, subst_comp_subst_apply has_subst₁
+        (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero hf)]
+      apply subst_congr
+      funext s; fin_cases s
+      · simp
+        rw [PowerSeries.X, subst_X <| hasSubst_of_constantCoeff_zero fun s ↦ hf]
+      · simp
+        unfold addInv
+        rw [PowerSeries.subst, PowerSeries.subst, subst_comp_subst_apply
+          (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X'))
+          (hasSubst_of_constantCoeff_zero fun s ↦ hf)]
+        apply subst_congr
+        funext s
+        rw [PowerSeries.X, subst_X <| hasSubst_of_constantCoeff_zero fun s ↦ hf]
+    _ = _ := by
+      rw [eq_aux]
+      ext n
+      rw [PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero hf]
+      simp
+
+
 
 lemma add_addInv_eq_zero' (f : MvPowerSeries σ R) :
   addInv F f +[F] f = 0 := sorry
@@ -120,10 +171,12 @@ lemma comm_iff_commutator_eq_zero :
   F.comm ↔ commutator F = 0 := by
   constructor
   · intro hF
+    have aux : constantCoeff (X₀ (R := R)) = 0 := by
+      exact constantCoeff_X 0
     conv =>
       lhs
       rw [commutator, add_assoc X₀, add_comm hF X₁, ←add_assoc X₀,
-        add_addInv_eq_zero, add_assoc, add_addInv_eq_zero, zero_add_eq_self]
+        add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, add_addInv_eq_zero _ (constantCoeff_X 1), zero_add_eq_self]
   · intro h
     rw [commutator] at h
     unfold comm
@@ -152,7 +205,8 @@ lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' :
   PowerSeries.subst (commutator F) α.toFun = 0 := by
   simp [commutator, hom_add]
   rw [add_assoc <| PowerSeries.subst X₀ α.toFun, add_comm hF' <| PowerSeries.subst X₁ α.toFun,
-    ←add_assoc, ←hom_add, add_addInv_eq_zero, add_assoc, ←hom_add, add_addInv_eq_zero, ←hom_add,
+    ←add_assoc, ←hom_add, add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add,
+    add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add,
     zero_add_eq_self]
   ext d
   simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
@@ -161,6 +215,9 @@ lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' :
   by_cases hx : x = 0
   · simp [hx, α.zero_constantCoeff]
   · simp [zero_pow hx]
+
+-- lemma MvPowerSeries.homogeneousComponent_pow_of_le_order {p n : ℕ} {f : MvPowerSeries.} :
+--   homogeneousComponent
 
 
 /-- Assume that `R` is an integral domain, `F(X,Y)` and `F'(X,Y)` are one dimensional
@@ -175,16 +232,311 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
     by_contra hc'
     obtain h := (comm_iff_commutator_eq_zero _).mpr hc'
     contradiction
-  have exist_n : ∃ n, homogeneousComponent n F.commutator ≠ 0 := by
-    by_contra hc'
-    simp at hc'
-    have h : F.commutator = 0 := by
+  let m := MvPowerSeries.order (F.commutator)
+  let r := PowerSeries.order α.toFun
+  obtain a_eq := ne_zero_iff_order_finite.mp ha
+  obtain meq := ne_zero_iff_order_finite.mp commutator_neZero
+  obtain h := zero_of_target_comm F α hF'
 
-      sorry
+  have exist_nonZero_coeff : ∃ d, (coeff d) (PowerSeries.subst F.commutator α.toFun) ≠ 0 := by
+    obtain ⟨d, hd₁, hd₂⟩ := exists_coeff_ne_zero_and_order meq
+    have exist_aux : ∃ (n : ℕ), (coeff (Finsupp.equivFunOnFinite.invFun ![n, m.toNat - n]))
+      F.commutator ≠ 0 := by
+      use d 0
+      have eq_aux : m.toNat - d 0 = d 1 := by
+        unfold Finsupp.degree at hd₂
+        simp at hd₂
+        rw [show m = F.commutator.order by rfl]
+        have aux : ∑ x ∈ d.support, (d x : ℕ∞) = d 0 + d 1 := by
+          calc
+            _ = ∑ x : Fin 2, (d x : ℕ∞) := by
+              refine Fintype.sum_subset <| fun i hi => Finsupp.mem_support_iff.mpr
+                <| fun a ↦ hi (congrArg Nat.cast a)
+            _ = _ := by
+              rfl
+        rw [aux] at hd₂
+        have aux' : d 0 + d 1 = F.commutator.order.toNat := by
+          rw [←hd₂]
+          rfl
+        rw [←aux']
+        simp
+      rw [eq_aux]
+      have d_eq : (Finsupp.equivFunOnFinite.invFun ![d 0, d 1]) = d := by
+        refine Finsupp.ext ?_
+        intro i; fin_cases i
+        all_goals simp
+      simp [d_eq, hd₁]
+    have decidable : DecidablePred fun n ↦ (coeff (Finsupp.equivFunOnFinite.invFun
+      ![n, m.toNat - n])) F.commutator ≠ 0 := Classical.decPred fun n ↦
+          ¬(coeff (Finsupp.equivFunOnFinite.symm ![n, m.toNat - n])) F.commutator = 0
+    let n := Nat.find exist_aux
+    let d₀ := (Finsupp.equivFunOnFinite.symm ![n, m.toNat - n])
+    let d' := Finsupp.equivFunOnFinite.symm ![n * r.toNat, (m.toNat - n) * r.toNat]
+    have d'_eq : d' = Finsupp.equivFunOnFinite.symm ![n * r.toNat, (m.toNat - n) * r.toNat] := rfl
+    have mge : m.toNat ≥ n := by sorry
+    use d'
+    rw [PowerSeries.coeff_subst <| HasSubst.powerseries_commutator F]
+    simp
+    have eq_single : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) α.toFun *
+      (coeff d') (F.commutator ^ d) = (PowerSeries.coeff r.toNat) α.toFun *
+      (coeff d') (F.commutator ^ r.toNat) := by
+      apply finsum_eq_single
+      intro x hx
+      by_cases hxLe : x < r.toNat
+      · simp [PowerSeries.coeff_of_lt_order_toNat x hxLe]
+      · sorry
+    rw [eq_single]
 
     sorry
+  have ne_zero : PowerSeries.subst F.commutator α.toFun ≠ 0 := by
+    by_contra hc
+    have forall_coeff_eq_zero : ∀ d, (coeff d) (PowerSeries.subst F.commutator α.toFun) = 0 := by
+      simp [hc]
+    simp_all
 
-  sorry
+
+
+
+
+  have order_aux : (order (PowerSeries.subst F.commutator α.toFun)).toNat =
+    order (PowerSeries.subst F.commutator α.toFun):= by
+    -- have aux : (PowerSeries.subst F.commutator α.toFun).order < ⊤ := by
+    --   sorry
+    obtain ⟨d, hd₁, hd₂⟩ := exists_coeff_ne_zero_and_order meq
+    have exist_aux : ∃ (n : ℕ), (coeff (Finsupp.equivFunOnFinite.invFun ![n, m.toNat - n]))
+      F.commutator ≠ 0 := by
+      use d 0
+      have eq_aux : m.toNat - d 0 = d 1 := by
+        unfold Finsupp.degree at hd₂
+        simp at hd₂
+        rw [show m = F.commutator.order by rfl]
+        have aux : ∑ x ∈ d.support, (d x : ℕ∞) = d 0 + d 1 := by
+          calc
+            _ = ∑ x : Fin 2, (d x : ℕ∞) := by
+              refine Fintype.sum_subset <| fun i hi => Finsupp.mem_support_iff.mpr
+                <| fun a ↦ hi (congrArg Nat.cast a)
+            _ = _ := by
+              rfl
+        rw [aux] at hd₂
+        have aux' : d 0 + d 1 = F.commutator.order.toNat := by
+          rw [←hd₂]
+          rfl
+        rw [←aux']
+        simp
+      rw [eq_aux]
+      have d_eq : (Finsupp.equivFunOnFinite.invFun ![d 0, d 1]) = d := by
+        refine Finsupp.ext ?_
+        intro i; fin_cases i
+        all_goals simp
+      simp [d_eq, hd₁]
+    have decidable : DecidablePred fun n ↦ (coeff (Finsupp.equivFunOnFinite.invFun
+      ![n, m.toNat - n])) F.commutator ≠ 0 := Classical.decPred fun n ↦
+          ¬(coeff (Finsupp.equivFunOnFinite.symm ![n, m.toNat - n])) F.commutator = 0
+    let n := Nat.find exist_aux
+    let d₀ := (Finsupp.equivFunOnFinite.symm ![n, m.toNat - n])
+    let d' := Finsupp.equivFunOnFinite.symm ![n * r.toNat, (m.toNat - n) * r.toNat]
+    have d'_eq : d' = Finsupp.equivFunOnFinite.symm ![n * r.toNat, (m.toNat - n) * r.toNat] := rfl
+    have mge : m.toNat ≥ n := by
+      simp_all
+    have neq : PowerSeries.subst F.commutator α.toFun ≠ 0 := by
+      apply ne_zero_iff_exists_coeff_ne_zero_and_degree.mpr
+      use (m.toNat * r.toNat), d'
+      constructor
+      ·
+        rw [PowerSeries.coeff_subst <| HasSubst.powerseries_commutator F]
+        simp
+        have eq_single : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) α.toFun *
+          (coeff d') (F.commutator ^ d) = (PowerSeries.coeff r.toNat) α.toFun *
+          (coeff d') (F.commutator ^ r.toNat) := by
+          apply finsum_eq_single
+          intro x hx
+          by_cases hxLe : x < r.toNat
+          · simp [PowerSeries.coeff_of_lt_order_toNat x hxLe]
+          · simp_all only [ne_eq, ENat.coe_toNat_eq_self, order_eq_top_iff, not_false_eq_true]
+        rw [eq_single]
+        have coeff_ne₁ : (PowerSeries.coeff r.toNat) α.toFun ≠ 0 := PowerSeries.coeff_order ha
+        have coeff_ne₂ : (coeff d') (F.commutator ^ r.toNat) ≠ 0 := by
+          simp [coeff_pow]
+          let l : ℕ →₀ (Fin 2) →₀ ℕ := {
+            support := Finset.range r.toNat
+            toFun := fun x => if x ∈ Finset.range r.toNat then
+              d₀ else 0
+            mem_support_toFun := by
+              intro a
+              constructor
+              · intro h
+                rw [if_pos h]
+                (expose_names; exact fun a ↦ ne_zero h_1)
+              · simp_all
+          }
+          have eq_aux : ∑ l ∈ (Finset.range r.toNat).finsuppAntidiag d',
+            ∏ i ∈ Finset.range r.toNat, (coeff (l i)) F.commutator =
+            ∏ i ∈ Finset.range r.toNat, (coeff (l i)) F.commutator := by
+            refine Finset.sum_eq_single l ?_ ?_
+            ·
+              intro b hb bneq
+              simp at hb
+              obtain ⟨hb₁, hb₂⟩ := hb
+              have sum_eq0 : ∑ i ∈ (Finset.range r.toNat), (b i 0) = n * r.toNat := by
+                simp [show n * r.toNat = d' 0 by rfl, ←hb₁]
+              have sum_eq1 : ∑ i ∈ (Finset.range r.toNat), (b i 1) = (m.toNat - n) * r.toNat := by
+                simp [show (m.toNat - n) * r.toNat = d' 1 by rfl, ←hb₁]
+              have exist_i :(∃ i ∈ Finset.range r.toNat, b i 0 < n) ∨
+                (∃ i ∈ Finset.range r.toNat, b i 1 > m.toNat - n) := by
+                by_contra hcontra
+                simp at hcontra
+                obtain ⟨hcontra, hcontra'⟩ := hcontra
+                have le_aux : ∀ x < r.toNat, (b x) 0 ≤ n := by
+                  by_contra h_le_aux
+                  simp at h_le_aux
+                  obtain ⟨x, hx, hx'⟩ := h_le_aux
+                  have hcontra' : ∑ i ∈ Finset.range r.toNat, (b i) 0 >
+                    n * r.toNat := by
+                    calc
+                      _ > ∑ i ∈ Finset.range r.toNat, n := by
+                        apply Finset.sum_lt_sum (by simp_all)
+                        use x
+                        simp_all
+                      _ = _ := by simp [Finset.sum_const, mul_comm]
+                  linarith
+                have forall_eq : ∀ x < r.toNat, b x 0 = n := by
+                  intro i hi
+                  nlinarith [hcontra i hi, le_aux i hi]
+                have le_aux' : ∀ x < r.toNat, (b x) 1 ≥ m.toNat - n := by
+                  by_contra h_le_aux
+                  simp at h_le_aux
+                  obtain ⟨x, hx, hx'⟩ := h_le_aux
+                  have hcontra' : ∑ i ∈ Finset.range r.toNat, (b i) 0 >
+                    n * r.toNat := by
+                    calc
+                      _ > ∑ i ∈ Finset.range r.toNat, n := by
+                        apply Finset.sum_lt_sum (by simp_all)
+                        use x
+                        simp_all
+                      _ = _ := by simp [Finset.sum_const, mul_comm]
+                  linarith
+                have forall_eq' : ∀ x < r.toNat, b x 1 = m.toNat - n := by
+                  intro i hi
+                  nlinarith [hcontra' i hi, le_aux' i hi]
+                have b_eq_l : b = l := by
+                  ext x i
+                  by_cases hx : x < r.toNat
+                  · fin_cases i
+                    · simp [l, if_pos hx, d₀, forall_eq x hx]
+                    · simp [l, if_pos hx, d₀, forall_eq' x hx]
+                  · have b_eq_zero : b x = 0 := by
+                      have x_not_mem : x ∉ Finset.range r.toNat := by
+                        simp only [Finset.mem_range, not_lt]
+                        linarith
+                      exact Finsupp.notMem_support_iff.mp fun a ↦ x_not_mem (hb₂ a)
+                    simp [b_eq_zero, l, if_neg hx]
+                contradiction
+              -- apply Finset.prod_eq_zero
+              by_cases b_sum : ∀ i ∈ Finset.range r.toNat, b i 0 + b i 1 = m.toNat
+              · obtain ⟨i, hi₁, hi₂⟩ | ⟨i, hi₁, hi₂⟩ := exist_i
+                · apply Finset.prod_eq_zero (i := i) hi₁
+                  obtain n_min := Nat.find_min exist_aux hi₂
+                  simp at n_min
+                  have eq_aux : m.toNat - (b i) 0 = b i 1 := by simp [←b_sum i hi₁]
+                  rw [eq_aux] at n_min
+                  simp_all
+                · apply Finset.prod_eq_zero (i := i) hi₁
+                  have lt_aux : b i 0 < n := by
+                    rw [←b_sum i hi₁] at hi₂
+                    omega
+                  obtain n_min := Nat.find_min exist_aux lt_aux
+                  simp at n_min
+                  have eq_aux : m.toNat - (b i) 0 = b i 1 := by simp [←b_sum i hi₁]
+                  rw [eq_aux] at n_min
+                  simp_all
+              ·
+                have exist_lt_order : ∃ i ∈ Finset.range r.toNat, b i 0 + b i 1 < m.toNat := by
+                  by_contra hcontra
+                  simp at hcontra
+                  simp at b_sum
+                  obtain ⟨i, hi₁, hi₂⟩ := b_sum
+                  have gt_aux : (b i) 0 + (b i) 1 > m.toNat := by
+                    obtain h := hcontra i hi₁
+                    omega
+                  have gt_aux' : ∑ i ∈ Finset.range r.toNat, ((b i) 0 + (b i) 1)
+                    > m.toNat * r.toNat:= by
+                    calc
+                      _ > ∑ i ∈ Finset.range r.toNat, m.toNat := by
+                        apply Finset.sum_lt_sum (by simp_all)
+                        exact ⟨i, by simp [hi₁], gt_aux⟩
+                      _ = _ := by
+                        simp [mul_comm]
+                  have eq_aux : ∑ i ∈ Finset.range r.toNat, ((b i) 0 + (b i) 1) =
+                    m.toNat * r.toNat := by
+                    calc
+                      _ = ((Finset.range r.toNat).sum ⇑b) 0 +
+                        ((Finset.range r.toNat).sum ⇑b) 1 := by
+                        simp [Finset.sum_add_distrib]
+                      _ = _ := by
+                        simp [hb₁, d']
+                        rw [←add_mul]
+                        congr
+                        omega
+                  linarith
+                obtain ⟨i, hi₁, hi₂⟩ := exist_lt_order
+                apply Finset.prod_eq_zero (i := i) hi₁
+                have degree_lt : (b i).degree < F.commutator.order.toNat := by
+                  calc
+                    _ = b i 0 + b i 1 := by
+                      unfold Finsupp.degree
+                      simp_all
+                    _ < _ := by
+                      linarith
+                refine coeff_of_lt_order ?_
+                rw [←meq]
+                exact ENat.coe_lt_coe.mpr degree_lt
+            · have mem_aux : l ∈  (Finset.range r.toNat).finsuppAntidiag d' := by
+                simp
+
+                sorry
+              simp [mem_aux]
+          rw [eq_aux]
+          have eq_aux' : ∏ i ∈ Finset.range r.toNat, (coeff (l i)) F.commutator
+            = (coeff d₀) F.commutator ^ r.toNat := by
+            calc
+              _ = ∏ i ∈ Finset.range r.toNat, (coeff d₀) F.commutator := by
+                refine Finset.prod_congr rfl ?_
+                intro x hx
+                unfold l
+                simp at ⊢ hx
+                rw [if_pos hx]
+              _ = _ := Eq.symm <| Finset.pow_eq_prod_const ((coeff d₀) F.commutator) r.toNat
+          -- have eq_aux' : ∏ i ∈ Finset.range r.toNat, (coeff (l i)) F.commutator
+          --   = ∏ i ∈ Finset.range r.toNat, (coeff d₀) F.commutator := by
+          --   refine Finset.prod_congr rfl ?_
+          --   intro x hx
+          --   unfold l
+          --   simp at ⊢ hx
+          --   rw [if_pos hx]
+          rw [eq_aux']
+          obtain n_find_spec := Nat.find_spec exist_aux
+          have ne_aux : (coeff d₀) F.commutator ≠ 0 := by
+            unfold d₀
+            simp_all
+          exact pow_ne_zero r.toNat n_find_spec
+        exact (mul_ne_zero_iff_right coeff_ne₂).mpr coeff_ne₁
+
+        -- have eq_single : ∑ᶠ (d : Unit →₀ ℕ), (coeff d) α.toFun
+        --   * (coeff d') (F.commutator ^ d PUnit.unit) =
+        --   coeff (Finsupp.equivFunOnFinite.symm (r.toNat : Unit → ℕ)), α.toFun
+      ·
+
+        sorry
+
+    -- use this MvPowerSeries.exists_coeff_ne_zero_and_order
+    sorry
+  have ne_top : order (PowerSeries.subst F.commutator α.toFun) ≠ ⊤ := by
+    exact ENat.coe_toNat_eq_self.mp order_aux
+  obtain h₁ := order_eq_top_iff.mpr h
+  contradiction
+
+
+
 
 /-- Assume that `R` is an integral domain, any one dimensional formal group law is
   commutative. -/
