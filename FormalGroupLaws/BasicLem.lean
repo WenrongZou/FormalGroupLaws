@@ -6,7 +6,7 @@ import FormalGroupLaws.SubstInv
 
 noncomputable section
 
-open MvPowerSeries Classical
+open MvPowerSeries Classical FormalGroup
 
 variable {R : Type*} [CommRing R] {σ : Type*}
 
