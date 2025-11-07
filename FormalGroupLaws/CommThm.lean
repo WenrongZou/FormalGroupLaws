@@ -105,6 +105,8 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
 def commutator : MvPowerSeries (Fin 2) R :=
   X₀ +[F] X₁ +[F] (addInv F X₀) +[F] (addInv F X₁)
 
+lemma constantCoeff_commutator : constantCoeff F.commutator = 0 := sorry
+
 lemma HasSubst.powerseries_commutator : PowerSeries.HasSubst F.commutator := sorry
 
 lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (hf : constantCoeff f = 0) :
@@ -160,32 +162,62 @@ lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (hf : constantCoeff f = 0) :
 lemma add_addInv_eq_zero' (f : MvPowerSeries σ R) :
   addInv F f +[F] f = 0 := sorry
 
+
 lemma zero_add_eq_self (f : MvPowerSeries σ R) :
   0 +[F] f = f := sorry
+
 
 lemma zero_add_eq_self' (f : MvPowerSeries σ R) :
   f +[F] 0 = f := sorry
 
+
+omit [Nontrivial R] in
+variable {F} in
+lemma constantCoeff_addInvF_X₀ :  constantCoeff (addInv F X₀) = 0 := by
+  simp [addInv]
+  rw [PowerSeries.subst, constantCoeff_subst_zero (by simp) rfl]
+
+
+omit [Nontrivial R] in
+variable {F} in
+lemma constantCoeff_addInvF_X₁ :  constantCoeff (addInv F X₁) = 0 := by
+  simp [addInv]
+  rw [PowerSeries.subst, constantCoeff_subst_zero (by simp) rfl]
+
+
 lemma comm_iff_commutator_eq_zero :
   F.comm ↔ commutator F = 0 := by
+  have aux : constantCoeff (X₀ (R := R)) = 0 := constantCoeff_X 0
   constructor
   · intro hF
-    have aux : constantCoeff (X₀ (R := R)) = 0 := by
-      exact constantCoeff_X 0
     conv =>
       lhs
-      rw [commutator, add_assoc X₀, add_comm hF X₁, ←add_assoc X₀,
-        add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, add_addInv_eq_zero _ (constantCoeff_X 1), zero_add_eq_self]
+      rw [commutator, add_assoc (Z₀ := X₀) (by simp) (by simp) constantCoeff_addInvF_X₀, add_comm hF (Z₀ := X₁)
+        (by simp) constantCoeff_addInvF_X₀, ←add_assoc (Z₀ := X₀) (by simp) constantCoeff_addInvF_X₀ (by simp),
+        add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc (by simp) (by simp) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1),
+        zero_add_eq_self]
   · intro h
     rw [commutator] at h
     unfold comm
     calc
       _ = X₀ +[F] X₁ +[F] addInv F X₀ +[F] addInv F X₁ +[F] X₁ +[F] X₀ := by
-        rw [add_assoc <| X₀ +[F] X₁ +[F] addInv F X₀, add_addInv_eq_zero', zero_add_eq_self',
-          add_assoc <| X₀ +[F] X₁, add_addInv_eq_zero', zero_add_eq_self']
+        rw [add_assoc (Z₀ := X₀ +[F] X₁ +[F] addInv F X₀), add_addInv_eq_zero', zero_add_eq_self',
+          add_assoc (Z₀ := X₀ +[F] X₁), add_addInv_eq_zero', zero_add_eq_self']
         have aux : ![X₀, X₁] = (X : Fin 2 → MvPowerSeries (Fin 2) R) := by
           simp [@funext_iff]
         simp [add, aux, ←map_algebraMap_eq_subst_X]
+        · rw [constantCoeff_subst_zero]
+          all_goals simp [F.zero_constantCoeff]
+        · exact constantCoeff_addInvF_X₀
+        · simp
+        · rw [constantCoeff_subst_zero]
+          intro s; fin_cases s
+          · simp
+            rw [constantCoeff_subst_zero (fun s => by fin_cases s <;> simp) F.zero_constantCoeff]
+          · simp [constantCoeff_addInvF_X₀]
+          · exact F.zero_constantCoeff
+        · exact constantCoeff_addInvF_X₁
+        · simp
       _ = X₁ +[F] X₀ := by
         rw [h, zero_add_eq_self]
 
@@ -194,18 +226,50 @@ lemma comm_iff_commutator_eq_zero :
 -- scoped[FormalGroup] notation:65 α:65 " •[" G:0 "] " f:66 =>
 --   PowerSeries.subst f α.toFun
 
-lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} (f g : MvPowerSeries σ R):
+omit [Nontrivial R] in
+lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} {f g : MvPowerSeries σ R}
+  (hf : constantCoeff f = 0) (hg : constantCoeff g = 0):
   PowerSeries.subst (f +[G₁] g) α.toFun = (PowerSeries.subst f α.toFun) +[G₂]
-    (PowerSeries.subst g α.toFun) := sorry
+  (PowerSeries.subst g α.toFun) := by
+  calc
+    _ = subst ![f, g] (PowerSeries.subst G₁.toFun α.toFun) := by
+      rw [PowerSeries.subst, PowerSeries.subst, subst_comp_subst_apply
+        (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero
+        G₁.zero_constantCoeff) (HasSubst.FinPairing hf hg)]
+    _ = _ := by
+      rw [α.hom, subst_comp_subst_apply (has_subst_toMvPowerSeries α.zero_constantCoeff)
+        (HasSubst.FinPairing hf hg)]
+      apply subst_congr
+      funext s; fin_cases s
+      · simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
+        rw [subst_comp_subst_apply (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _)
+          <| HasSubst.FinPairing hf hg]
+        apply subst_congr
+        funext s
+        simp [subst_X <| HasSubst.FinPairing hf hg]
+      · simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
+        rw [subst_comp_subst_apply (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _)
+          <| HasSubst.FinPairing hf hg]
+        apply subst_congr
+        funext s; simp [subst_X <| HasSubst.FinPairing hf hg]
+
+
 
 /- Let `α` be a formal group homomorphism from `F(X,Y)` to `F'(X,Y)`, if `F'` is commutative
   then `α (commutator F) = 0` -/
 lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' : F'.comm):
   PowerSeries.subst (commutator F) α.toFun = 0 := by
-  simp [commutator, hom_add]
-  rw [add_assoc <| PowerSeries.subst X₀ α.toFun, add_comm hF' <| PowerSeries.subst X₁ α.toFun,
-    ←add_assoc, ←hom_add, add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add,
-    add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add,
+  simp [commutator]
+  have aux₁ : constantCoeff (X₀ +[F] X₁) = 0 :=
+    constantCoeff_subst_zero (fun s => by fin_cases s <;> simp) F.zero_constantCoeff
+  have aux₂ : constantCoeff (X₀ +[F] X₁ +[F] addInv F X₀) = 0 := constantCoeff_subst_zero
+    (fun s => by fin_cases s <;> simp [aux₁, constantCoeff_addInvF_X₀]) F.zero_constantCoeff
+  rw [hom_add aux₂ constantCoeff_addInvF_X₁, hom_add aux₁ constantCoeff_addInvF_X₀,
+    hom_add (constantCoeff_X 0) (constantCoeff_X 1), add_assoc (Z₀ := PowerSeries.subst X₀ α.toFun),
+    add_comm hF' (Z₀ := PowerSeries.subst X₁ α.toFun), ←add_assoc,
+    ←hom_add (constantCoeff_X 0) constantCoeff_addInvF_X₀,
+    add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add
+    (constantCoeff_X 1) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add rfl rfl,
     zero_add_eq_self]
   ext d
   simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
@@ -214,6 +278,10 @@ lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' :
   by_cases hx : x = 0
   · simp [hx, α.zero_constantCoeff]
   · simp [zero_pow hx]
+  all_goals rw [PowerSeries.subst, constantCoeff_subst_zero] <;> simp [α.zero_constantCoeff,
+    constantCoeff_addInvF_X₀, constantCoeff_addInvF_X₁]
+
+
 
 -- lemma MvPowerSeries.homogeneousComponent_pow_of_le_order {p n : ℕ} {f : MvPowerSeries.} :
 --   homogeneousComponent
@@ -233,9 +301,18 @@ lemma le_order_pow {n : ℕ} {f : MvPowerSeries σ R}:
         simp [pow_add]
         apply le_order_mul
 
-lemma order_neZero {f : MvPowerSeries σ R}:
+
+omit [Nontrivial R] in
+lemma order_neZero {f : MvPowerSeries σ R} (h : constantCoeff f = 0):
   f.order ≠ 0 := by
-  sorry
+  refine ENat.one_le_iff_ne_zero.mp ?_
+  by_cases hf : f = 0
+  · simp [hf]
+  apply MvPowerSeries.le_order
+  simp
+  intro d hd
+  have deq : d = 0 := (degree_eq_zero_iff d).mp hd
+  simp [deq, h]
 
 
 
@@ -276,7 +353,7 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
           linarith
         _ ≥ n := Nat.find_min' exist_aux hd₁
     have mtoNat_neZero : m.toNat ≠ 0 := by
-      have neZero : m ≠ 0 := order_neZero
+      have neZero : m ≠ 0 := order_neZero <| constantCoeff_commutator F
       have neTop : m ≠ ⊤ := ENat.coe_toNat_eq_self.mp meq
       simp [neZero, neTop]
     have m_decomp_aux : m.toNat = n + (m.toNat - n) := by omega
@@ -454,8 +531,7 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
         · have mem_aux : l ∈  (Finset.range r.toNat).finsuppAntidiag d' := by
             simp
             constructor
-            ·
-              simp [l]
+            · simp [l]
               calc
                 _ = ∑ x ∈ Finset.range r.toNat, d₀ := by
                   apply Finset.sum_congr rfl
@@ -573,8 +649,8 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
     simp only
     rw [show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
       show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
-    obtain has_subst₁ := has_subst_aux₁ (X₀ + X₁ + c • X₀ * X₁ ^ p) (R := R) (by simp)
-    obtain has_subst₂ := has_subst_aux₂ (X₀ + X₁ + c • (X₀ * X₁ ^ p)) (R := R)  (by simp)
+    obtain has_subst₁ := has_subst_aux₁ (F := X₀ + X₁ + c • X₀ * X₁ ^ p) (R := R) (by simp)
+    obtain has_subst₂ := has_subst_aux₂ (F := X₀ + X₁ + c • (X₀ * X₁ ^ p)) (R := R)  (by simp)
     rw [←smul_eq_C_mul, subst_add has_subst₁, subst_add has_subst₁, subst_mul has_subst₁, subst_X has_subst₁,
       subst_X has_subst₁, subst_smul has_subst₁, subst_X has_subst₁,
       subst_pow has_subst₁, subst_X has_subst₁]
@@ -764,46 +840,46 @@ def canonicalMapToTensorRat : R →ₐ[ℤ] (R ⊗[ℤ] ℚ) :=
 The kernel of the canonical map `r ↦ r ⊗ 1` from a ring `R` to `R ⊗[ℤ] ℚ`
 is precisely the `ℤ`-torsion submodule of `R`.
 -/
-theorem kernel_canonicalMapToTensorRat_eq_torsion :
-  ker (canonicalMapToTensorRat R) = torsion ℤ R := by
-  refine Submodule.ext ?_
-  intro x
-  constructor
-  · intro hx
-    refine (mem_torsion_iff x).mpr ?_
-    have aux : (canonicalMapToTensorRat R) x = 0 := by
-      exact hx
-    simp [canonicalMapToTensorRat] at aux
+-- theorem kernel_canonicalMapToTensorRat_eq_torsion :
+--   ker (canonicalMapToTensorRat R) = torsion ℤ R := by
+--   refine Submodule.ext ?_
+--   intro x
+--   constructor
+--   · intro hx
+--     refine (mem_torsion_iff x).mpr ?_
+--     have aux : (canonicalMapToTensorRat R) x = 0 := by
+--       exact hx
+--     simp [canonicalMapToTensorRat] at aux
 
-    sorry
-  · intro hx
-    simp [canonicalMapToTensorRat]
-    obtain ⟨a, ha⟩ := (mem_torsion_iff x).mp hx
-    calc
-      _ = (a • x) ⊗ₜ (1 / (a : ℚ)) := by
-        rw [smul_tmul]
-        have aux : (a • (1 / (a : ℚ))) = 1 := by
-          calc
-            _ = a * (a : ℚ)⁻¹ := by
-              aesop
-            _ = 1 := by
-              simp
-        rw [aux]
-      _ = 0 := by
-        simp only [ha, one_div, zero_tmul]
+--     sorry
+--   · intro hx
+--     simp [canonicalMapToTensorRat]
+--     obtain ⟨a, ha⟩ := (mem_torsion_iff x).mp hx
+--     calc
+--       _ = (a • x) ⊗ₜ (1 / (a : ℚ)) := by
+--         rw [smul_tmul]
+--         have aux : (a • (1 / (a : ℚ))) = 1 := by
+--           calc
+--             _ = a * (a : ℚ)⁻¹ := by
+--               aesop
+--             _ = 1 := by
+--               simp
+--         rw [aux]
+--       _ = 0 := by
+--         simp only [ha, one_div, zero_tmul]
 
 
-lemma lem2 :
-  ∀ x, x ∈ torsion ℤ R ↔ addOrderOf x ≠ 0 := by
-  intro x
-  constructor
-  ·
-    intro hx
-    simp at hx
-    obtain ⟨a, ha₁, ha₂⟩ := hx
+-- lemma lem2 :
+--   ∀ x, x ∈ torsion ℤ R ↔ addOrderOf x ≠ 0 := by
+--   intro x
+--   constructor
+--   ·
+--     intro hx
+--     simp at hx
+--     obtain ⟨a, ha₁, ha₂⟩ := hx
 
-    sorry
-  · sorry
+--     sorry
+--   · sorry
 
 lemma lem1 : ringChar (Localization.Away (0 : R)) = 0 := by
   refine (CharP.ringChar_zero_iff_CharZero (Localization.Away 0)).mpr ?_

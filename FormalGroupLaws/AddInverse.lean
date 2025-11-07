@@ -325,9 +325,7 @@ lemma coeff_n_aux (n : ℕ):
 theorem subst_addInv_eq_zero : MvPowerSeries.subst ![X, (addInv_X F)] F.toFun = 0 := by
   ext n
   by_cases hn : n = 0
-  · simp [hn]
-    rw [constantCoeff, MvPowerSeries.constantCoeff_subst (HasSubst.addInv_aux _)]
-    simp
+  · simp [hn, constantCoeff, MvPowerSeries.constantCoeff_subst (HasSubst.addInv_aux _)]
     apply finsum_eq_zero_of_forall_eq_zero
     intro d
     by_cases hd₀ : d 0 ≠ 0
@@ -339,10 +337,9 @@ theorem subst_addInv_eq_zero : MvPowerSeries.subst ![X, (addInv_X F)] F.toFun = 
     simp_all
     have d_eq_zero : d = 0 := by
       ext x
-      fin_cases x; all_goals simp [hd₀, hd₁]
+      fin_cases x <;> simp [hd₀, hd₁]
     simp [d_eq_zero, F.zero_constantCoeff]
-  simp
-  rw [←(coeff_n_aux F n), coeff_subst_addInv_trunc _ _ hn]
+  simp [←(coeff_n_aux F n), coeff_subst_addInv_trunc _ _ hn]
   congr! 3
   unfold trunc
   simp_rw [←Polynomial.coe_C, ←Polynomial.coe_X]
