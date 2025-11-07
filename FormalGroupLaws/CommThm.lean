@@ -1,5 +1,4 @@
 import FormalGroupLaws.Basic
-import Mathlib.Algebra.Module.Torsion
 import Mathlib.RingTheory.Nilpotent.Lemmas
 import Mathlib.Algebra.Module.Submodule.Ker
 import Mathlib.GroupTheory.MonoidLocalization.Away
