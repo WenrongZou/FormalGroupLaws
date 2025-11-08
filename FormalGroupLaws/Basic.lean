@@ -864,6 +864,38 @@ theorem subst_X₁_eq_X₁ :
   exact (PowerSeries.subst_eq_id_iff_eq_X (subst ![0, PowerSeries.X] F.toFun)
     (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₁))).mp eq_aux
 
+lemma zero_add_eq_self {f : MvPowerSeries σ R} (h : constantCoeff f = 0) :
+  0 +[F] f = f := calc
+    _ = PowerSeries.subst f (R := R) (subst ![0, PowerSeries.X] F.toFun) := by
+      rw [PowerSeries.subst, subst_comp_subst_apply has_subst_X₁
+      <| hasSubst_of_constantCoeff_zero fun s ↦ h]
+      apply subst_congr
+      funext s; fin_cases s
+      · simp
+        rw [←substAlgHom_apply <| hasSubst_of_constantCoeff_zero fun s ↦ h]
+        exact Eq.symm <| map_zero <| substAlgHom <| hasSubst_of_constantCoeff_zero fun s ↦ h
+      · simp
+        rw [←PowerSeries.subst, PowerSeries.subst_X <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+    _ = _ := by
+      rw [subst_X₁_eq_X₁, PowerSeries.subst_X <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+
+
+lemma zero_add_eq_self' {f : MvPowerSeries σ R} (h : constantCoeff f = 0) :
+  f +[F] 0 = f := calc
+    _ = PowerSeries.subst f (R := R) (subst ![PowerSeries.X, 0] F.toFun) := by
+      rw [PowerSeries.subst, subst_comp_subst_apply has_subst_X₀
+      <| hasSubst_of_constantCoeff_zero fun s ↦ h]
+      apply subst_congr
+      funext s; fin_cases s
+      · simp
+        rw [←PowerSeries.subst, PowerSeries.subst_X <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+      · simp
+        rw [←substAlgHom_apply <| hasSubst_of_constantCoeff_zero fun s ↦ h]
+        exact Eq.symm <| map_zero <| substAlgHom <| hasSubst_of_constantCoeff_zero fun s ↦ h
+    _ = _ := by
+      rw [subst_X_eq_X, PowerSeries.subst_X <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+
+
 
 /-- Let `G₁, G₂` be two formal group laws over `CommRing A`. A homomorphism (over `A`)
   `F (X, Y) → G (X, Y)` is a power series `α(X) = b₁ * X + b₂ * X ^ 2 + ⋯` with coefficients

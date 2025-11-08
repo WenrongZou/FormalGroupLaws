@@ -18,7 +18,7 @@ variable {R : Type*} [CommRing R] (F : FormalGroup R) [Nontrivial R] {σ : Type*
 
 namespace FormalGroup
 
-open Algebra Submodule MvPowerSeries TensorProduct LinearMap Finsupp
+open Algebra Submodule MvPowerSeries TensorProduct LinearMap Finsupp Classical
 
 omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
@@ -99,90 +99,77 @@ theorem comm_of_char_zero_and_no_torsion_nilpotent (h : IsAddTorsionFree R) :
 theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
   (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
   (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
+  let H := X₀ +[F] X₁ +[F] (addInv F X₀)
+  /- H (0, Y) = Y-/
+  have eq_aux₀ : subst ![0, X₁] H = X₁ (R := R) := sorry
+  /- then we can write H(X,Y) = Y + ∑ rₙ(X) Yⁿ.-/
+  let r : ℕ → PowerSeries R := fun n =>
+    PowerSeries.mk <| fun m => coeff (single 0 m + single 1 n) H
+  have exist_neZero : ∃ n, r n ≠ 0 :=
+    /- here we need to use `F` is not commutative. -/
+    sorry
+  obtain m := Nat.find exist_neZero
+  have m_neZero : m ≠ 0 := sorry
+  by_cases hm : m = 1
+  · /- in this cases m = 1, we can find a Formal Group homomorphism to
+      multiplicative Formal Group `Gₘ`.-/
 
-  sorry
+    sorry
+  · /- in this cases m ≥ 2, we can find a Formal Group homomorphism to an
+      additive Formal Group `Gₐ`.-/
+    have mgeTwo : m ≥ 2 := by grind
+
+    sorry
 
 def commutator : MvPowerSeries (Fin 2) R :=
   X₀ +[F] X₁ +[F] (addInv F X₀) +[F] (addInv F X₁)
 
-lemma constantCoeff_commutator : constantCoeff F.commutator = 0 := sorry
-
-lemma HasSubst.powerseries_commutator : PowerSeries.HasSubst F.commutator := sorry
-
-lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (hf : constantCoeff f = 0) :
-  f +[F] addInv F f = 0 := by
-  have eq_aux : PowerSeries.X +[F] addInv F PowerSeries.X = (0 : PowerSeries R)  := by
-    have aux : addInv F PowerSeries.X = addInv_X F := by
-      unfold addInv
-      rw [←PowerSeries.map_algebraMap_eq_subst_X]
-      simp
-    rw [aux, X_add_addInv_X_eq_zero]
-  calc
-    _ = PowerSeries.subst f (PowerSeries.X +[F] addInv F PowerSeries.X) := by
-      unfold add
-      have has_subst₁ : HasSubst ![PowerSeries.X, addInv F PowerSeries.X] := by
-        refine HasSubst.FinPairing ?_ ?_
-        simp
-        rw [addInv, PowerSeries.subst, constantCoeff_subst
-          (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X'))]
-        simp
-        apply finsum_eq_zero_of_forall_eq_zero
-        intro x
-        by_cases hx : x = 0
-        · simp [hx]
-          exact rfl
-        rw [zero_pow]
-        simp
-        by_contra hc
-        have xeq : x = 0 := by
-          exact Eq.symm (Finsupp.ext fun a ↦ _root_.id (Eq.symm hc))
-        contradiction
-      rw [PowerSeries.subst, subst_comp_subst_apply has_subst₁
-        (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero hf)]
-      apply subst_congr
-      funext s; fin_cases s
-      · simp
-        rw [PowerSeries.X, subst_X <| hasSubst_of_constantCoeff_zero fun s ↦ hf]
-      · simp
-        unfold addInv
-        rw [PowerSeries.subst, PowerSeries.subst, subst_comp_subst_apply
-          (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X'))
-          (hasSubst_of_constantCoeff_zero fun s ↦ hf)]
-        apply subst_congr
-        funext s
-        rw [PowerSeries.X, subst_X <| hasSubst_of_constantCoeff_zero fun s ↦ hf]
-    _ = _ := by
-      rw [eq_aux]
-      ext n
-      rw [PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero hf]
-      simp
-
-
-
-lemma add_addInv_eq_zero' (f : MvPowerSeries σ R) :
-  addInv F f +[F] f = 0 := sorry
-
-
-lemma zero_add_eq_self (f : MvPowerSeries σ R) :
-  0 +[F] f = f := sorry
-
-
-lemma zero_add_eq_self' (f : MvPowerSeries σ R) :
-  f +[F] 0 = f := sorry
+omit [Nontrivial R] in
+lemma constantCoeff_commutator : constantCoeff F.commutator = 0 := by
+  rw [commutator, constantCoeff_subst_zero]
+  simp
+  constructor
+  rw [constantCoeff_subst_zero]
+  simp
+  constructor
+  rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
+  all_goals simp [constantCoeff_addInvF_X₀, F.zero_constantCoeff, constantCoeff_addInvF_X₁]
 
 
 omit [Nontrivial R] in
-variable {F} in
-lemma constantCoeff_addInvF_X₀ :  constantCoeff (addInv F X₀) = 0 := by
-  simp [addInv]
-  rw [PowerSeries.subst, constantCoeff_subst_zero (by simp) rfl]
+lemma HasSubst.powerseries_commutator : PowerSeries.HasSubst F.commutator :=
+  PowerSeries.HasSubst.of_constantCoeff_zero <| constantCoeff_commutator F
 
 
-omit [Nontrivial R] in
-variable {F} in
-lemma constantCoeff_addInvF_X₁ :  constantCoeff (addInv F X₁) = 0 := by
-  simp [addInv]
-  rw [PowerSeries.subst, constantCoeff_subst_zero (by simp) rfl]
+lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (h : constantCoeff f = 0) :
+  f +[F] addInv F f = 0 := calc
+  _ = PowerSeries.subst f (subst ![ PowerSeries.X, addInv_X F] F.toFun) := by
+    rw [PowerSeries.subst, subst_comp_subst_apply (HasSubst.addInv_aux F)
+      (hasSubst_of_constantCoeff_zero fun s ↦ h)]
+    apply subst_congr
+    funext s; fin_cases s
+    · simp; rw [← PowerSeries.subst, PowerSeries.subst_X
+      <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+    · simp; rfl
+  _ = _ := by
+    rw [subst_addInv_eq_zero]; ext n
+    simp [PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+
+
+lemma add_addInv_eq_zero' {f : MvPowerSeries σ R} (h : constantCoeff f = 0):
+  addInv F f +[F] f = 0 := calc
+  _ = PowerSeries.subst f (subst ![(addInv_X_left F), PowerSeries.X] F.toFun) := by
+    rw [PowerSeries.subst, subst_comp_subst_apply (HasSubst.addInv_aux' F)
+      (hasSubst_of_constantCoeff_zero fun s ↦ h)]
+    apply subst_congr
+    funext s; fin_cases s
+    · simp [left_addInv_eq_right_addInv]; rfl
+    · simp; rw [← PowerSeries.subst, PowerSeries.subst_X
+      <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+  _ = _ := by
+    rw [subst_addInv_eq_zero_left]; ext n
+    simp [PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero h]
+
 
 
 lemma comm_iff_commutator_eq_zero :
@@ -208,8 +195,18 @@ lemma comm_iff_commutator_eq_zero :
         simp [add, aux, ←map_algebraMap_eq_subst_X]
         · rw [constantCoeff_subst_zero]
           all_goals simp [F.zero_constantCoeff]
+        · exact aux
+        · rw [constantCoeff_subst_zero]
+          all_goals simp [F.zero_constantCoeff]
         · exact constantCoeff_addInvF_X₀
         · simp
+        · rw [constantCoeff_subst_zero]
+          intro s; fin_cases s
+          · simp
+            rw [constantCoeff_subst_zero (fun s => by fin_cases s <;> simp) F.zero_constantCoeff]
+          · simp [constantCoeff_addInvF_X₀]
+          · exact F.zero_constantCoeff
+        · exact constantCoeff_X 1
         · rw [constantCoeff_subst_zero]
           intro s; fin_cases s
           · simp
@@ -219,7 +216,7 @@ lemma comm_iff_commutator_eq_zero :
         · exact constantCoeff_addInvF_X₁
         · simp
       _ = X₁ +[F] X₀ := by
-        rw [h, zero_add_eq_self]
+        rw [h, zero_add_eq_self <| constantCoeff_X 1]
 
 
 -- variable (G G' : FormalGroup R) {α : FormalGroupHom G G'} in
@@ -270,7 +267,7 @@ lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' :
     ←hom_add (constantCoeff_X 0) constantCoeff_addInvF_X₀,
     add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add
     (constantCoeff_X 1) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add rfl rfl,
-    zero_add_eq_self]
+    zero_add_eq_self rfl]
   ext d
   simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
   apply finsum_eq_zero_of_forall_eq_zero
