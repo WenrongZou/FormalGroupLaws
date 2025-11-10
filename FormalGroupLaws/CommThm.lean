@@ -93,14 +93,72 @@ theorem comm_of_char_zero_and_no_torsion_nilpotent (h : IsAddTorsionFree R) :
   ¬ ∃ r : R, r ≠ 0 ∧ IsNilpotent r ∧ addOrderOf r ≠ 0 → F.comm := by
   sorry
 
+/-- Given `f, g` be two MvPowerSeries, preCommutator define to be
+  `f +[F] g +[F] (addInv F f)`. -/
+abbrev preCommutator (f g : MvPowerSeries σ R) := f +[F] g +[F] (addInv F f)
+
+/-- If the formal group `F` is not commutative, then `preCommutator F X₀ X₁ ≠ X₁`. -/
+lemma preCommutator_ne_of_nonComm (h : ¬ F.comm) :
+  preCommutator F X₀ X₁ ≠ X₁ := by
+  by_contra hc
+  have comm_aux : F.comm := by
+    rw [comm]
+    calc
+      _ = F.preCommutator X₀ X₁ +[F] X₀ := by
+        have aux : ![X₀, X₁] = X (R := R):= List.ofFn_inj.mp rfl
+        have coeff_aux : constantCoeff (X₀ +[F] X₁) = 0 := by
+          rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
+        rw [add_assoc coeff_aux constantCoeff_addInvF_X₀ (constantCoeff_X 0),
+          add_addInv_eq_zero' _ <| constantCoeff_X _,
+          zero_add_eq_self' coeff_aux, add, aux, subst_self]
+        rfl
+      _ = _ := by
+        rw [hc]
+  exact h comm_aux
+
+/-- here -/
+lemma coeff_preCommutator_zero {n : ℕ} :
+  coeff (single 0 0 + single 1 n) (preCommutator F X₀ X₁) = 0 := by
+
+  sorry
+
+/-- given a two variable multi variable power series, reordering the terms and write is
+  as the $r_0(X) + r_1(X) Y + r_2(X) Y^2 + r_3(X) Y^3 + ...$, `collect_X₉ n = r_n (X)`.-/
+abbrev collect_X₀ (n : ℕ) : MvPowerSeries (Fin 2) R →+ MvPowerSeries (Fin 2) R where
+  toFun := fun f => PowerSeries.subst X₀ <| PowerSeries.mk
+    <| fun m => coeff (single 0 m + single 1 n) f
+  map_zero' := by
+    simp [show (PowerSeries.mk fun m ↦ (0 : R)) = 0 by rfl]
+    rw [←PowerSeries.coe_substAlgHom <| PowerSeries.HasSubst.X 0, map_zero]
+  map_add' := fun x y => by
+    rw [←PowerSeries.subst_add <| PowerSeries.HasSubst.X 0]
+    congr
+
+/-- Given a two variable power series with the expression
+  `r_0(X) + r_1(X) Y + r_2(X) Y^2 + r_3(X) Y^3 + ...`, this is the truncation of
+  `Y^n`.  -/
+abbrev trunc_X₁ (n : ℕ) : MvPowerSeries (Fin 2) R →+ MvPowerSeries (Fin 2) R where
+  toFun := fun f => ∑ m ∈ Finset.Iio n, collect_X₀ m f * X₁ ^ m
+  map_zero' := by
+    refine Finset.sum_eq_zero <| fun m hm => by simp [AddMonoidHom.map_zero]
+  map_add' := fun x y => by
+    rw [←Finset.sum_add_distrib]
+    refine Finset.sum_congr rfl <| fun m hm => by
+      rw [←add_mul]
+      congr
+      exact AddMonoidHom.map_add (collect_X₀ m) x y
+
+
+-- (hf : constantCoeff f = 0) (hg : constantCoeff g = 0)
+
 /-- Given a formal group law `F(X,Y)`, assume that `F(X,Y)` is not commutative, then
   there exist a nonzero formal group homomorphism from `F(X,Y)` to additive formal
   group law `Gₐ` or multiplicative formal group law `Gₘ`.-/
 theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
   (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
   (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
-  let H := X₀ +[F] X₁ +[F] (addInv F X₀)
-  /- H (0, Y) = Y-/
+  let H := preCommutator F X₀ X₁
+  /- H (0, Y) = Y. -/
   have eq_aux₀ : subst ![0, X₁] H = X₁ (R := R) := sorry
   /- then we can write H(X,Y) = Y + ∑ rₙ(X) Yⁿ.-/
   let r : ℕ → PowerSeries R := fun n =>
@@ -139,36 +197,6 @@ lemma constantCoeff_commutator : constantCoeff F.commutator = 0 := by
 omit [Nontrivial R] in
 lemma HasSubst.powerseries_commutator : PowerSeries.HasSubst F.commutator :=
   PowerSeries.HasSubst.of_constantCoeff_zero <| constantCoeff_commutator F
-
-
-lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (h : constantCoeff f = 0) :
-  f +[F] addInv F f = 0 := calc
-  _ = PowerSeries.subst f (subst ![ PowerSeries.X, addInv_X F] F.toFun) := by
-    rw [PowerSeries.subst, subst_comp_subst_apply (HasSubst.addInv_aux F)
-      (hasSubst_of_constantCoeff_zero fun s ↦ h)]
-    apply subst_congr
-    funext s; fin_cases s
-    · simp; rw [← PowerSeries.subst, PowerSeries.subst_X
-      <| PowerSeries.HasSubst.of_constantCoeff_zero h]
-    · simp; rfl
-  _ = _ := by
-    rw [subst_addInv_eq_zero]; ext n
-    simp [PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero h]
-
-
-lemma add_addInv_eq_zero' {f : MvPowerSeries σ R} (h : constantCoeff f = 0):
-  addInv F f +[F] f = 0 := calc
-  _ = PowerSeries.subst f (subst ![(addInv_X_left F), PowerSeries.X] F.toFun) := by
-    rw [PowerSeries.subst, subst_comp_subst_apply (HasSubst.addInv_aux' F)
-      (hasSubst_of_constantCoeff_zero fun s ↦ h)]
-    apply subst_congr
-    funext s; fin_cases s
-    · simp [left_addInv_eq_right_addInv]; rfl
-    · simp; rw [← PowerSeries.subst, PowerSeries.subst_X
-      <| PowerSeries.HasSubst.of_constantCoeff_zero h]
-  _ = _ := by
-    rw [subst_addInv_eq_zero_left]; ext n
-    simp [PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero h]
 
 
 
