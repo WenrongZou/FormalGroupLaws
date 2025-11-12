@@ -494,35 +494,22 @@ lemma coeff_of_X₀_of_subst_X₀ :
     · -- the case `d 1 = 0`
       by_cases hd' : d 0 = 0
       · -- the case `d 0 = 0`
-        have d_is_zero : d = 0 := by
-          refine (Finsupp.ext ?_)
-          intro n
-          fin_cases n
-          all_goals simp [hd, hd']
+        have d_is_zero : d = 0 := Finsupp.ext <| fun x => by fin_cases x <;> simp [hd, hd']
         simp [d_is_zero, zero_constantCoeff]
       · -- the case `d 0 ≠ 0`
         simp [hd, PowerSeries.coeff_X_pow]
         by_cases hd₀ : d 0 = 1
         · -- the cases `d 0 = 1`
           -- contradiction to the assumption
-          have d_eq : d = (Finsupp.single 0 1) := by
-            refine (Finsupp.ext ?_)
-            intro x
-            by_cases hx₀ : x = 0
-            · simp [hx₀, hd₀]
-            · have aux : x = 1 := by omega
-              simp [aux, hd]
+          have d_eq : d = (Finsupp.single 0 1) := Finsupp.ext <| fun x => by
+            fin_cases x <;> simp [hd₀, hd]
           contradiction
-        have aux (f : PowerSeries R): PowerSeries.coeff 1 f =
-          coeff (Finsupp.single () 1) f := by
-          exact rfl
         intro hc
         by_contra
         exact hd₀ (Eq.symm hc)
     · -- the case `d 1 ≠ 0`
       simp [zero_pow hd]
-  rw [finsum_eq_single _ _ eq_aux]
-  simp [lin_coeff_X,  PowerSeries.coeff_X]
+  simp [finsum_eq_single _ _ eq_aux, lin_coeff_X,  PowerSeries.coeff_X]
 
 
 /-- The first coefficient of `F(0, X)` is `1`. -/
@@ -536,75 +523,59 @@ lemma coeff_of_X₁_of_subst_X₁ :
     · -- the case `d 0 = 0`
       by_cases hd' : d 1 = 0
       · -- the case d 1 = 0
-        have d_is_zero : d = 0 := by
-          refine (Finsupp.ext ?_)
-          intro n
-          fin_cases n
-          all_goals simp [hd, hd']
+        have d_is_zero : d = 0 := Finsupp.ext fun n => by fin_cases n <;> simp [hd, hd']
         simp [d_is_zero, F.zero_constantCoeff]
       · -- the case d 1 ≠ 0
         simp [hd, PowerSeries.coeff_X_pow]
         by_cases hd₁ : d 1 = 1
         · -- the case d 1 = 1
-          have d_eq : d = (Finsupp.single 1 1) := by
-            refine (Finsupp.ext ?_)
-            intro x
-            fin_cases x
-            all_goals simp [hd, hd₁]
+          have d_eq : d = (Finsupp.single 1 1) :=
+            Finsupp.ext <| fun x => by fin_cases x <;> simp [hd, hd₁]
           contradiction
         intro h
         by_contra _
         exact hd₁ (Eq.symm h)
     · -- the case `d 0 ≠ 0`
       simp [zero_pow hd]
-  rw [finsum_eq_single _ _ eq_aux]
-  simp [lin_coeff_Y, PowerSeries.coeff_X]
+  simp [finsum_eq_single _ _ eq_aux, lin_coeff_Y, PowerSeries.coeff_X]
 
 
 /-- The constant coefficient of `F(X, 0)` is `0`. -/
 lemma constantCoeff_of_subst_X₀ :
   PowerSeries.constantCoeff (subst ![PowerSeries.X (R := R), 0] F.toFun) (R := R) = 0 := by
   rw [PowerSeries.constantCoeff, constantCoeff_subst has_subst_X₀]
-  apply finsum_eq_zero_of_forall_eq_zero
-  intro d
-  simp
-  by_cases hd : d 1 = 0
-  · -- the case `d 1 = 0`
-    by_cases hd' : d 0 = 0
-    · -- the case `d 0 = 0`
-      have d_is_zero : d = 0 := by
-        refine (Finsupp.ext ?_)
-        intro n
-        fin_cases n
-        all_goals simp [hd, hd']
-      simp [d_is_zero, zero_constantCoeff]
-    · -- the case `d 0 ≠ 0`
-      simp [hd, zero_pow hd']
-  · -- the case `d 1 ≠ 0`
-    simp [zero_pow hd]
+  apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
+    simp
+    by_cases hd : d 1 = 0
+    · -- the case `d 1 = 0`
+      by_cases hd' : d 0 = 0
+      · -- the case `d 0 = 0`
+        have d_is_zero : d = 0 :=
+          Finsupp.ext <| fun n => by fin_cases n <;> simp [hd, hd']
+        simp [d_is_zero, zero_constantCoeff]
+      · -- the case `d 0 ≠ 0`
+        simp [hd, zero_pow hd']
+    · -- the case `d 1 ≠ 0`
+      simp [zero_pow hd]
 
 
 /-- The constant coefficient of `F(0, X)` is `0`. -/
 lemma constantCoeff_of_subst_X₁ :
   PowerSeries.constantCoeff (subst ![0, PowerSeries.X] F.toFun) (R := R) = 0 := by
   rw [PowerSeries.constantCoeff, constantCoeff_subst has_subst_X₁]
-  apply finsum_eq_zero_of_forall_eq_zero
-  intro d
-  simp
-  by_cases hd : d 0 = 0
-  · -- the case `d 0 = 0`
-    by_cases hd' : d 1 = 0
-    · -- the case `d 1 = 0`
-      have d_is_zero : d = 0 := by
-        refine (Finsupp.ext ?_)
-        intro n
-        fin_cases n
-        all_goals simp [hd, hd']
-      simp [d_is_zero, zero_constantCoeff]
-    · -- the case `d 1 ≠ 0`
-      simp [hd, zero_pow hd']
-  · -- the case `d 0 ≠ 0`
-    simp [zero_pow hd]
+  apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
+    simp
+    by_cases hd : d 0 = 0
+    · -- the case `d 0 = 0`
+      by_cases hd' : d 1 = 0
+      · -- the case `d 1 = 0`
+        have d_is_zero : d = 0 :=
+          Finsupp.ext <| fun n => by fin_cases n <;> simp [hd, hd']
+        simp [d_is_zero, zero_constantCoeff]
+      · -- the case `d 1 ≠ 0`
+        simp [hd, zero_pow hd']
+    · -- the case `d 0 ≠ 0`
+      simp [zero_pow hd]
 
 
 
@@ -618,10 +589,6 @@ lemma self_comp_aux :
   (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) ∘
   (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) =
   (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) := by
-  let map_aux : Fin 3 → PowerSeries R
-    | ⟨0, _⟩ => PowerSeries.X
-    | ⟨1, _⟩ => 0
-    | ⟨2, _⟩ => 0
   obtain assoc_eq := F.assoc
   have has_subst_aux : PowerSeries.HasSubst (subst ![PowerSeries.X, 0] F.toFun (S := R)) := by
     refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
@@ -643,17 +610,17 @@ lemma self_comp_aux :
       obtain hd₁ | hd₁ := dneq
       · simp [zero_pow hd₁]
       · simp [zero_pow hd₁]
-  have has_subst_map_aux : HasSubst map_aux := by
+  have has_subst_map_aux : HasSubst ![PowerSeries.X (R := R), 0, 0] := by
     refine hasSubst_of_constantCoeff_zero ?_
     intro s
     fin_cases s
-    all_goals simp [map_aux]
+    all_goals simp
   /- prove that F(F(X,0),0) = F(X, F(0, 0)). -/
-  have eq_aux₁ : subst map_aux (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
-    subst map_aux (subst ![Y₀, subst ![Y₁, Y₂] F.toFun (S := R)] F.toFun) := by
+  have eq_aux₁ : subst ![PowerSeries.X (R := R), 0, 0] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
+    subst ![PowerSeries.X (R := R), 0, 0] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun (S := R)] F.toFun) := by
     rw [assoc_eq]
 
-  have left_eq : subst map_aux (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
+  have left_eq : subst ![PowerSeries.X (R := R), 0, 0] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
     ((PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) ∘
     (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R))) PowerSeries.X := by
     simp
@@ -666,19 +633,14 @@ lemma self_comp_aux :
     · -- the cases s = 0
       simp
       obtain aux := PowerSeries.HasSubst.const has_subst_aux
-      unfold PowerSeries.X at aux
-      rw [PowerSeries.X, subst_X aux, subst_comp_subst_apply
+      -- unfold PowerSeries.X at aux
+      rw [← PowerSeries.subst, PowerSeries.subst_X has_subst_aux, subst_comp_subst_apply
         has_subst_XY has_subst_map_aux]
       apply subst_congr
-      funext t
-      fin_cases t
-      all_goals simp [map_aux, subst_X has_subst_map_aux]
-      rfl
+      funext t; fin_cases t <;> simp [subst_X has_subst_map_aux]
     · -- the cases s = 1
-      simp
-      rw [subst_X has_subst_map_aux]
-      simp [map_aux, ←coe_substAlgHom (PowerSeries.HasSubst.const has_subst_aux), map_zero]
-  have right_eq : subst map_aux (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
+      simp [subst_X has_subst_map_aux, ←coe_substAlgHom (PowerSeries.HasSubst.const has_subst_aux), map_zero]
+  have right_eq : subst ![PowerSeries.X (R := R), 0, 0] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
     (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) PowerSeries.X := by
     rw [PowerSeries.subst_X has_subst_aux, subst_comp_subst_apply
       (has_subst_aux₂ (F.zero_constantCoeff)) has_subst_map_aux]
@@ -686,10 +648,9 @@ lemma self_comp_aux :
     funext s
     fin_cases s
     · -- the cases s = 0
-      simp [subst_X has_subst_map_aux, map_aux]
+      simp [subst_X has_subst_map_aux]
     · -- the cases s = 1
-      simp
-      rw [subst_comp_subst_apply has_subst_YZ has_subst_map_aux]
+      simp [subst_comp_subst_apply has_subst_YZ has_subst_map_aux]
       have eq_aux₃ :  subst (0 : Fin 2 → PowerSeries R) F.toFun = 0 := by
         have aux : HasSubst (0 : Fin 2 → PowerSeries R) := by
           exact hasSubst_of_constantCoeff_zero (congrFun rfl)
@@ -707,10 +668,10 @@ lemma self_comp_aux :
             have deq : d = 0 := Finsupp.ext fun n => by fin_cases n <;> simp [hc]
             contradiction
           obtain hd₁ | hd₁ := dneq
-          · simp [zero_pow hd₁]
-          · simp [zero_pow hd₁]
+          <;> simp [zero_pow hd₁]
       rw [←eq_aux₃]
-      exact subst_congr <| by funext t; fin_cases t <;> simp [map_aux, subst_X has_subst_map_aux]
+      exact subst_congr <| by
+        funext t; fin_cases t <;> simp [eq_aux₃, subst_X has_subst_map_aux]
   rw [left_eq, right_eq] at eq_aux₁
   funext g
   have eq_aux₂ : g = PowerSeries.subst PowerSeries.X g := by
@@ -727,12 +688,6 @@ lemma self_comp_aux' :
   (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) ∘
   (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) =
   (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) := by
-  /- this map is Fin 3 → PowerSeries R where 0 → 0, 1 → 0, 2 → PowerSeries.X, and
-    subst this map to the associativity equality will get the require equality-/
-  let map_aux : Fin 3 → PowerSeries R
-    | ⟨0, _⟩ => 0
-    | ⟨1, _⟩ => 0
-    | ⟨2, _⟩ => PowerSeries.X
   obtain assoc_eq := F.assoc
   have has_subst_aux : PowerSeries.HasSubst (subst ![0, PowerSeries.X] F.toFun (S := R)) := by
     refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
@@ -750,13 +705,14 @@ lemma self_comp_aux' :
       obtain hd₁ | hd₁ := dneq
       · simp [zero_pow hd₁]
       · simp [zero_pow hd₁]
-  have has_subst_map_aux : HasSubst map_aux := hasSubst_of_constantCoeff_zero
-    <| fun s => by fin_cases s <;> simp [map_aux]
+  have has_subst_map_aux : HasSubst ![0, 0, PowerSeries.X (R := R)] :=
+    hasSubst_of_constantCoeff_zero
+    <| fun s => by fin_cases s <;> simp
   /- prove that F(F(X,0),0) = F(X, F(0, 0)). -/
-  have eq_aux₁ : subst map_aux (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
-    subst map_aux (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) := by
+  have eq_aux₁ : subst ![0, 0, PowerSeries.X (R := R)] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
+    subst ![0, 0, PowerSeries.X (R := R)] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) := by
     rw [assoc_eq]
-  have left_eq : subst map_aux (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
+  have left_eq : subst ![0, 0, PowerSeries.X (R := R)] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
     ((PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) ∘
     (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R))) PowerSeries.X := by
     simp
@@ -767,17 +723,17 @@ lemma self_comp_aux' :
     apply subst_congr
     funext s; fin_cases s
     · -- the cases s = 0
-      simp [subst_X has_subst_map_aux, map_aux, ←coe_substAlgHom (PowerSeries.HasSubst.const has_subst_aux), map_zero]
+      simp [subst_X has_subst_map_aux, ←coe_substAlgHom (PowerSeries.HasSubst.const has_subst_aux), map_zero]
     · -- the cases s = 1
       simp
       obtain aux := (PowerSeries.HasSubst.const has_subst_aux)
-      unfold PowerSeries.X at aux
-      rw [PowerSeries.X, subst_X aux, subst_comp_subst_apply
+
+      rw [← PowerSeries.subst, PowerSeries.subst_X has_subst_aux, subst_comp_subst_apply
         has_subst_YZ has_subst_map_aux]
       apply subst_congr
       funext t
-      fin_cases t <;> simp [map_aux, subst_X has_subst_map_aux]; rfl
-  have right_eq : subst map_aux (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
+      fin_cases t <;> simp [subst_X has_subst_map_aux]
+  have right_eq : subst ![0, 0, PowerSeries.X (R := R)] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
     (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) PowerSeries.X := by
     rw [PowerSeries.subst_X has_subst_aux, subst_comp_subst_apply
       (has_subst_aux₁ (F.zero_constantCoeff)) has_subst_map_aux]
@@ -804,9 +760,9 @@ lemma self_comp_aux' :
             · simp [zero_pow hd₁]
       rw [←eq_aux₃]
       apply subst_congr
-      funext t; fin_cases t <;> simp [map_aux, subst_X has_subst_map_aux]
+      funext t; fin_cases t <;> simp [eq_aux₃, subst_X has_subst_map_aux]
     · -- the cases s = 1
-      simp [subst_X has_subst_map_aux, map_aux]
+      simp [subst_X has_subst_map_aux]
   funext g
   have eq_aux₂ : g = PowerSeries.subst PowerSeries.X g := by
     simp [←PowerSeries.map_algebraMap_eq_subst_X]

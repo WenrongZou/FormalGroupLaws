@@ -124,29 +124,70 @@ lemma coeff_preCommutator_zero {n : ℕ} :
 
 /-- given a two variable multi variable power series, reordering the terms and write is
   as the $r_0(X) + r_1(X) Y + r_2(X) Y^2 + r_3(X) Y^3 + ...$, `collect_X₉ n = r_n (X)`.-/
-abbrev collect_X₀ (n : ℕ) : MvPowerSeries (Fin 2) R →+ MvPowerSeries (Fin 2) R where
-  toFun := fun f => PowerSeries.subst X₀ <| PowerSeries.mk
+abbrev collect_X₀ (n : ℕ) : MvPowerSeries (Fin 2) R →+ PowerSeries R where
+  toFun := fun f => PowerSeries.mk
     <| fun m => coeff (single 0 m + single 1 n) f
   map_zero' := by
     simp [show (PowerSeries.mk fun m ↦ (0 : R)) = 0 by rfl]
-    rw [←PowerSeries.coe_substAlgHom <| PowerSeries.HasSubst.X 0, map_zero]
-  map_add' := fun x y => by
-    rw [←PowerSeries.subst_add <| PowerSeries.HasSubst.X 0]
-    congr
+    -- rw [←PowerSeries.coe_substAlgHom <| PowerSeries.HasSubst.X 0, map_zero]
+  map_add' := fun x y => by congr
+    -- rw [←PowerSeries.subst_add <| PowerSeries.HasSubst.X 0]
+
 
 /-- Given a two variable power series with the expression
   `r_0(X) + r_1(X) Y + r_2(X) Y^2 + r_3(X) Y^3 + ...`, this is the truncation of
   `Y^n`.  -/
 abbrev trunc_X₁ (n : ℕ) : MvPowerSeries (Fin 2) R →+ MvPowerSeries (Fin 2) R where
-  toFun := fun f => ∑ m ∈ Finset.Iio n, collect_X₀ m f * X₁ ^ m
+  toFun := fun f => ∑ m ∈ Finset.Iio n, (PowerSeries.subst X₀ <| collect_X₀ m f) * X₁ ^ m
   map_zero' := by
-    refine Finset.sum_eq_zero <| fun m hm => by simp [AddMonoidHom.map_zero]
+    refine Finset.sum_eq_zero <| fun m hm => by
+      rw [←PowerSeries.coe_substAlgHom <| PowerSeries.HasSubst.X 0, map_zero]
+      simp
   map_add' := fun x y => by
     rw [←Finset.sum_add_distrib]
     refine Finset.sum_congr rfl <| fun m hm => by
-      rw [←add_mul]
+      rw [←add_mul, ←PowerSeries.subst_add <| PowerSeries.HasSubst.X 0]
       congr
-      exact AddMonoidHom.map_add (collect_X₀ m) x y
+
+
+omit [Nontrivial R] in
+lemma subst_X₀_preCommutator : subst ![0, X₁] (preCommutator F X₀ X₁) = X₁ (R := R) := calc
+  _ = 0 +[F] X₁ +[F] 0 := by
+    rw [preCommutator, subst_comp_subst_apply]
+    apply subst_congr
+    funext s; fin_cases s
+    · simp
+      rw [subst_comp_subst_apply (HasSubst.FinPairing (constantCoeff_X _) (constantCoeff_X _))
+        <| HasSubst.FinPairing rfl <| constantCoeff_X _]
+      apply subst_congr
+      funext s; fin_cases s
+      · simp; rw [subst_X <| HasSubst.FinPairing rfl <| constantCoeff_X _]; rfl
+      · simp; rw [subst_X <| HasSubst.FinPairing rfl <| constantCoeff_X _]; rfl
+    · simp
+      rw [addInv, PowerSeries.subst, subst_comp_subst_apply
+        (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X 0)
+        <| HasSubst.FinPairing rfl <| constantCoeff_X _]
+      calc
+        _ = PowerSeries.subst 0 F.addInv_X := by
+          apply subst_congr; rw [subst_X <| HasSubst.FinPairing rfl <| constantCoeff_X _]
+          funext s; simp
+        _ = _ := by
+          ext d; simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
+          apply finsum_eq_zero_of_forall_eq_zero <| fun x => by
+            if h : x = 0 then
+              simp [h, show PowerSeries.constantCoeff F.addInv_X = 0 by rfl]
+            else simp [zero_pow h]
+    · refine HasSubst.FinPairing (constantCoeff_subst_zero (by simp) F.zero_constantCoeff)
+        constantCoeff_addInvF_X₀
+    · refine HasSubst.FinPairing rfl <| constantCoeff_X _
+  _ = _ := by
+    rw [zero_add_eq_self <| constantCoeff_X 1, zero_add_eq_self' <| constantCoeff_X 1]
+
+
+/- here we need to prove `H(Y₀ +[F] Y₁, Y₂) = H(Y₀, H(Y₁, Y₂))` using the associativity condition of
+  formal group laws.  -/
+lemma preCommutator_comp_preCommutator :
+  preCommutator F (Y₀ +[F] Y₁) Y₂ = preCommutator F Y₀ (preCommutator F Y₁ Y₂) := sorry
 
 
 -- (hf : constantCoeff f = 0) (hg : constantCoeff g = 0)
@@ -157,27 +198,54 @@ abbrev trunc_X₁ (n : ℕ) : MvPowerSeries (Fin 2) R →+ MvPowerSeries (Fin 2)
 theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
   (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
   (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
-  let H := preCommutator F X₀ X₁
+  let H := fun (a : MvPowerSeries (Fin 2) R) b => preCommutator F a b
   /- H (0, Y) = Y. -/
-  have eq_aux₀ : subst ![0, X₁] H = X₁ (R := R) := sorry
+  -- have eq_aux₀ : subst ![0, X₁] H = X₁ (R := R) := sorry
   /- then we can write H(X,Y) = Y + ∑ rₙ(X) Yⁿ.-/
-  let r : ℕ → PowerSeries R := fun n =>
-    PowerSeries.mk <| fun m => coeff (single 0 m + single 1 n) H
-  have exist_neZero : ∃ n, r n ≠ 0 :=
+  let r : ℕ → PowerSeries  R := fun n => collect_X₀ n (H X₀ X₁)
+  have exist_neZero : ∃ n, r n ≠ 0 := by
     /- here we need to use `F` is not commutative. -/
-    sorry
-  obtain m := Nat.find exist_neZero
-  have m_neZero : m ≠ 0 := sorry
+    by_contra hc
+    simp at hc
+    /- use the hypothese hc, we can get the result H = X₁, which will lead to contradiction. -/
+    have eq_aux : H X₀ X₁ = X₁ := by
+      ext d
+      sorry
+    exact (preCommutator_ne_of_nonComm F h) eq_aux
+  have r_zero : r 0 = 0 := sorry
+  have constant_zero : ∀ n, PowerSeries.constantCoeff (r n) = 0 := sorry
+  let m := Nat.find exist_neZero
+  have m_neZero : m ≠ 0 :=
+    Nat.ne_zero_iff_zero_lt.mpr <|
+      (Nat.find_pos exist_neZero).mpr fun a ↦ a r_zero
   by_cases hm : m = 1
   · /- in this cases m = 1, we can find a Formal Group homomorphism to
       multiplicative Formal Group `Gₘ`.-/
-
-    sorry
+    right
+    let α : FormalGroupHom F Gₘ.toFormalGroup := {
+      toFun := r m
+      zero_constantCoeff := constant_zero m
+      hom := by
+        /- here need some truncation result-/
+        sorry
+      }
+    use α; subst m α; simp [Nat.find_spec exist_neZero]
   · /- in this cases m ≥ 2, we can find a Formal Group homomorphism to an
       additive Formal Group `Gₐ`.-/
+    left
     have mgeTwo : m ≥ 2 := by grind
-
-    sorry
+    let α : FormalGroupHom F Gₐ.toFormalGroup := {
+      toFun := r m
+      zero_constantCoeff := constant_zero m
+      hom := by
+        rw [Gₐ]
+        simp
+        simp_rw [subst_add <| has_subst_toMvPowerSeries (constant_zero m),
+          subst_X <| has_subst_toMvPowerSeries (constant_zero m)]
+        /- here need some truncation result-/
+        sorry
+      }
+    use α; subst m α; simp [Nat.find_spec exist_neZero]
 
 def commutator : MvPowerSeries (Fin 2) R :=
   X₀ +[F] X₁ +[F] (addInv F X₀) +[F] (addInv F X₁)
