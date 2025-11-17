@@ -49,7 +49,7 @@ variable {R : Type*} [CommRing R] {σ τ: Type*} (F : MvPowerSeries (Fin 2) R) (
 
 noncomputable section
 
-open MvPowerSeries
+open MvPowerSeries Finsupp
 
 abbrev X₀ : MvPowerSeries (Fin 2) R := X (0 : Fin 2)
 
