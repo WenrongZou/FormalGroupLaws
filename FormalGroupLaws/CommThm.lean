@@ -175,7 +175,8 @@ lemma subst_X₀_preCommutator : subst ![0, X₁] (preCommutator F X₀ X₁) = 
           ext d; simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
           apply finsum_eq_zero_of_forall_eq_zero <| fun x => by
             if h : x = 0 then
-              simp [h, show PowerSeries.constantCoeff F.addInv_X = 0 by rfl]
+              simp [h, show PowerSeries.constantCoeff F.addInv_X = 0 by rw [addInv_X,
+                PowerSeries.constantCoeff_mk, addInv_aux]]
             else simp [zero_pow h]
     · refine HasSubst.FinPairing (constantCoeff_subst_zero (by simp) F.zero_constantCoeff)
         constantCoeff_addInvF_X₀

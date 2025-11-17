@@ -380,7 +380,7 @@ lemma HasSum_aux [TopologicalSpace K] (hs0 : s 0 = 0) : HasSum
           apply finsum_eq_zero_of_forall_eq_zero <| fun m => by
             if hm : m = 0 then simp [hm, RecurFunAux]
             else
-            rw [PowerSeries.monmial_pow, PowerSeries.coeff_monomial, if_neg]
+            rw [PowerSeries.monomial_pow, PowerSeries.coeff_monomial, if_neg]
             simp
             · simp [d_zero, hm]
               intro hq
@@ -407,7 +407,7 @@ lemma HasSum_aux [TopologicalSpace K] (hs0 : s 0 = 0) : HasSum
           = 0 := by
             rw [PowerSeries.coeff_subst']
             apply finsum_eq_zero_of_forall_eq_zero <| fun m => by
-              rw [PowerSeries.monmial_pow, PowerSeries.coeff_monomial, if_neg]
+              rw [PowerSeries.monomial_pow, PowerSeries.coeff_monomial, if_neg]
               simp
               simp [deq]
               if hm : m = 0 then simp [hm]
@@ -440,7 +440,7 @@ lemma HasSum_aux [TopologicalSpace K] (hs0 : s 0 = 0) : HasSum
               congr
               have monomial_eq : ((PowerSeries.monomial (q ^ x)) (1 : K) ^ (d / q ^ x)) =
                 ((PowerSeries.monomial d)) 1 := by
-                rw [PowerSeries.monmial_pow]
+                rw [PowerSeries.monomial_pow]
                 simp
                 congr
                 simp at hx
@@ -450,7 +450,7 @@ lemma HasSum_aux [TopologicalSpace K] (hs0 : s 0 = 0) : HasSum
                 monomial_eq]
               simp
               intro m hm
-              simp [PowerSeries.monmial_pow, PowerSeries.coeff_monomial]
+              simp [PowerSeries.monomial_pow, PowerSeries.coeff_monomial]
               intro hc
               have aux : m * q ^ x / q ^ x = m := by
                 refine Nat.mul_div_left m <| Nat.pow_pos <| Nat.zero_lt_of_ne_zero qneq
@@ -472,7 +472,7 @@ lemma HasSum_aux [TopologicalSpace K] (hs0 : s 0 = 0) : HasSum
             apply finsum_eq_zero_of_forall_eq_zero
             intro m
             simp
-            rw [PowerSeries.monmial_pow, PowerSeries.coeff_monomial, if_neg, mul_zero]
+            rw [PowerSeries.monomial_pow, PowerSeries.coeff_monomial, if_neg, mul_zero]
             by_contra hc
             have aux : multiplicity q d > multiplicity q d := calc
               _ ≥ x := by
