@@ -37,6 +37,11 @@ the multivariate formal power series whose coefficients are in the ambient ring.
 def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
   fun n => (p n : R)
 
+@[simp]
+theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubring T p).coeff n = p.coeff n
+  := by
+  exact rfl
+
 
 end ToSubring
 

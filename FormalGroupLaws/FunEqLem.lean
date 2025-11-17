@@ -6,6 +6,7 @@ import FormalGroupLaws.SubstInv
 import Mathlib.RingTheory.PowerSeries.PiTopology
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import FormalGroupLaws.MvPowerSeries
+import Mathlib.Algebra.CharP.Lemmas
 
 
 
@@ -554,7 +555,7 @@ lemma p_pow_mod_p {G : MvPowerSeries (Fin 2) R} {l : ℕ} (l_pos : 0 < l) :
   G ^ (q ^ l) ≡ ((subst ![X₀ ^ (q ^ l), X₁ ^ (q ^ l)] G).ofSubring.map (σ^l)).toSubring _
   (coeff_aux_mem σ hs l) [SMOD I.MvPowerSeries] := sorry
 
-include hs hp in
+include hs hp hq hp_prime in
 theorem pow_ModEq {G : MvPowerSeries (Fin 2) R} {r l m: ℕ} (hl : l > 0) :
   G ^ ((q ^ r * m) * q ^ l) ≡ (((subst ![X₀ ^ (q ^ l), X₁ ^ (q ^ l)] G) ^ (q ^ r * m)).ofSubring.map (σ^l)).toSubring _
   (coeff_aux_mem σ hs l) [SMOD (I^(r + 1)).MvPowerSeries] := by
@@ -565,9 +566,79 @@ theorem pow_ModEq {G : MvPowerSeries (Fin 2) R} {r l m: ℕ} (hl : l > 0) :
       simp
       refine SModEq.trans (p_pow_mod_p σ hs hp hl) (by congr; simp)
     | succ k ih =>
+      -- Ideal.pow_mem_pow
+      obtain ⟨a, a_mem, ha⟩ := exists_eq_right'.mpr <| SModEq.sub_mem.mp ih
+      have eq_aux : G ^ (q ^ k * q ^ l) =
+        ((MvPowerSeries.map (σ ^ l)) (ofSubring R (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G ^ q ^ k))).toSubring
+        R (coeff_aux_mem σ hs l) + a := by rw [←ha]; ring
+      have mod_eq_aux :
+        (G ^ (q ^ k * q ^ l)) ^ q ≡
+        ((MvPowerSeries.map (σ ^ l)) (ofSubring R (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l]
+        G ^ q ^ (k + 1)))).toSubring R (coeff_aux_mem σ hs l) [SMOD (I ^(k + 1 + 1)).MvPowerSeries]
+        := by
+        apply SModEq.sub_mem.mpr
+        obtain ⟨r, hr⟩ := exists_add_pow_prime_pow_eq hp_prime (((MvPowerSeries.map (σ ^ l))
+          (ofSubring R (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G ^ q ^ k))).toSubring R
+          (coeff_aux_mem σ hs l)) a t
+        nth_rw 3 [hq]
+        rw [eq_aux, hr]
+        have eq_aux' : ((MvPowerSeries.map (σ ^ l)) (ofSubring R (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l]
+          G ^ q ^ k))).toSubring R (σ := Fin 2) (coeff_aux_mem σ hs l) ^ p ^ t =
+          ((MvPowerSeries.map (σ ^ l)) (ofSubring R (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l]
+          G ^ q ^ (k + 1)))).toSubring R (coeff_aux_mem σ hs l) := by
+          rw [←hq]
+          ext n
+          rw [coeff_pow]
+          simp only [Nat.succ_eq_add_one, Nat.reduceAdd, AddSubmonoidClass.coe_finset_sum,
+            SubmonoidClass.coe_finset_prod, coeff_toSubring, coeff_map, coeff_ofSubring]
+          simp [pow_add, pow_mul, coeff_pow]
+        rw [eq_aux']
+        ring_nf
+        refine Submodule.add_mem Ideal.MvPowerSeries ?_ ?_
 
-      sorry
-  sorry
+        sorry
+        sorry
+        -- have mem_aux₂ :
+        --  exists_add_pow_prime_pow_eq
+
+        -- have aux : CharP (MvPowerSeries (Fin 2) ↥R ⧸ (I ^ (k + 1 + 1)).MvPowerSeries (σ := Fin 2)) p := by
+        --   -- Submodule.Quotient.mk_eq_zero
+        --   have aux : Nontrivial (MvPowerSeries (Fin 2) ↥R ⧸ (I ^ (k + 1 + 1)).MvPowerSeries
+        --     (σ := Fin 2)) := sorry
+        --   refine (CharP.charP_iff_prime_eq_zero hp_prime).mpr ?_
+
+        --   sorry
+        -- calc
+        --   _ = (Submodule.Quotient.mk (G ^ (q ^ k * q ^ l))) ^ q := by
+        --     exact rfl
+        --   _ = (Submodule.Quotient.mk (G ^ (q ^ k * q ^ l))) ^ (p ^ t) := sorry
+
+        --   _ = _ := by
+        --     have aux : Fact (Nat.Prime p) := sorry
+        --     rw [eq_aux, Submodule.Quotient.mk_add, add_pow_char_pow]
+        --     conv => rw [←add_zero <| Submodule.Quotient.mk
+        --       (((MvPowerSeries.map (σ ^ l)) (ofSubring R (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l]
+        --       G ^ q ^ (k + 1)))).toSubring R _)]
+        --     congr
+        --     sorry
+      refine SModEq.trans ?_ mod_eq_aux
+      rw [←pow_mul]
+      congr! 1
+      ring
+  calc
+    _ ≡ (G ^ (q ^ r * q ^ l)) ^ m [SMOD (I^(r + 1)).MvPowerSeries] := by
+      rw [←pow_mul]; congr! 1; ring
+    _ ≡ _ [SMOD (I^(r + 1)).MvPowerSeries] := by
+      refine SModEq.trans (SModEq.pow _ mod_aux) ?_
+      congr
+      ext n
+      rw [coeff_pow]
+      simp only [AddSubmonoidClass.coe_finset_sum,
+        SubmonoidClass.coe_finset_prod, coeff_toSubring, coeff_map, coeff_ofSubring]
+      simp [pow_mul, coeff_pow]
+
+
+
 
 
 
