@@ -1,9 +1,8 @@
 import Mathlib.RingTheory.MvPowerSeries.Basic
 import Mathlib.RingTheory.MvPowerSeries.Substitution
--- import Mathlib.LinearAlgebra.SModEq.Basic
--- import Mathlib
+import FormalGroupLaws.Basic
 
-variable {R : Type*} [CommRing R] {σ : Type*} {I : Ideal R} [DecidableEq σ]
+variable {R : Type*} [CommRing R] {σ : Type*} {I : Ideal R} [DecidableEq σ] {n : ℕ}
 
 open MvPowerSeries
 
@@ -17,6 +16,14 @@ def Ideal.MvPowerSeries : Ideal (MvPowerSeries σ R) where
     rw [smul_eq_mul, ← show coeff n (c * x) = (c * x) n by rfl, coeff_mul]
     exact Ideal.sum_mem _ <| fun d hd => mul_mem_left I ((coeff d.1) c) (hx d.2)
 
+lemma MvPowerSeries.mul_mem_mul {a b : MvPowerSeries σ R} {J : Ideal R}
+    (ha : a ∈ I.MvPowerSeries) (hb : b ∈ J.MvPowerSeries) :
+    a * b ∈ (I * J).MvPowerSeries := by
+  unfold Ideal.MvPowerSeries
+  simp
+  intro n
+  rw [show (a * b) n = coeff n (a * b) by rfl, coeff_mul]
+  refine Ideal.sum_mem (I * J) <| fun d hd => Submodule.mul_mem_mul (ha d.1) (hb d.2)
 
 section ToSubring
 
@@ -30,7 +37,7 @@ def MvPowerSeries.toSubring (hp : ∀ n, p n ∈ T) : MvPowerSeries σ T := fun 
 variable (hp : ∀ n, p n ∈ T)
 
 @[simp]
-theorem coeff_toSubring {n : σ →₀ ℕ} : ↑((toSubring p T hp).coeff n) = p.coeff n:= rfl
+theorem coeff_toSubring {n : σ →₀ ℕ} : ↑((toSubring p T hp).coeff n) = p.coeff n := rfl
 
 /-- Given a multivariate formal power series whose coefficients are in some subring, return
 the multivariate formal power series whose coefficients are in the ambient ring. -/
@@ -42,14 +49,29 @@ theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubrin
   := by
   exact rfl
 
+variable (F : FormalGroup R)
+
+def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
+  toFun := F.toFun.toSubring _ hF
+  zero_constantCoeff := by
+    rw [← @coeff_zero_eq_constantCoeff_apply]
+    have aux : (coeff 0) (F.toFun.toSubring T hF) = (0 : R) := by
+      rw [@coeff_toSubring]
+      simp [F.zero_constantCoeff]
+    norm_cast at aux
+  lin_coeff_X := by
+    have aux : (coeff (Finsupp.single 0 1)) (F.toFun.toSubring T hF) = (1 : R) := by
+      rw [coeff_toSubring]
+      simp [F.lin_coeff_X]
+    norm_cast at aux
+  lin_coeff_Y:= by
+    have aux : (coeff (Finsupp.single 1 1)) (F.toFun.toSubring T hF) = (1 : R) := by
+      rw [coeff_toSubring]
+      simp [F.lin_coeff_Y]
+    norm_cast at aux
+  assoc := by
+
+    sorry
+
 
 end ToSubring
-
--- lemma aux : f ≡ g [IMOD I.MvPowerSeries] ↔ f ≡ g [SMOD I.MvPowerSeries] := by
---   constructor
---   intro h
---   apply SModEq.sub_mem.mpr
---   exact h
---   intro h
---   apply SModEq.sub_mem.mp
---   exact h
