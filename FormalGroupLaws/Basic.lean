@@ -385,28 +385,22 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
     assoc := by
       have constant_zero : constantCoeff ((MvPowerSeries.map f) F.toFun) = 0 := by
         simp [F.zero_constantCoeff]
-
+      have toAdd_aux {a : R} : f a = f.toAddMonoidHom a := rfl
       have aux₁ : subst ![subst ![Y₀, Y₁] ((MvPowerSeries.map f) F.toFun), Y₂]
         ((MvPowerSeries.map f) F.toFun) =
         (MvPowerSeries.map f) (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun) := by
         ext n
         simp
-        have aux : f ((coeff n) (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun)) =
-          f.toAddMonoidHom ((coeff n) (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun)) := rfl
-        rw [aux, coeff_subst (has_subst_aux₁ F.zero_constantCoeff)]
         obtain h₁ := coeff_subst_finite (has_subst_aux₁ F.zero_constantCoeff) F.toFun n
-        rw [AddMonoidHom.map_finsum _ h₁]
-        rw [coeff_subst
-          (has_subst_aux₁ constant_zero)]
+        rw [toAdd_aux, coeff_subst (has_subst_aux₁ F.zero_constantCoeff),
+          AddMonoidHom.map_finsum _ h₁, coeff_subst (has_subst_aux₁ constant_zero)]
         simp
         have aux₁ : subst ![Y₀, Y₁] ((MvPowerSeries.map f) F.toFun) =
           (MvPowerSeries.map f) (subst ![Y₀, Y₁] F.toFun) := by
           simp
           ext m
           simp
-          have aux' : f ((coeff m) (subst ![Y₀, Y₁] F.toFun)) =
-            f.toAddMonoidHom ((coeff m) (subst ![Y₀, Y₁] F.toFun)) := rfl
-          rw [aux', coeff_subst has_subst_XY, coeff_subst has_subst_XY]
+          rw [toAdd_aux, coeff_subst has_subst_XY, coeff_subst has_subst_XY]
           obtain h₂ := coeff_subst_finite (has_subst_XY) (R := R) (S := R) F.toFun m
           rw [AddMonoidHom.map_finsum _ h₂]
           simp
@@ -419,22 +413,17 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
             simp [X_pow_eq, monomial_mul_monomial]
             rw [coeff_monomial, coeff_monomial, if_neg meq, if_neg meq, map_zero]
           simp_rw [aux']
-        have aux₂ : Y₂ (R := R') =
-          (MvPowerSeries.map f) Y₂ := by
-          simp
+        have aux₂ : Y₂ (R := R') = (MvPowerSeries.map f) Y₂ := by simp
         simp_rw [aux₁, aux₂, ←map_pow, ←map_mul, coeff_map]
         simp
-
       have aux₂ : subst ![Y₀, subst ![Y₁, Y₂] ((MvPowerSeries.map f) F.toFun)]
         ((MvPowerSeries.map f) F.toFun) =
         (MvPowerSeries.map f) (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun)  := by
         ext n
         simp
-        have aux : f ((coeff n) (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun))=
-          f.toAddMonoidHom ((coeff n) (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun)) := rfl
-        rw [aux, coeff_subst (has_subst_aux₂ F.zero_constantCoeff)]
         obtain h₁ := coeff_subst_finite (has_subst_aux₂ F.zero_constantCoeff) F.toFun n
-        rw [AddMonoidHom.map_finsum _ h₁]
+        rw [toAdd_aux, coeff_subst (has_subst_aux₂ F.zero_constantCoeff),
+          AddMonoidHom.map_finsum _ h₁]
         simp
         rw [coeff_subst (has_subst_aux₂ constant_zero)]
         simp
@@ -445,20 +434,18 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
           simp
           ext m
           simp
-          have aux' : f ((coeff m) (subst ![Y₁, Y₂] F.toFun)) =
-            f.toAddMonoidHom ((coeff m) (subst ![Y₁, Y₂] F.toFun)) := rfl
-          rw [aux', coeff_subst has_subst_YZ, coeff_subst has_subst_YZ]
           obtain h₂ := coeff_subst_finite (has_subst_YZ) (R := R) (S := R) F.toFun m
-          rw [AddMonoidHom.map_finsum _ h₂]
+          rw [toAdd_aux, coeff_subst has_subst_YZ, coeff_subst has_subst_YZ,
+            AddMonoidHom.map_finsum _ h₂]
           simp
           have aux' : ∀ (d : Fin 2 →₀ ℕ), (coeff m) (Y₁ ^ d 0 * Y₂ ^ d 1) =
             f ((coeff m) (Y₁ ^ d 0 * Y₂ ^ d 1)) := by
             intro d
             by_cases meq : m = Finsupp.single 1 (d 0) + Finsupp.single 2 (d 1)
-            · simp [X_pow_eq, monomial_mul_monomial]
-              rw [coeff_monomial, coeff_monomial, if_pos meq, if_pos meq, map_one]
-            simp [X_pow_eq, monomial_mul_monomial]
-            rw [coeff_monomial, coeff_monomial, if_neg meq, if_neg meq, map_zero]
+            · simp [X_pow_eq, monomial_mul_monomial, coeff_monomial, coeff_monomial, if_pos meq,
+                map_one]
+            simp [X_pow_eq, monomial_mul_monomial, coeff_monomial, coeff_monomial,
+              if_neg meq, map_zero]
           simp_rw [aux']
         simp_rw [aux₁, aux₂, ←map_pow, ←map_mul, coeff_map]
         simp
