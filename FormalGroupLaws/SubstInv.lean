@@ -285,6 +285,24 @@ theorem subst_inv_aux₁ {n : ℕ} :
     simp
 
 
+def subst_inv : PowerSeries R := mk (fun n => (invFun_aux f h hc n).1)
+
+theorem subst_inv_eq : subst (subst_inv f h hc) f = X := by
+  let g : PowerSeries R := mk (fun n => (invFun_aux f h hc n).1)
+  have substDomain_g : HasSubst g := by
+    apply HasSubst.of_constantCoeff_zero
+    have zero_coeff : (constantCoeff) g = 0 := by
+      simp [g, invFun_aux]
+    unfold constantCoeff at zero_coeff
+    simp [zero_coeff]
+  rw [show (f.subst_inv h hc) = g by rfl]
+  apply eq_of_forall_trunc'_eq
+  intro n
+  rw [trunc'_of_subst, trunc'_of_invFun_aux, subst_inv_aux₁]
+  simp [g, invFun_aux]
+
+
+
 theorem subst_inv_aux
   (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0)
    : ∃ (g : PowerSeries R), subst g f = X

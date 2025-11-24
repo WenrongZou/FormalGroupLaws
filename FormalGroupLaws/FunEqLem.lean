@@ -8,7 +8,7 @@ import Mathlib.Topology.Instances.ENNReal.Lemmas
 import FormalGroupLaws.MvPowerSeries
 import Mathlib.Algebra.CharP.Lemmas
 import FormalGroupLaws.SubstInv
-
+import FormalGroupLaws.MvPowerSeries
 
 
 noncomputable section
@@ -27,7 +27,7 @@ namespace FunctionalEquationIntegralityLemma
 
 variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} {τ : Type*}
   {p t q: ℕ} (hp_prime : Nat.Prime p) (hn : t ≠ 0) (hq : q = p ^ t)
-  (σ : K →+* K)  (hs : ∀ (a : R), σ a ∈ R) {x : R}
+  (σ : K →+* K)  (hs : ∀ (a : R), σ a ∈ R)
   (hs_mod : ∀ (a : R), (⟨σ a, hs a⟩) ≡  (a ^ q) [SMOD I])
   (hp : (p : R) ∈ I) (s : ℕ → K) (hs_i : ∀ i, ∀ a ∈ I, s i * a ∈ R)
   (hs_i' :∀ r : ℕ, ∀ b : K,
@@ -80,29 +80,31 @@ def RecurFunAux (hg : constantCoeff g = 0): ℕ → K
 -- if you want to elimilate the attach here, use `sum_attach`.
 
 -- This is f_g
-def RecurFun : PowerSeries K :=
-  PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g hg)
-
-/-- First coefficient of `f_g` is unit-/
-lemma coeff_RecurFun_unit (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
-    IsUnit ((RecurFun hp_prime hn hq σ s g hg).coeff 1) := by
-  simp [RecurFun, RecurFunAux]
-  have empty_aux : (multiplicity q 1) = 0 := by
-    refine multiplicity_eq_zero.mpr ?_
-    have q_ge : q ≥ 2 := by
-      rw [hq]; exact le_trans (Nat.Prime.two_le hp_prime) <| Nat.le_self_pow hn p
-    refine Nat.not_dvd_of_pos_of_lt (by linarith) q_ge
-  rw [empty_aux, show Icc 1 0 = ∅ by rfl]
-  simp
-  obtain ⟨b, hb₁, hb₂⟩ := isUnit_iff_exists.mp hg_unit
-  apply isUnit_iff_exists.mpr
-  use b
-  norm_cast
+def RecurFun : PowerSeries K := PowerSeries.mk (RecurFunAux hp_prime hn hq σ s g hg)
 
 /-- constant coefficient of `f_g` is zero-/
 lemma constantCoeff_RecurFun_zero :
     PowerSeries.constantCoeff (RecurFun hp_prime hn hq σ s g hg) = 0 := by
   simp [RecurFun, RecurFunAux]
+
+/- First coefficient of `f_g` is equal to `coeff 1 g`. -/
+lemma coeff_RecurFun_one : (RecurFun hp_prime hn hq σ s g hg).coeff 1 = g.coeff 1 := by
+  simp [RecurFun, RecurFunAux]
+  have empty_aux : (multiplicity q 1) = 0 := by
+    refine multiplicity_eq_zero.mpr ?_
+    have q_ge : q ≥ 2 := by
+      rw [hq]; exact le_trans (Nat.Prime.two_le hp_prime) <| Nat.le_self_pow hn p
+    exact Nat.not_dvd_of_pos_of_lt (by linarith) q_ge
+  rw [empty_aux, show Icc 1 0 = ∅ by rfl]
+  simp
+
+
+/-- First coefficient of `f_g` is unit-/
+lemma coeff_RecurFun_unit (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
+    IsUnit ((RecurFun hp_prime hn hq σ s g hg).coeff 1) := by
+  rw [coeff_RecurFun_one]
+  obtain ⟨b, hb₁, hb₂⟩ := isUnit_iff_exists.mp hg_unit
+  exact isUnit_iff_exists.mpr ⟨b, by norm_cast⟩
 
 
 /- Functional equation lemma.
@@ -610,31 +612,120 @@ theorem pow_ModEq {G : MvPowerSeries (Fin 2) R} {r l m: ℕ} (hl : l > 0) :
 
 
 def inv_RecurFun (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :=
-  Classical.choose (PowerSeries.exist_subst_inv
-  (RecurFun hp_prime hn hq σ s g hg) (coeff_RecurFun_unit hp_prime hn hq σ s g hg hg_unit)
-  (constantCoeff_RecurFun_zero ..))
+  PowerSeries.subst_inv _ (coeff_RecurFun_unit hp_prime hn hq σ s g hg hg_unit)
+  (constantCoeff_RecurFun_zero ..)
+
+lemma coeff_inv_RecurFun_one (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
+    (inv_RecurFun hp_prime hn hq σ s g hg hg_unit).coeff 1 = hg_unit.unit⁻¹ := by
+  rw [inv_RecurFun, PowerSeries.subst_inv]
+  simp [PowerSeries.invFun_aux, coeff_RecurFun_one]
+  refine Units.inv_eq_of_mul_eq_one_left ?_
+  simp
+  exact_mod_cast IsUnit.val_inv_mul hg_unit
+
+-- lemma coeff_inv_RecurFun_zero (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
+--     PowerSeries.constantCoeff (inv_RecurFun hp_prime hn hq σ s g hg hg_unit) := by
+
+--   sorry
+
+lemma coeff_inv_RecurFun_zero (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
+    (inv_RecurFun hp_prime hn hq σ s g hg hg_unit).constantCoeff = 0 := by
+  simp [inv_RecurFun, PowerSeries.subst_inv, PowerSeries.invFun_aux]
+
 
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, and we will prove this to be
   a formal group law over coefficient ring `R`. -/
-def inv_add_aux (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) := PowerSeries.subst
-  ((PowerSeries.subst (X₀ (R := K)) (RecurFun hp_prime hn hq σ s g hg)) +
-  (PowerSeries.subst X₁ (RecurFun hp_prime hn hq σ s g hg)))
-  (inv_RecurFun hp_prime hn hq σ s g hg hg_unit)
+def inv_add_aux (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :=
+    PowerSeries.subst ((PowerSeries.subst (X₀ (R := K)) (RecurFun hp_prime hn hq σ s g hg)) +
+    (PowerSeries.subst X₁ (RecurFun hp_prime hn hq σ s g hg)))
+    (inv_RecurFun hp_prime hn hq σ s g hg hg_unit)
 
 lemma coeff_inv_add_mem_Subring (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
-    ∀ n, (inv_add_aux hp_prime hn hq σ s g hg hg_unit) n ∈ R
-  := sorry
+    ∀ n, (inv_add_aux hp_prime hn hq σ s g hg hg_unit) n ∈ R := by
+
+  sorry
 
 
-def inv_add_K (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) : FormalGroup K where
-  toFun := (inv_add_aux hp_prime hn hq σ s g hg hg_unit)
-  zero_constantCoeff := sorry
-  lin_coeff_X := sorry
-  lin_coeff_Y := sorry
-  assoc := sorry
+
+def inv_add_K (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) : FormalGroup K :=
+  have eq_aux : constantCoeff ((PowerSeries.subst (X₀ (R := K)) (RecurFun hp_prime hn hq σ s g hg) +
+    PowerSeries.subst X₁ (RecurFun hp_prime hn hq σ s g hg))) = 0 := by
+    rw [@RingHom.map_add, PowerSeries.constantCoeff_subst_X
+      <| constantCoeff_RecurFun_zero hp_prime ..,
+      PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun_zero hp_prime .., add_zero]
+  { toFun := (inv_add_aux hp_prime hn hq σ s g hg hg_unit)
+    zero_constantCoeff := by
+      rw [inv_add_aux, PowerSeries.constantCoeff_subst <|
+        PowerSeries.HasSubst.of_constantCoeff_zero eq_aux]
+      apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
+        if hd : d = 0 then
+        simp [hd]
+        simp [inv_RecurFun, PowerSeries.subst_inv]; rfl
+        else
+        simp [eq_aux, zero_pow hd]
+    lin_coeff_X := by
+      rw [inv_add_aux, PowerSeries.coeff_subst <|
+        PowerSeries.HasSubst.of_constantCoeff_zero eq_aux, finsum_eq_single _ 1]
+      simp
+      rw [PowerSeries.coeff_subst <| PowerSeries.HasSubst.X _, finsum_eq_single _ 1,
+        coeff_RecurFun_one]
+      simp [coeff_inv_RecurFun_one]
+      have eq_aux : ↑↑hg_unit.unit⁻¹ * (((PowerSeries.coeff 1) g : R) : K) = 1 := by
+        exact_mod_cast IsUnit.val_inv_mul hg_unit
+      simp [mul_add, eq_aux]
+      have eq_aux : (coeff (Finsupp.single 0 1)) (PowerSeries.subst (X₁ (R := K))
+        (RecurFun hp_prime hn hq σ s g hg)) = 0 := by
+        rw [PowerSeries.coeff_subst <| PowerSeries.HasSubst.X 1]
+        apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
+          if hd : d = 0 then simp [hd, constantCoeff_RecurFun_zero]
+          else
+          rw [X, monomial_pow, coeff_monomial, if_neg _]
+          simp
+          exact Finsupp.ne_iff.mpr ⟨0, by simp⟩
+      simp [eq_aux]
+      intro x hx
+      rw [X, monomial_pow, coeff_monomial, if_neg <| Finsupp.ne_iff.mpr ⟨0, by simp [Ne.symm hx]⟩,
+        MulActionWithZero.smul_zero]
+      intro x hx
+      if hx' : x = 0 then simp [hx', coeff_inv_RecurFun_zero]
+      else
+      have eq_aux : (((RecurFun hp_prime hn hq σ s g hg).subst (X₀ (R := K)) +
+        (RecurFun hp_prime hn hq σ s g hg).subst X₁) ^ x).coeff (Finsupp.single 0 1) = 0 := by
+        rw [coeff_pow]
+        apply Finset.sum_eq_zero <| fun d hd => by
+          simp at hd
+          have exist_aux : ∃ i ∈ range x, d i = 0 := by
+            have xge : x ≥ 2 := by omega
+            by_contra hc
+            simp at hc
+            have aux : ∀ x_1 < x, (d x_1).degree ≥ 1 := by
+              intro t ht
+              obtain ht' := hc t ht
+              by_contra hc'
+              simp at hc'
+              exact ht' <| (Finsupp.degree_eq_zero_iff _).mp hc'
+            have eq_aux : ((range x).sum ⇑d).degree = (Finsupp.single (0 : Fin 2) 1).degree := by
+              rw [hd.1]
+            simp at eq_aux
+            have contra : ((range x).sum ⇑d).degree ≥ 2 := calc
+              _ ≥ (range x).sum 1 := by
+                rw [sum_range, sum_range,  @Fin.sum_univ_eq_sum_range, @Fin.sum_univ_eq_sum_range,
+                  Finsupp.sum_degree]
+                exact sum_le_sum <| by simpa
+              _ ≥ 2 := by
+                simp [xge]
+            linarith
+          obtain ⟨i, hi, hi'⟩ := exist_aux
+          apply Finset.prod_eq_zero (hi)
+          simp [hi']
+          rw [PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun_zero ..,
+            PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun_zero .., add_zero]
+      simp [eq_aux]
+    lin_coeff_Y := sorry
+    assoc := sorry }
 
 def inv_add_R (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) : FormalGroup R :=
-  FormalGroup.toSubring R (inv_add_K hp_prime hn hq σ s g hg hg_unit)
+  (inv_add_K hp_prime hn hq σ s g hg hg_unit).toSubring R
   (coeff_inv_add_mem_Subring hp_prime hn hq σ s g hg hg_unit)
 
 /-- `inv_add` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, this is a formal group law over `R`. -/
@@ -649,9 +740,5 @@ def inv_add (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) : CommFormalGroup R whe
 
 
 
-
-
--- lemma finst_attach {t : Finset ℕ} (f : ℕ → R) : ∑ i ∈ t.attach, f i = ∑ i ∈ t, f i := by
---   exact sum_attach t f
 
 end FunctionalEquationIntegralityLemma

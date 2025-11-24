@@ -144,8 +144,22 @@ def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
         rw [Y₂, Y₂, ←eq_aux 2]
         simp [coeff_pow]
 
-
-
-
-
 end ToSubring
+
+lemma PowerSeries.constantCoeff_subst_X {f : PowerSeries R} (hf : constantCoeff f = 0) {s : σ} :
+    MvPowerSeries.constantCoeff (subst (MvPowerSeries.X s (R := R)) f) = 0 := by
+  rw [PowerSeries.constantCoeff_subst <| HasSubst.X s]
+  apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
+    if hd : d = 0 then simp [hd, hf]
+    else
+    rw [MvPowerSeries.X, MvPowerSeries.monomial_pow, ←MvPowerSeries.coeff_zero_eq_constantCoeff,
+      MvPowerSeries.coeff_monomial, if_neg <| Finsupp.ne_iff.mpr <| ⟨s, by simp [Ne.symm hd]⟩]
+    simp
+
+omit [DecidableEq σ] in
+lemma Finsupp.degree_sum {α : Type*} [DecidableEq α] {s : Finset α} {d : α → σ →₀ ℕ} :
+  (∑ i ∈ s, d i).degree = ∑ i ∈ s, (d i).degree := by
+  refine Finset.induction ?_ ?_ s
+  · simp
+  · rintro a s hs hs'
+    rw [Finset.sum_insert hs, Finset.sum_insert hs, Finsupp.degree_add, hs']
