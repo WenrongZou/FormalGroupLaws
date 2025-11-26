@@ -2,7 +2,7 @@ import Mathlib.RingTheory.MvPowerSeries.Basic
 import Mathlib.RingTheory.MvPowerSeries.Substitution
 import FormalGroupLaws.Basic
 
-variable {R : Type*} [CommRing R] {σ τ: Type*} {I : Ideal R} [DecidableEq σ] {n : ℕ}
+variable {R S: Type*} [CommRing R] [CommRing S] {σ τ: Type*} {I : Ideal R} [DecidableEq σ] {n : ℕ}
   [DecidableEq τ]
 
 open MvPowerSeries
@@ -11,20 +11,16 @@ open MvPowerSeries
 `I`, forms a ideal of ring of multivariate power series over `R`. -/
 def Ideal.MvPowerSeries : Ideal (MvPowerSeries σ R) where
   carrier := {p | ∀ n, p n ∈ I}
-  add_mem' := fun {a} {b} ha hb n => add_mem (ha n) (hb n)
-  zero_mem' := fun n => (Submodule.Quotient.mk_eq_zero I).mp rfl
-  smul_mem' := fun c {x} hx n ↦ by
-    rw [smul_eq_mul, ← show coeff n (c * x) = (c * x) n by rfl, coeff_mul]
-    exact Ideal.sum_mem _ <| fun d hd => mul_mem_left I ((coeff d.1) c) (hx d.2)
+  add_mem' := fun ha hb n => add_mem (ha n) (hb n)
+  zero_mem' := fun _ => (Submodule.Quotient.mk_eq_zero I).mp rfl
+  smul_mem' := fun c {_} hx _ ↦
+    I.sum_mem <| fun d _ => mul_mem_left I ((coeff d.1) c) (hx d.2)
 
+omit [DecidableEq σ] in
 lemma MvPowerSeries.mul_mem_mul {a b : MvPowerSeries σ R} {J : Ideal R}
     (ha : a ∈ I.MvPowerSeries) (hb : b ∈ J.MvPowerSeries) :
-    a * b ∈ (I * J).MvPowerSeries := by
-  unfold Ideal.MvPowerSeries
-  simp
-  intro n
-  rw [show (a * b) n = coeff n (a * b) by rfl, coeff_mul]
-  refine Ideal.sum_mem (I * J) <| fun d hd => Submodule.mul_mem_mul (ha d.1) (hb d.2)
+    a * b ∈ (I * J).MvPowerSeries :=
+  fun _ ↦ (I * J).sum_mem  <| fun d _ => Submodule.mul_mem_mul (ha d.1) (hb d.2)
 
 section ToSubring
 
@@ -51,8 +47,7 @@ def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
 
 @[simp]
 theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubring T p).coeff n = p.coeff n
-  := by
-  exact rfl
+  := rfl
 
 variable (F : FormalGroup R)
 
@@ -163,3 +158,11 @@ lemma Finsupp.degree_sum {α : Type*} [DecidableEq α] {s : Finset α} {d : α �
   · simp
   · rintro a s hs hs'
     rw [Finset.sum_insert hs, Finset.sum_insert hs, Finsupp.degree_add, hs']
+
+lemma MvPowerSeries.subst_map {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
+  (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
+  sorry
+
+lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
+  (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
+  sorry
