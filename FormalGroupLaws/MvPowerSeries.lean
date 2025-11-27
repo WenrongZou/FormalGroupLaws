@@ -1,11 +1,14 @@
 import Mathlib.RingTheory.MvPowerSeries.Basic
 import Mathlib.RingTheory.MvPowerSeries.Substitution
 import FormalGroupLaws.Basic
+import Mathlib.RingTheory.PowerSeries.PiTopology
+import Mathlib.Topology.Instances.ENNReal.Lemmas
 
 variable {R S: Type*} [CommRing R] [CommRing S] {σ τ: Type*} {I : Ideal R} [DecidableEq σ] {n : ℕ}
   [DecidableEq τ]
 
 open MvPowerSeries
+open scoped WithPiTopology
 
 /- Given a ideal `I` of commutative ring `R`, then multivariate power series with coefficient in
 `I`, forms a ideal of ring of multivariate power series over `R`. -/
@@ -166,3 +169,17 @@ lemma MvPowerSeries.subst_map {a : σ → MvPowerSeries τ R} {h : R →+* R} {f
 lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
   (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
   sorry
+
+
+omit [DecidableEq σ]
+lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpace R] [T2Space R]
+    [DiscreteUniformity R] (hx : Summable x) (hg : PowerSeries.HasSubst g) :
+    (∑' i : ℕ, x i).subst g = ∑' i : ℕ, ((x i).subst g) := by
+  rw [←PowerSeries.coe_substAlgHom hg, Summable.map_tsum hx]
+  rw [PowerSeries.substAlgHom_eq_aeval hg]
+  apply PowerSeries.continuous_aeval
+
+/- this theorem already in mathlib, please delete it after update mathlib-/
+lemma PowerSeries.monomial_eq_C_mul_X_pow (r : R) (n : ℕ) : PowerSeries.monomial n r = PowerSeries.C r *
+  PowerSeries.X ^ n := by
+  ext; simp [PowerSeries.coeff_X_pow, PowerSeries.coeff_monomial]
