@@ -178,8 +178,8 @@ structure FormalGroup where
   zero_constantCoeff : constantCoeff toFun = 0
   lin_coeff_X : coeff (Finsupp.single 0 1) toFun = 1
   lin_coeff_Y : coeff (Finsupp.single 1 1) toFun = 1
+  /- Associativity of the Formal Group : `F (F (X, Y), Z) = F (X, F (Y, Z))`. -/
   assoc : subst ![subst ![Y₀, Y₁] toFun, Y₂] toFun = subst ![Y₀, subst ![Y₁, Y₂] toFun] toFun (S := R)
-  --  Associativity of the Formal Group : `F (F (X, Y), Z) = F (X, F (Y, Z))`.
 
 variable (R) in
 @[ext]

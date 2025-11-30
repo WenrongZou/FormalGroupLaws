@@ -154,7 +154,9 @@ lemma PowerSeries.constantCoeff_subst_X {f : PowerSeries R} (hf : constantCoeff 
       MvPowerSeries.coeff_monomial, if_neg <| Finsupp.ne_iff.mpr <| ⟨s, by simp [Ne.symm hd]⟩]
     simp
 
+/- already in mathlib, using simp-/
 omit [DecidableEq σ] in
+@[simp]
 lemma Finsupp.degree_sum {α : Type*} [DecidableEq α] {s : Finset α} {d : α → σ →₀ ℕ} :
   (∑ i ∈ s, d i).degree = ∑ i ∈ s, (d i).degree := by
   refine Finset.induction ?_ ?_ s
@@ -175,9 +177,9 @@ omit [DecidableEq σ]
 lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpace R] [T2Space R]
     [DiscreteUniformity R] (hx : Summable x) (hg : PowerSeries.HasSubst g) :
     (∑' i : ℕ, x i).subst g = ∑' i : ℕ, ((x i).subst g) := by
-  rw [←PowerSeries.coe_substAlgHom hg, Summable.map_tsum hx]
-  rw [PowerSeries.substAlgHom_eq_aeval hg]
-  apply PowerSeries.continuous_aeval
+  rw [←PowerSeries.coe_substAlgHom hg, PowerSeries.substAlgHom_eq_aeval hg,
+    Summable.map_tsum hx _ <| PowerSeries.continuous_aeval _]
+
 
 /- this theorem already in mathlib, please delete it after update mathlib-/
 lemma PowerSeries.monomial_eq_C_mul_X_pow (r : R) (n : ℕ) : PowerSeries.monomial n r = PowerSeries.C r *
