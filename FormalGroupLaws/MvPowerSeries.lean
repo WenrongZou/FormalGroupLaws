@@ -48,6 +48,9 @@ the multivariate formal power series whose coefficients are in the ambient ring.
 def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
   fun n => (p n : R)
 
+def PowerSeries.ofSubring (p : PowerSeries T) : PowerSeries R :=
+  fun n => (p n : R)
+
 @[simp]
 theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubring T p).coeff n = p.coeff n
   := rfl
@@ -185,3 +188,37 @@ lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpa
 lemma PowerSeries.monomial_eq_C_mul_X_pow (r : R) (n : ℕ) : PowerSeries.monomial n r = PowerSeries.C r *
   PowerSeries.X ^ n := by
   ext; simp [PowerSeries.coeff_X_pow, PowerSeries.coeff_monomial]
+
+
+open Finset in
+/-- A series of multi variate power series is summable if the order of the sequence
+  strictly increase. -/
+lemma MvPowerSeries.Summable.increase_order {x : ℕ → MvPowerSeries σ R}
+    [TopologicalSpace R] [T2Space R] [DiscreteTopology R]
+    (hx : ∀ n, (x n).order ≥ n) : Summable x := by
+  refine ⟨(fun n => ∑ i ∈ Finset.range (n.degree + 1), ((x i).coeff n)), ?_⟩
+  rw [HasSum, (MvPowerSeries.WithPiTopology.tendsto_iff_coeff_tendsto _ _ _)]
+  intro d
+  simp only [map_sum, SummationFilter.unconditional_filter, nhds_discrete, Filter.tendsto_pure,
+    Filter.eventually_atTop, ge_iff_le, le_eq_subset]
+  use (Finset.range (d.degree + 1))
+  intro s hs
+  rw [coeff_apply, (sum_subset hs _).symm]
+  intro i _ hi
+  by_cases hxi : (x i).order = ⊤
+  · exact ((weightedOrder_eq_top_iff fun x ↦ 1).mp hxi) ▸ (coeff_zero _)
+  · simp only [mem_range, not_lt] at hi
+    rw [coeff_of_lt_order]
+    specialize hx i
+    rw [←(ENat.coe_toNat hxi)] at ⊢ hx
+    norm_cast at ⊢ hx
+    linarith
+  -- if hxi : (x i).order = ⊤ then
+  --   exact ((weightedOrder_eq_top_iff fun x ↦ 1).mp hxi) ▸ (coeff_zero _)
+  -- else
+  -- simp at hi
+  -- refine coeff_of_lt_order ?_
+  -- obtain aux' := hx i
+  -- rw [←(ENat.coe_toNat hxi)] at ⊢ aux'
+  -- norm_cast at ⊢ aux'
+  -- linarith

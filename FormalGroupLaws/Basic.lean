@@ -46,6 +46,7 @@ In this file, I also prove in this definition of Formal Group Law `F`, it follow
 -- Definition of Formal Group
 -- Assume the coeffiecient ring `R` to be commutative ring.
 variable {R : Type*} [CommRing R] {σ τ: Type*} (F : MvPowerSeries (Fin 2) R) (α : PowerSeries R)
+  {S : Type*} [CommRing S] [Algebra R S]
 
 noncomputable section
 
@@ -63,19 +64,16 @@ abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
 
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
-  (hg : constantCoeff g = 0) :
-  HasSubst ![f, g] := hasSubst_of_constantCoeff_zero (by simp [hf, hg])
+    (hg : constantCoeff g = 0) : HasSubst ![f, g] :=
+  hasSubst_of_constantCoeff_zero (by simp [hf, hg])
 
 
-lemma has_subst_XY : MvPowerSeries.HasSubst (![Y₀, Y₁]) (S := R):= by
-  refine HasSubst.FinPairing ?_ ?_
-  exact constantCoeff_X 0
-  exact constantCoeff_X 1
+lemma has_subst_XY : HasSubst (![Y₀, Y₁]) (S := R) :=
+  HasSubst.FinPairing (constantCoeff_X _) (constantCoeff_X _)
 
-lemma has_subst_YZ : MvPowerSeries.HasSubst (![Y₁, Y₂]) (S := R):= by
-  refine HasSubst.FinPairing ?_ ?_
-  exact constantCoeff_X 1
-  exact constantCoeff_X 2
+
+lemma has_subst_YZ : HasSubst (![Y₁, Y₂]) (S := R) :=
+  HasSubst.FinPairing (constantCoeff_X _) (constantCoeff_X _)
 
 variable {F} in
 lemma has_subst_aux₁ (hF : constantCoeff F = 0) : HasSubst (![subst ![Y₀, Y₁] F, Y₂])
@@ -106,7 +104,7 @@ lemma has_subst_aux₁ (hF : constantCoeff F = 0) : HasSubst (![subst ![Y₀, Y�
   · simp
 
 variable {F} in
-lemma has_subst_aux₂ (hF : constantCoeff F = 0) : MvPowerSeries.HasSubst ![Y₀, subst ![Y₁, Y₂] F]
+lemma has_subst_aux₂ (hF : constantCoeff F = 0) : HasSubst ![Y₀, subst ![Y₁, Y₂] F]
   (S := R):= by
   refine hasSubst_of_constantCoeff_zero ?_
   intro s
@@ -221,7 +219,7 @@ abbrev add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries 
 scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 =>
   add F f₀ f₁
 
-lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ R} {g : MvPowerSeries σ R}
+lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSeries σ R}
   [Fintype σ] (hf : ∀ x : σ, constantCoeff (f x) = 0) (hg : constantCoeff g = 0):
   constantCoeff (subst f g) = 0 := by
   rw [constantCoeff_subst <| hasSubst_of_constantCoeff_zero hf]
@@ -239,6 +237,14 @@ lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ R} {g : MvPowerSerie
         simp [hf, zero_pow hi]
       simp [zero_aux]
 
+lemma PowerSeries.constantCoeff_subst_zero {f : MvPowerSeries τ S} {g : PowerSeries R}
+  (hf : f.constantCoeff = 0) (hg : g.constantCoeff = 0):
+  constantCoeff (g.subst f) = 0 := by
+  rw [PowerSeries.constantCoeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero hf]
+  apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
+    if hd : d = 0 then simp [hd, hg]
+    else simp [hf, zero_pow hd]
+
 
 
 /-- The addition under the sense of formal group `F` is associative. -/
@@ -254,7 +260,7 @@ theorem add_assoc {F : FormalGroup R} {Z₀ Z₁ Z₂ : MvPowerSeries σ R}
     · simp
       rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
   have has_subst_aux₃ : HasSubst ![subst ![Y₀, Y₁] F.toFun, Y₂] :=
-    hasSubst_of_constantCoeff_zero <| fun s => by
+    hasSubst_of_constantCoeff_zero (S := R) <| fun s => by
     fin_cases s
     · simp
       rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
@@ -693,12 +699,8 @@ lemma self_comp_aux' :
       · simp [zero_pow hd₁]
       · simp [zero_pow hd₁]
   have has_subst_map_aux : HasSubst ![0, 0, PowerSeries.X (R := R)] :=
-    hasSubst_of_constantCoeff_zero
-    <| fun s => by fin_cases s <;> simp
+    hasSubst_of_constantCoeff_zero <| fun s => by fin_cases s <;> simp
   /- prove that F(F(X,0),0) = F(X, F(0, 0)). -/
-  have eq_aux₁ : subst ![0, 0, PowerSeries.X (R := R)] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
-    subst ![0, 0, PowerSeries.X (R := R)] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) := by
-    rw [assoc_eq]
   have left_eq : subst ![0, 0, PowerSeries.X (R := R)] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun] F.toFun (S := R)) =
     ((PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) ∘
     (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R))) PowerSeries.X := by
@@ -714,7 +716,6 @@ lemma self_comp_aux' :
     · -- the cases s = 1
       simp
       obtain aux := (PowerSeries.HasSubst.const has_subst_aux)
-
       rw [← PowerSeries.subst, PowerSeries.subst_X has_subst_aux, subst_comp_subst_apply
         has_subst_YZ has_subst_map_aux]
       apply subst_congr
@@ -770,7 +771,6 @@ lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : PowerSeries.Has
     rw [h]
     funext g
     simp [←PowerSeries.map_algebraMap_eq_subst_X]
-
 
 /--
   Given a formal group law `F`, `F(X,0) = X`.
@@ -876,11 +876,9 @@ theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : Forma
     rw [h]
   · intro h
     refine FormalGroupStrictIso.ext h ?_
-    have eq_aux₁ : (PowerSeries.subst α.toHom.toFun) ∘ (PowerSeries.subst α.invHom.toFun) = id := by
-      exact α.left_inv
+    have eq_aux₁ := α.left_inv
     rw [h] at eq_aux₁
-    have eq_aux₂ : (PowerSeries.subst β.toHom.toFun) ∘ (PowerSeries.subst β.invHom.toFun) = id := by
-      exact β.left_inv
+    have eq_aux₂ := β.left_inv
     have eq_aux₃ : α.invHom.toFun = β.invHom.toFun := by
       obtain ⟨g, h₁, h₂⟩ := PowerSeries.exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
         β.toHom.zero_constantCoeff
