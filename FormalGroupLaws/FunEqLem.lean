@@ -224,7 +224,7 @@ lemma multiplicity_aux (n i q: ℕ) (hq : q > 1)
 
 
 
-include I  hs_i hs_i'  in
+include hs_i hs_i'  in
 /-- Let a_n be the coefficient of f_g, then a_n * I^r ⊆ R, where r is the multiplicity of
   q in n. -/
 lemma coeff_RecurFun_mul_mem (n : ℕ) :
@@ -291,7 +291,23 @@ lemma coeff_RecurFun_mul_mem (n : ℕ) :
         rw [←sum_attach] at aux
         exact aux
 
-include I  hs_i hs_i'  in
+include hs_i hs_i' in
+lemma coeff_RecurFun_mul_mem_i (n i: ℕ) :
+  ∀ (x : R), x ∈ I ^ (multiplicity q n + i) →
+    (PowerSeries.coeff n (RecurFun hp_prime hn hq σ s hg)) * x ∈ (algebraMap R K )'' ↑(I ^ i) := by
+  intro x hx
+  rw [pow_add] at hx
+  refine Submodule.mul_induction_on hx ?_ ?_
+  intro y hy z hz
+  obtain h₁ := coeff_RecurFun_mul_mem hp_prime hn hq σ s hs_i hs_i' hg _ y hy
+  rw [Subring.coe_mul, ←mul_assoc]
+
+
+  sorry
+
+  sorry
+
+include hs_i hs_i'  in
 /-- Let a_n be the coefficient of f_g, then a_n * I^r ⊆ R, where r is the multiplicity of
   q in n. -/
 lemma coeff_RecurFun_mul_mem' (n i : ℕ) :
@@ -300,15 +316,36 @@ lemma coeff_RecurFun_mul_mem' (n i : ℕ) :
   := by
   intro x hx
   rw [pow_add] at hx
-  induction i with
-  | zero =>
-    rw [pow_zero]
-    have aux : ⇑(algebraMap (↥R) K) '' ↑(1 : Ideal R) = R := by
-      simp
-      sorry
-    sorry
+  simp at hx
+  obtain ⟨a, ha, ha_mem, ha_eq⟩ := hx
+  rw [← ha_eq]
 
-  | succ k ih => sorry
+  -- induction i with
+  -- | zero =>
+  --   rw [pow_zero]
+  --   have aux : ⇑(algebraMap (↥R) K) '' ↑(1 : Ideal R) = R := by
+  --     ext y
+  --     simp
+  --     constructor
+  --     · intro h
+  --       obtain ⟨a, ha, ha'⟩ := h
+  --       rw [←ha']
+  --       exact ha
+  --     · intro hy
+  --       use y, hy; rfl
+  --   rw [aux]
+  --   simp at hx
+  --   obtain ⟨a, ha, ha_eq₁, ha_eq₂⟩ := hx
+  --   obtain ha' := coeff_RecurFun_mul_mem hp_prime hn hq σ s hs_i hs_i' hg _ _ ha_eq₁
+  --   rw [← ha_eq₂]
+  --   exact ha'
+  -- | succ k ih =>
+  --   simp at hx
+  --   obtain ⟨a, ha, ha_eq₁, ha_eq₂⟩ := hx
+  --   rw [←ha_eq₂]
+
+  --   sorry
+  sorry
 
 
 
