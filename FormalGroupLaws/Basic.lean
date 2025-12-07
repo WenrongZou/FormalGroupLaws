@@ -62,6 +62,14 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
+lemma MvPowerSeries.subst_map {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
+    (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
+
+  sorry
+
+lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
+  (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
+  sorry
 
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
     (hg : constantCoeff g = 0) : HasSubst ![f, g] :=
@@ -75,32 +83,31 @@ lemma has_subst_XY : HasSubst (![Y₀, Y₁]) (S := R) :=
 lemma has_subst_YZ : HasSubst (![Y₁, Y₂]) (S := R) :=
   HasSubst.FinPairing (constantCoeff_X _) (constantCoeff_X _)
 
+lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSeries σ R}
+  [Fintype σ] (hf : ∀ x : σ, constantCoeff (f x) = 0) (hg : constantCoeff g = 0):
+  constantCoeff (subst f g) = 0 := by
+  rw [constantCoeff_subst <| hasSubst_of_constantCoeff_zero hf]
+  apply finsum_eq_zero_of_forall_eq_zero <| fun x => by
+    by_cases hx : x = 0
+    · simp [hx, hg]
+    · simp
+      have zero_aux : ∏ x_1, constantCoeff (f x_1) ^ x x_1 = 0 := by
+        have exist_aux : ∃ i : σ, x i ≠ 0 := by
+          by_contra hc
+          simp at hc
+          exact hx <| Finsupp.ext hc
+        obtain ⟨i, hi⟩ := exist_aux
+        apply Finset.prod_eq_zero (i := i) (by simp)
+        simp [hf, zero_pow hi]
+      simp [zero_aux]
+
 variable {F} in
 lemma has_subst_aux₁ (hF : constantCoeff F = 0) : HasSubst (![subst ![Y₀, Y₁] F, Y₂])
   (S := R):= by
   refine hasSubst_of_constantCoeff_zero ?_
-  intro s
-  fin_cases s
-  · simp
-    rw [constantCoeff_subst (HasSubst.FinPairing (by simp) (by simp))]
-    simp
-    apply finsum_eq_zero_of_forall_eq_zero
-    intro x
-    by_cases hx : x = 0
-    · simp [hx, hF]
-    have xneq : x 0 ≠ 0 ∨ x 1 ≠ 0 := by
-      by_contra hc
-      simp at hc
-      have xeq : x = 0 := by
-        refine Finsupp.ext ?_
-        intro a
-        by_cases ha0 : a = 0
-        · simp [ha0, hc]
-        · simp [show a = 1 by omega, hc]
-      contradiction
-    obtain x_or | x_or := xneq
-    · simp [zero_pow x_or]
-    · simp [zero_pow x_or]
+  intro s; fin_cases s
+  · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero]
+    exact constantCoeff_subst_zero (by simp) hF
   · simp
 
 variable {F} in
@@ -110,31 +117,13 @@ lemma has_subst_aux₂ (hF : constantCoeff F = 0) : HasSubst ![Y₀, subst ![Y�
   intro s
   fin_cases s
   · simp
-  · simp
-    rw [constantCoeff_subst (HasSubst.FinPairing (by simp) (by simp))]
-    simp
-    apply finsum_eq_zero_of_forall_eq_zero
-    intro x
-    by_cases hx : x = 0
-    · simp [hx, hF]
-    have xneq : x 0 ≠ 0 ∨ x 1 ≠ 0 := by
-      by_contra hc
-      simp at hc
-      have xeq : x = 0 := by
-        refine Finsupp.ext ?_
-        intro a
-        by_cases ha0 : a = 0
-        · simp [ha0, hc]
-        · simp [show a = 1 by omega, hc]
-      contradiction
-    obtain x_or | x_or := xneq
-    · simp [zero_pow x_or]
-    · simp [zero_pow x_or]
+  · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.mk_one, Fin.isValue, Matrix.cons_val_one,
+    Matrix.cons_val_fin_one]
+    exact constantCoeff_subst_zero (by simp) hF
 
 
 lemma has_subst_swap : HasSubst ![X₁, X₀ (R := R)]  :=
-  hasSubst_of_constantCoeff_zero (by simp [constantCoeff_X] )
-
+  hasSubst_of_constantCoeff_zero (by simp [constantCoeff_X])
 
 /--
 Given a power series p(X) ∈ R⟦X⟧ and an index i, we may view it as a
@@ -148,9 +137,8 @@ lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
   HasSubst (f.toMvPowerSeries (σ := σ)) (S := R) := by
   refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
   intro x
-  rw [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
+  simp [PowerSeries.toMvPowerSeries, ←coeff_zero_eq_constantCoeff, PowerSeries.coeff_subst
     (PowerSeries.HasSubst.X x)]
-  simp
   apply finsum_eq_zero_of_forall_eq_zero
   intro d
   by_cases hd₀ : d = 0
@@ -182,8 +170,8 @@ structure FormalGroup where
 variable (R) in
 @[ext]
 structure CommFormalGroup extends FormalGroup R where
+  /- Commutativity F (X, Y) = F (Y, X)-/
   comm : toFun = MvPowerSeries.subst ![X₁, X₀] toFun
--- Commutativity F (X, Y) = F (Y, X)
 
 namespace FormalGroup
 
@@ -197,16 +185,13 @@ instance : Coe (CommFormalGroup R) (FormalGroup R) where
 
 /-- Given a MvPowerSeries `f'` and two map `g h : σ → MvPowerSeries τ R`, if `g = h`,
   then `subst g f' = subst h f'`-/
-lemma subst_congr {τ : Type*} {f' : MvPowerSeries σ R} {g h : σ → MvPowerSeries τ R} (h_gh : g = h) :
-  subst g f' = subst h f' := by
-  rw [h_gh]
+lemma subst_congr {τ : Type*} {f' : MvPowerSeries σ R} {g h : σ → MvPowerSeries τ R} (H : g = h) :
+    subst g f' = subst h f' := H ▸ rfl
 
 /-- Given a PowerSeries `f'` and two MvPowerSeries `f₁, f₂`, if `f₁ = f₂`,
   then `PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f'`. -/
 lemma PowerSeries.subst_congr {f' : PowerSeries R} {f₁ f₂ : MvPowerSeries σ R}
-  (h_eq : f₁ = f₂):
-  PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f' := by
-  rw [h_eq]
+    (H : f₁ = f₂): PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f' :=  H ▸ rfl
 
 
 /-- addition of two multi variate power series under the formal group `F` sense, namely
@@ -219,31 +204,15 @@ abbrev add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries 
 scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 =>
   add F f₀ f₁
 
-lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSeries σ R}
-  [Fintype σ] (hf : ∀ x : σ, constantCoeff (f x) = 0) (hg : constantCoeff g = 0):
-  constantCoeff (subst f g) = 0 := by
-  rw [constantCoeff_subst <| hasSubst_of_constantCoeff_zero hf]
-  apply finsum_eq_zero_of_forall_eq_zero <| fun x => by
-    by_cases hx : x = 0
-    · simp [hx, hg]
-    · simp
-      have zero_aux : ∏ x_1, constantCoeff (f x_1) ^ x x_1 = 0 := by
-        have exist_aux : ∃ i : σ, x i ≠ 0 := by
-          by_contra hc
-          simp at hc
-          exact hx <| Finsupp.ext hc
-        obtain ⟨i, hi⟩ := exist_aux
-        apply Finset.prod_eq_zero (i := i) (by simp)
-        simp [hf, zero_pow hi]
-      simp [zero_aux]
 
 lemma PowerSeries.constantCoeff_subst_zero {f : MvPowerSeries τ S} {g : PowerSeries R}
-  (hf : f.constantCoeff = 0) (hg : g.constantCoeff = 0):
-  constantCoeff (g.subst f) = 0 := by
-  rw [PowerSeries.constantCoeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero hf]
-  apply finsum_eq_zero_of_forall_eq_zero <| fun d => by
-    if hd : d = 0 then simp [hd, hg]
-    else simp [hf, zero_pow hd]
+    (hf : f.constantCoeff = 0) (hg : g.constantCoeff = 0):
+    constantCoeff (g.subst f) = 0 := by
+  rw [PowerSeries.constantCoeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero hf,
+    finsum_eq_zero_of_forall_eq_zero]
+  intro d
+  if hd : d = 0 then simp [hd, hg]
+  else simp [hf, zero_pow hd]
 
 
 
@@ -390,7 +359,7 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
       simp [F.lin_coeff_Y]
     assoc := by
       have constant_zero : constantCoeff ((MvPowerSeries.map f) F.toFun) = 0 := by
-        simp [F.zero_constantCoeff]
+        rw [constantCoeff_map, F.zero_constantCoeff, map_zero]
       have toAdd_aux {a : R} : f a = f.toAddMonoidHom a := rfl
       have aux₁ : subst ![subst ![Y₀, Y₁] ((MvPowerSeries.map f) F.toFun), Y₂]
         ((MvPowerSeries.map f) F.toFun) =

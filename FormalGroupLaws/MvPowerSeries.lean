@@ -167,19 +167,11 @@ lemma Finsupp.degree_sum {α : Type*} [DecidableEq α] {s : Finset α} {d : α �
   · rintro a s hs hs'
     rw [Finset.sum_insert hs, Finset.sum_insert hs, Finsupp.degree_add, hs']
 
-lemma MvPowerSeries.subst_map {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
-  (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
-  sorry
-
-lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
-  (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
-  sorry
-
 
 omit [DecidableEq σ]
 lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpace R] [T2Space R]
     [DiscreteUniformity R] (hx : Summable x) (hg : PowerSeries.HasSubst g) :
-    (∑' i : ℕ, x i).subst g = ∑' i : ℕ, ((x i).subst g) := by
+    (∑' i, x i).subst g = ∑' i, ((x i).subst g) := by
   rw [←PowerSeries.coe_substAlgHom hg, PowerSeries.substAlgHom_eq_aeval hg,
     Summable.map_tsum hx _ <| PowerSeries.continuous_aeval _]
 
@@ -213,15 +205,7 @@ lemma MvPowerSeries.Summable.increase_order {x : ℕ → MvPowerSeries σ R}
     rw [←(ENat.coe_toNat hxi)] at ⊢ hx
     norm_cast at ⊢ hx
     linarith
-  -- if hxi : (x i).order = ⊤ then
-  --   exact ((weightedOrder_eq_top_iff fun x ↦ 1).mp hxi) ▸ (coeff_zero _)
-  -- else
-  -- simp at hi
-  -- refine coeff_of_lt_order ?_
-  -- obtain aux' := hx i
-  -- rw [←(ENat.coe_toNat hxi)] at ⊢ aux'
-  -- norm_cast at ⊢ aux'
-  -- linarith
+
 
 
 lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
