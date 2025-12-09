@@ -1,15 +1,8 @@
-import Mathlib.RingTheory.MvPowerSeries.Substitution
-import Mathlib.RingTheory.PowerSeries.Substitution
 import FormalGroupLaws.Basic
 import FormalGroupLaws.BasicLem
-import FormalGroupLaws.SubstInv
 import Mathlib.RingTheory.PowerSeries.PiTopology
-import Mathlib.Topology.Instances.ENNReal.Lemmas
 import FormalGroupLaws.MvPowerSeries
 import Mathlib.Algebra.CharP.Lemmas
-import FormalGroupLaws.SubstInv
-import FormalGroupLaws.MvPowerSeries
-import Mathlib.RingTheory.PowerSeries.Trunc
 
 noncomputable section
 

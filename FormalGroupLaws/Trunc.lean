@@ -184,16 +184,7 @@ theorem trunc_of_subst (f g: PowerSeries R)(hg : constantCoeff g = 0)
     rw [if_neg hm, if_neg hm]
 
 lemma trunc'_eq_trunc_succ (f : PowerSeries R) :
-  trunc' n f = trunc (n + 1) f := by
-  unfold trunc' truncFun' trunc
-  simp
-  have aux : Iic n = range (n + 1) := by
-    refine Finset.ext_iff.mpr ?_
-    simp
-    omega
-  rw [aux]
-
-
+  trunc' n f = trunc (n + 1) f := rfl
 
 theorem trunc'_of_subst (f g: PowerSeries R)
   (hg : PowerSeries.constantCoeff g = 0)

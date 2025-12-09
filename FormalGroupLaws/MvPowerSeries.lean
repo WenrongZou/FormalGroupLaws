@@ -165,7 +165,7 @@ lemma Finsupp.degree_sum {α : Type*} [DecidableEq α] {s : Finset α} {d : α �
   refine Finset.induction ?_ ?_ s
   · simp
   · rintro a s hs hs'
-    rw [Finset.sum_insert hs, Finset.sum_insert hs, Finsupp.degree_add, hs']
+    rw [Finset.sum_insert hs, Finset.sum_insert hs, map_add, hs']
 
 
 omit [DecidableEq σ]
@@ -174,12 +174,6 @@ lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpa
     (∑' i, x i).subst g = ∑' i, ((x i).subst g) := by
   rw [←PowerSeries.coe_substAlgHom hg, PowerSeries.substAlgHom_eq_aeval hg,
     Summable.map_tsum hx _ <| PowerSeries.continuous_aeval _]
-
-
-/- this theorem already in mathlib, please delete it after update mathlib-/
-lemma PowerSeries.monomial_eq_C_mul_X_pow (r : R) (n : ℕ) : PowerSeries.monomial n r = PowerSeries.C r *
-  PowerSeries.X ^ n := by
-  ext; simp [PowerSeries.coeff_X_pow, PowerSeries.coeff_monomial]
 
 
 open Finset in
