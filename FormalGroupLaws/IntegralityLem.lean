@@ -106,7 +106,7 @@ lemma hasSum_aux [TopologicalSpace K] [Nontrivial K] (hs₀ : s 0 = 0) :
           coeff_monomial, if_pos _, one_pow, smul_eq_mul, mul_one]
         · exact (Nat.div_mul_cancel <| pow_dvd_of_le_multiplicity (mem_Icc.mp hx).2).symm
         · intro y hy
-          rw [coeff_mk, monomial_pow, coeff_monomial, if_neg, smul_zero]
+          rw [coeff_mk, monomial_pow, coeff_monomial, if_neg _, smul_zero]
           by_contra hc
           rw [hc, mul_div_cancel_right₀ y <| q_pow_neZero hq] at hy
           contradiction
@@ -114,9 +114,10 @@ lemma hasSum_aux [TopologicalSpace K] [Nontrivial K] (hs₀ : s 0 = 0) :
       · intro x hx₁ hx₂
         by_cases hx₀ : x = 0
         · simp [hx₀, hs₀]
-        have eq_zero : (coeff d) (subst ((monomial (q ^ x)) (1 : K)) (PowerSeries.mk
+        have eq_zero : (coeff d) (subst ((monomial (q ^ x)) (1 : K)) (.mk
           (RecurFunAux ht hq σ s hg))) = 0 := by
-          rw [coeff_subst' <| HasSubst.monomial' (q_pow_neZero hq) 1, finsum_eq_zero_of_forall_eq_zero]
+          rw [coeff_subst' <| HasSubst.monomial' (q_pow_neZero hq) 1,
+            finsum_eq_zero_of_forall_eq_zero]
           · intro y
             rw [coeff_mk, monomial_pow, coeff_monomial, if_neg, smul_zero]
             by_contra hc
@@ -138,13 +139,12 @@ lemma hasSum_aux [TopologicalSpace K] [Nontrivial K] (hs₀ : s 0 = 0) :
   rw [← coeff_zero_eq_constantCoeff_apply, PowerSeries.coeff_map,
     coeff_zero_eq_constantCoeff_apply, constantCoeff_RecurFun, map_zero]
 
-
 open PowerSeries in
 include ht hq hg in
 lemma summable_aux [TopologicalSpace K] [Nontrivial K] (hs₀ : s 0 = 0) :
-    Summable (fun i ↦ s i • ((RecurFun ht hq σ s hg).subst ((monomial (q^i)) 1)).map (σ^i)) := by
-  use (RecurFun ht hq σ s hg - g.map R.subtype)
-  exact hasSum_aux ht hq σ s hg hs₀
+    Summable (fun i ↦ s i • ((RecurFun ht hq σ s hg).subst ((monomial (q^i)) 1)).map (σ^i)) :=
+  ⟨(RecurFun ht hq σ s hg - g.map R.subtype), hasSum_aux ht hq σ s hg hs₀ ⟩
+
 
 
 
