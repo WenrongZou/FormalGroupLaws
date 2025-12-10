@@ -250,14 +250,9 @@ lemma coeff_RecurFun_mul_mem (n : ℕ) :
               ∈ ⇑(algebraMap (↥R) K) '' ↑I := by
               intro b hb
               rw [h] at hb
-              have lt_aux : multiplicity q (n / q ^ i) < k := by
-                rw [←h]
-                simp at hi
-                obtain ⟨hi1, hi2⟩ := hi
-                have hq' : q > 1 := by
-                  rw [hq]
-                  exact Nat.one_lt_pow hn <| Nat.Prime.one_lt hp_prime
-                exact multiplicity_aux n i q hq' (by omega) hi2 hi1
+              have lt_aux : multiplicity q (n / q ^ i) < k :=
+                h.symm ▸  multiplicity_aux n i q (hq ▸ Nat.one_lt_pow hn <| Nat.Prime.one_lt hp_prime)
+                  (by omega) (mem_Icc.mp hi).2 (mem_Icc.mp hi).1
               have le_aux : multiplicity q (n / q ^ i) ≤ k := by linarith
               have b_mem : b ∈ I ^ multiplicity q (n / q ^ i) :=
                 SetLike.le_def.mp (Ideal.pow_le_pow_right le_aux (I := I)) hb
