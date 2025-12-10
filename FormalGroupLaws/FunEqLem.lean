@@ -34,14 +34,10 @@ variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} {τ : Type*}
 variable {g : PowerSeries R} (hg : PowerSeries.constantCoeff g = 0)
   (hg_unit : IsUnit (g.coeff 1))
 
-include hp_prime hn hq in
+include hp_prime hq in
 /-- under our assumption, `∀ x ∈ ℕ, q ^ x ≠ 0`-/
-lemma q_pow_neZero {x : ℕ} : q ^ x ≠ 0 := by
-  have qneq : q ≠ 0 := hq ▸ pow_ne_zero t <| Nat.Prime.ne_zero hp_prime
-  have qneq' : q ≠ 1 := by
-    rw [hq]
-    refine Ne.symm <| Nat.ne_of_lt <| Nat.one_lt_pow hn <| Nat.Prime.one_lt hp_prime
-  exact pow_ne_zero x qneq
+lemma q_pow_neZero {x : ℕ} : q ^ x ≠ 0 :=
+  pow_ne_zero x (hq ▸ pow_ne_zero t <| Nat.Prime.ne_zero hp_prime)
 
 lemma mem_image_aux {y : R} {I : Ideal R} (hy : ↑y ∈ Set.image (algebraMap R K) I) : y ∈ I := by
   simp at hy
@@ -554,7 +550,7 @@ theorem Fun_eq_of_RecurFun_XY [UniformSpace K] [T2Space K] [DiscreteUniformity K
       rw [←PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul has_subst_aux,
         ←f_def, ←PowerSeries.subst_map has_subst_aux]
       congr! 2
-      rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.monomial' (q_pow_neZero hp_prime hn hq) 1)
+      rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.monomial' (q_pow_neZero hp_prime hq) 1)
         has_subst_aux]
       apply subst_congr
       funext d
@@ -1093,7 +1089,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   have F_def : F = (inv_add_aux hp_prime hn hq σ s hg hg_unit) := rfl
   have has_subst_F : PowerSeries.HasSubst F := HasSubst.inv_add_aux hp_prime hn hq σ s hg hg_unit
   have has_subst_monomial {i : ℕ} := PowerSeries.HasSubst.monomial'
-    (q_pow_neZero hp_prime hn hq (x := i)) (1 : K)
+    (q_pow_neZero hp_prime hq (x := i)) (1 : K)
   if hn₀ : n = 0 then
     /- all these terms are equal to zero. -/
     simp [hn₀]
@@ -1146,7 +1142,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       ∑ j ∈ range (n.degree + 1), (coeff n) ((σ ^ i) ((PowerSeries.coeff j) f) •
       (MvPowerSeries.map (σ ^ i)) (subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] F) ^ j) := sorry
     nth_rw 2 [f.as_tsum]
-    rw [tsum_subst ⟨f, PowerSeries.hasSum_of_monomials_self f⟩ (PowerSeries.HasSubst.monomial' (q_pow_neZero hp_prime hn hq) 1),
+    rw [tsum_subst ⟨f, PowerSeries.hasSum_of_monomials_self f⟩ (PowerSeries.HasSubst.monomial' (q_pow_neZero hp_prime hq) 1),
       ←PowerSeries.subst_map has_subst_F, tsum_subst _ has_subst_F, coeff_map,
       Summable.map_tsum _ _ (WithPiTopology.continuous_coeff K n)]
     have eq_aux₃ {i_1 : ℕ}: ((PowerSeries.monomial (i_1 * q ^ i))
@@ -1163,8 +1159,6 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     rw [tsum_to_finite₃, tsum_to_finite₄, map_sum, ←sum_sub_distrib]
     simp_rw [←coeff_map, ←map_sub, eq_aux₄, ←smul_sub]
     exact mem_ideal_aux (forall_coeff_mem_aux hp_prime hn hq σ s hs_i hs_i' hg hg_unit n i)
-
-    #check pow_ModEq
     simp_rw [eq_aux₂]
     apply MvPowerSeries.Summable.increase_order <| fun n => nat_le_order <| fun d hd => by
       rw [PowerSeries.coeff_subst has_subst_F, finsum_eq_zero_of_forall_eq_zero]
@@ -1192,7 +1186,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
                   (sum_range_induction (fun k ↦ 1) (fun m ↦ m) rfl m fun k ↦ congrFun rfl)
                 _ ≤ _ := sum_le_sum h_aux'
             have ineq_aux' : m ≥ n := hm ▸ Nat.le_mul_of_pos_right n
-              <| Nat.zero_lt_of_ne_zero <| q_pow_neZero hp_prime hn hq (x := i)
+              <| Nat.zero_lt_of_ne_zero <| q_pow_neZero hp_prime hq (x := i)
             linarith
           obtain ⟨i, hi₁, hi₂⟩ := h_aux
           rw [prod_eq_zero hi₁]
