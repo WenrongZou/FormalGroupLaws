@@ -768,7 +768,7 @@ lemma coeff_inv_add_aux_X :
         have contra : ((range x).sum ⇑d).degree ≥ 2 := calc
           _ ≥ (range x).sum 1 := by
             rw [sum_range, sum_range,  @Fin.sum_univ_eq_sum_range, @Fin.sum_univ_eq_sum_range,
-              Finsupp.degree_sum]
+              map_sum]
             exact sum_le_sum <| by simpa
           _ ≥ 2 := by
             simp [xge]
@@ -1289,7 +1289,7 @@ lemma coeffEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       refine Subring.prod_mem R <| fun j hj => by
         simp at hl
         have le_aux : (l j).degree ≤ n.degree := by
-          rw [←hl.1, Finsupp.degree_sum]
+          rw [←hl.1, map_sum]
           exact Finset.single_le_sum aux hj
         if hlj : (l j).degree < n.degree then
           rw [h] at hlj
@@ -1305,7 +1305,7 @@ lemma coeffEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
               exact hc <| (Finsupp.degree_eq_zero_iff _).mp hc'
             have contra_aux : ∑ s ∈ range i, (l s).degree ≥ (l b).degree + (l j).degree :=
               add_le_sum aux hb hj hb'
-            rw [eq_aux, ←Finsupp.degree_sum, hl.1] at contra_aux
+            rw [eq_aux, ← map_sum, hl.1] at contra_aux
             linarith
           have i_ge : i ≥ 2 := by omega
           have exist_b : ∃ b ∈ range i, b ≠ j := by

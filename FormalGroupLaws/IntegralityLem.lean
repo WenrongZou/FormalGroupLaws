@@ -25,7 +25,7 @@ variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R}
   {p t q : ℕ} [hp : Fact (Nat.Prime p)] (ht : t ≠ 0) (hq : q = p ^ t)
   (σ : K →+* K)  (hs : ∀ (a : R), σ a ∈ R) (a_congr : ∀ a : R, ⟨σ a, hs a⟩ ≡  (a ^ q) [SMOD I])
   (hp_mem : (p : R) ∈ I) (s : ℕ → K) (hs₁ : ∀ i, ∀ a, a ∈ R.subtype '' I → s i * a ∈ R)
-  (hs₂ :∀ r, ∀ b, (∀ a, (a ∈ R.subtype '' (I^r : Ideal R)) → b * a ∈ R.subtype '' I)
+  (hs₂ : ∀ r, ∀ b, (∀ a, (a ∈ R.subtype '' (I^r : Ideal R)) → b * a ∈ R.subtype '' I)
     → (∀ a, a ∈ R.subtype '' (I^r : Ideal R) → (σ b) * a ∈ R.subtype '' I))
 
 section FunctionalEquation
@@ -44,10 +44,10 @@ lemma q_neOne : q ≠ 1 := IsPrimePow.ne_one <| isPrimePow_q ht hq
 
 /-- define the $f_g$ by its coefficient recursively, and then we prove the functional equation
 for $f_g$, namely $f_g(X)=g(X)+∑_{i=1}^∞ s_i σ^i f_g(X^{q^i})$.-/
-def RecurFunAux (hg : PowerSeries.constantCoeff g = 0) : ℕ → K
+def RecurFunAux (hg : g.constantCoeff = 0) : ℕ → K
   | 0 => 0
   | k + 1 =>
-    PowerSeries.coeff (k + 1) g + ∑ j ∈ (Icc 1 (multiplicity q (k + 1))).attach,
+    g.coeff (k + 1) + ∑ j ∈ (Icc 1 (multiplicity q (k + 1))).attach,
       have aux : ((k + 1) / (q ^ (j : ℕ))) < k + 1 :=
         Nat.div_lt_self (by linarith) <| Nat.one_lt_pow
           (by nlinarith [List.left_le_of_mem_range' j.property])
@@ -69,7 +69,7 @@ lemma coeff_RecurFun_one : (RecurFun ht hq σ s hg).coeff 1 = g.coeff 1 := by
   rw [empty_aux, show Icc 1 0 = ∅ by rfl, attach_empty, sum_empty]
 
 /-- First coefficient of `f_g` is unit-/
-lemma coeff_RecurFun_unit (hg_unit : IsUnit ((PowerSeries.coeff 1) g)) :
+lemma coeff_RecurFun_unit (hg_unit : IsUnit (g.coeff 1)) :
     IsUnit ((RecurFun ht hq σ s hg).coeff 1) := by
   rw [coeff_RecurFun_one]
   obtain ⟨b, hb₁, hb₂⟩ := isUnit_iff_exists.mp hg_unit
@@ -166,38 +166,106 @@ lemma image_of_incl_mem {J : Ideal R} : ∀ x, x ∈ R.subtype '' J → x ∈ R 
   obtain ⟨y, hy₁, hy₂⟩ := hx
   simp only [← hy₂,Subring.subtype_apply, SetLike.coe_mem]
 
+include hs in
+lemma refinement_hs: ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
+  induction j with
+  | zero => simp
+  | succ k ih =>
+    intro a
+    have eq_aux : (σ ^ (k + 1)) ↑a = σ ((σ^k) a) := by
+      simp [Function.iterate_succ_apply']
+    exact eq_aux ▸ hs ⟨_, ih _⟩
+
+include hs₂ in
+lemma refinement_hs₂ : ∀ (i r : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^r))
+    → b * a ∈ R.subtype '' I) → (∀ a, a ∈ R.subtype '' ↑(I^r)
+    → ((σ)^[i] b) * a ∈ R.subtype '' I) := fun i r b h => by
+  induction i with
+  | zero => exact h
+  | succ k hk => exact (Function.iterate_succ_apply' σ k b) ▸ hs₂ r _ hk
+
+lemma ideal_pow_mem {I : Ideal R} {r : ℕ} {a : K} : (∀ b ∈ I^r, a * b ∈ R)
+    → (∀ c ∈ I^r * I, a * c ∈ R.subtype '' I) := fun h c hc => by
+  refine Submodule.mul_induction_on hc ?_ ?_
+  · intro m hm n hn
+    rw [Subring.coe_mul, ← mul_assoc]
+    use ⟨a * ↑m * n, Subring.mul_mem R (h m hm) (SetLike.coe_mem n)⟩
+    simpa using Ideal.mul_mem_left I (⟨a * ↑m, h _ hm⟩) hn
+  · intro x y hx hy
+    rw [Subring.coe_add, mul_add]
+    obtain ⟨x₁, hx₁, hx₂⟩ := hx
+    obtain ⟨y₁, hy₁, hy₂⟩ := hy
+    use (x₁ + y₁)
+    simp [←hx₂, ←hy₂, (Submodule.add_mem_iff_right I hx₁).mpr hy₁]
+
+lemma ideal_pow_mem' {I : Ideal R} {r s: ℕ} {x : K} (hs : s > r) : (∀ b ∈ I^r, x * b ∈ R)
+    → (∀ c ∈ I^s, x * c ∈ R.subtype '' I) :=
+  fun h c hc => (ideal_pow_mem h) c ((Ideal.pow_le_pow_right hs) hc)
+
+open FiniteMultiplicity in
+lemma multiplicity_aux {n i q : ℕ} (hq : 1 < q) (hn : n > 0) (hi : 1 ≤ i ∧ i ≤ multiplicity q n) :
+    multiplicity q (n / q ^ i) < multiplicity q n :=
+  (multiplicity_lt_iff_not_dvd (Nat.finiteMultiplicity_iff.mpr
+    ⟨(Nat.ne_of_lt hq).symm, Nat.div_pos (Nat.le_of_dvd hn
+    <| pow_dvd_of_le_multiplicity hi.2) (by positivity)⟩)).mpr <| by
+    by_contra hc
+    nlinarith [le_multiplicity_of_pow_dvd (Nat.finiteMultiplicity_iff.mpr
+      ⟨(Nat.ne_of_lt hq).symm, hn⟩) <| (pow_add q _ _) ▸
+        (Nat.dvd_div_iff_mul_dvd (pow_dvd_of_le_multiplicity hi.2)).mp hc]
+
 include hs₁ hs₂ in
 /- First technical lemma: Let $a_n$ be the coefficient of $f_g$, then $a_n * I^r ⊆ R$,
 where $r$ is the multiplicity of $q$ in $n$. -/
 theorem coeff_RecurFun_mul_mem (n : ℕ) :
-    let f := RecurFun ht hq σ s hg
-    ∀ x, x ∈ R.subtype '' (I^(multiplicity q n) : Ideal R) → (f.coeff n) * x ∈ R := by
-  intro f
-  have f_def : f = RecurFun ht hq σ s hg := rfl
+    ∀ x, x ∈ R.subtype '' ↑(I^(multiplicity q n)) → ((RecurFun ht hq σ s hg).coeff n) * x ∈ R := by
   generalize h : (multiplicity q n) = m
   induction m using Nat.strongRecOn generalizing n with
   | ind k hk =>
     intro x hx
     by_cases hn₀ : n = 0
     · -- prove the case for n = 0
-      simp [f_def, hn₀, RecurFun, RecurFunAux]
+      simp [hn₀, RecurFun, RecurFunAux]
     · -- the case for n ≥ 1
       rw [← Nat.succ_pred_eq_of_ne_zero hn₀]
-      simp only [Nat.pred_eq_sub_one, Nat.succ_eq_add_one, f_def, RecurFun, PowerSeries.coeff_mk,
+      simp only [Nat.pred_eq_sub_one, Nat.succ_eq_add_one, RecurFun, PowerSeries.coeff_mk,
         RecurFunAux]
       rw [show n - 1 + 1 = n by exact Nat.succ_pred_eq_of_ne_zero hn₀, add_mul]
       refine Subring.add_mem _ (Subring.mul_mem _ (SetLike.coe_mem _) (image_of_incl_mem _ hx)) ?_
       · -- second component is in R
-        rw [sum_attach (Icc 1 (multiplicity q n))
-          (fun x ↦ s x * (σ)^[x] (RecurFunAux ht hq σ s hg (n / q ^ x))), sum_mul]
-        refine Subring.sum_mem R fun i hi => ?_
-        rw [mul_assoc]
+        rw [sum_attach _ (fun x ↦ s x * (σ)^[x] (RecurFunAux ht hq σ s hg (n / q ^ x))), sum_mul]
+        refine Subring.sum_mem R fun i hi =>
+          (mul_assoc (s i) _ _) ▸ hs₁ _ _ (refinement_hs₂ σ hs₂ i k _ (fun b hb => ?_) _ hx)
+        have aux : ⟨b, image_of_incl_mem b hb⟩ ∈ I ^ k := by
+          obtain ⟨c, hc, hc'⟩ := hb
+          exact hc' ▸ hc
+        have lt_aux : multiplicity q (n / q ^ i) < k :=
+          h.symm ▸  multiplicity_aux (hq ▸ Nat.one_lt_pow ht <| Nat.Prime.one_lt hp.out)
+            (by omega) (mem_Icc.mp hi)
+        refine ideal_pow_mem' lt_aux ?_ _ aux
+        intro y hy
+        obtain h' := hk _ lt_aux _ rfl ↑y <| Set.mem_image_of_mem _ hy
+        rw [RecurFun, PowerSeries.coeff_mk] at h'
+        exact h'
 
-
-        sorry
-
-
-
+include hs₁ hs₂ in
+lemma coeff_RecurFun_mul_mem_i (n i: ℕ) :
+  ∀ (x : R), x ∈ I ^ (multiplicity q n + i) →
+    ((RecurFun ht hq σ s hg).coeff n) * x ∈ R.subtype '' ↑(I ^ i) := by
+  rw [pow_add]
+  intro x hx
+  refine Submodule.mul_induction_on hx ?_ ?_
+  · intro y hy z hz
+    rw [Subring.coe_mul, ← mul_assoc]
+    obtain h₁ := coeff_RecurFun_mul_mem ht hq σ s hs₁ hs₂ hg n y
+      (Set.mem_image_of_mem (⇑R.subtype) hy)
+    use ⟨(PowerSeries.coeff n) (RecurFun ht hq σ s hg) * ↑y, h₁⟩ * z
+    simpa using Ideal.mul_mem_left (I ^ i) _ hz
+  · intro y z hy hz
+    rw [Subring.coe_add, mul_add]
+    obtain ⟨x₁, hx₁, hx₂⟩ := hy
+    obtain ⟨y₁, hy₁, hy₂⟩ := hz
+    use (x₁ + y₁)
+    simp [←hx₂, ←hy₂, (Submodule.add_mem_iff_right (I ^ i) hx₁).mpr hy₁]
 
 
 
