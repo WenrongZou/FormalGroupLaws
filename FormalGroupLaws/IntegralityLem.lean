@@ -61,7 +61,7 @@ lemma constantCoeff_RecurFun : (RecurFun ht hq σ s hg).constantCoeff = 0 := by
   simp [RecurFun, RecurFunAux]
 
 /- First coefficient of `f_g` is equal to `coeff 1 g`. -/
-lemma coeff_RecurFun_one : (RecurFun ht hq σ s hg).coeff 1 = g.coeff 1 := by
+lemma coeff_one_RecurFun: (RecurFun ht hq σ s hg).coeff 1 = g.coeff 1 := by
   simp only [RecurFun, PowerSeries.coeff_mk, RecurFunAux, zero_add, Nat.reduceAdd, add_eq_left]
   have empty_aux : (multiplicity q 1) = 0 :=
     multiplicity_eq_zero.mpr <| Nat.not_dvd_of_pos_of_lt (by linarith)
@@ -71,7 +71,7 @@ lemma coeff_RecurFun_one : (RecurFun ht hq σ s hg).coeff 1 = g.coeff 1 := by
 /-- First coefficient of `f_g` is unit-/
 lemma coeff_RecurFun_unit (hg_unit : IsUnit (g.coeff 1)) :
     IsUnit ((RecurFun ht hq σ s hg).coeff 1) := by
-  rw [coeff_RecurFun_one]
+  rw [coeff_one_RecurFun]
   obtain ⟨b, hb₁, hb₂⟩ := isUnit_iff_exists.mp hg_unit
   exact isUnit_iff_exists.mpr ⟨b, by norm_cast⟩
 
@@ -160,7 +160,7 @@ end FunctionalEquation
 
 section technical_lemma
 
-variable {g : PowerSeries R} (hg : g.constantCoeff = 0)
+variable {g : PowerSeries R} (hg : g.constantCoeff = 0) (hg_unit : IsUnit (g.coeff 1))
 
 lemma image_of_incl_mem {J : Ideal R} : ∀ x, x ∈ R.subtype '' J → x ∈ R := fun x hx => by
   obtain ⟨y, hy₁, hy₂⟩ := hx
@@ -266,6 +266,45 @@ lemma coeff_RecurFun_mul_mem_i (n i: ℕ) :
     obtain ⟨y₁, hy₁, hy₂⟩ := hz
     use (x₁ + y₁)
     simp [←hx₂, ←hy₂, (Submodule.add_mem_iff_right (I ^ i) hx₁).mpr hy₁]
+
+include hp_mem in
+lemma p_pow_mod_p {G : MvPowerSeries (Fin 2) R} {l : ℕ} (l_pos : 0 < l) :
+    ∀ d, ((G ^ (q ^ l)).ofSubring - ((G.subst ![X₀ ^ (q ^ l), X₁ ^ (q ^ l)]).map (σ^l))).coeff d
+      ∈ R.subtype '' I := by
+  intro d
+  have mem_aux : ((G ^ (q ^ l)).ofSubring -
+    ((G.subst ![X₀ ^ (q ^ l), X₁ ^ (q ^ l)]).map (σ^l))).coeff d ∈ R := by
+    sorry
+  have pdvd : (p : R) ∣ ⟨_, mem_aux⟩ := by
+    sorry
+  obtain ⟨pk, hpk⟩ := pdvd
+  use ⟨_, mem_aux⟩
+  nth_rw 1 [hpk]
+  exact ⟨Ideal.IsTwoSided.mul_mem_of_left pk hp_mem, by simp⟩
+
+include ht hq hp_mem hs in
+/- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
+we have that $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
+theorem pow_ModEq {G : MvPowerSeries (Fin 2) R} {n r l m : ℕ} (hn : n = q ^ r * m) (hl : l > 0) :
+    ∀ d, ((G ^ (n * q ^ l)).ofSubring - (((G.subst ![X₀^(q^l), X₁^(q^l)])^n).map (σ^l))).coeff d
+      ∈ R.subtype '' ↑(I^r) := by
+  sorry
+
+/- Given a `g ∈ R⟦X⟧`, Recursive function `RecurFun` is $f_g(X) ∈ K⟦X⟧ $, then
+`inv_RecurFun` is $f_g^{-1}(X)$. -/
+def inv_RecurFun := PowerSeries.subst_inv _ (coeff_RecurFun_unit ht hq σ s hg hg_unit)
+  (constantCoeff_RecurFun ..)
+
+lemma coeff_one_inv_RecurFun :
+    (inv_RecurFun ht hq σ s hg hg_unit).coeff 1 = hg_unit.unit⁻¹ := by
+  simp [inv_RecurFun, PowerSeries.subst_inv, PowerSeries.invFun_aux, coeff_one_RecurFun]
+  refine Units.inv_eq_of_mul_eq_one_left ?_
+  simp only [IsUnit.unit_spec]
+  exact_mod_cast IsUnit.val_inv_mul hg_unit
+
+lemma constantCoeff_inv_RecurFun :
+    (inv_RecurFun ht hq σ s hg hg_unit).constantCoeff = 0 := by
+  simp [inv_RecurFun, PowerSeries.subst_inv, PowerSeries.invFun_aux]
 
 
 

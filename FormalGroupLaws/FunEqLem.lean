@@ -671,7 +671,7 @@ theorem pow_ModEq {G : MvPowerSeries (Fin 2) R} {r l m: ℕ} (hl : l > 0) :
     _ ≡ (G ^ (q ^ r * q ^ l)) ^ m [SMOD (I^(r + 1)).MvPowerSeries] := by
       rw [←pow_mul]; congr! 1; ring
     _ ≡ _ [SMOD (I^(r + 1)).MvPowerSeries] := by
-      refine SModEq.trans (SModEq.pow _ mod_aux) ?_
+      refine .trans (SModEq.pow _ mod_aux) ?_
       congr
       ext n
       rw [coeff_pow]
