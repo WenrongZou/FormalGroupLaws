@@ -543,7 +543,7 @@ theorem Fun_eq_of_RecurFun_XY [UniformSpace K] [T2Space K] [DiscreteUniformity K
     rw [subst_X <| PowerSeries.HasSubst.const has_subst_aux]
   · apply tsum_congr <| fun i => by
       rw [←PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul has_subst_aux,
-        ←f_def, ←PowerSeries.subst_map has_subst_aux]
+        ←f_def, PowerSeries.subst_map has_subst_aux]
       congr! 2
       rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.monomial' (q_pow_neZero hp_prime hq) 1)
         has_subst_aux]
@@ -712,7 +712,6 @@ def inv_add_aux  :=
 
 
 /- Now we denote `F(X,Y) = f_g⁻¹(f_g(X) + f_g(Y))` and `f (X) = f_g (X)` for convention. -/
-
 lemma constantCoeff_aux : constantCoeff ((RecurFun hp_prime hn hq σ s hg).subst (X₀ (R := K)) +
     (RecurFun hp_prime hn hq σ s hg).subst X₁) = 0 := by
   rw [@RingHom.map_add, PowerSeries.constantCoeff_subst_X
@@ -869,7 +868,7 @@ lemma decomp_f (i : ℕ) [UniformSpace K] [T2Space K] [DiscreteUniformity K]:
   have has_subst_aux : PowerSeries.HasSubst (subst ![(X₀ (R := K)) ^ q ^ i, X₁ ^ q ^ i]
     ((MvPowerSeries.map (σ ^ i)) F)) := by
     refine PowerSeries.HasSubst.of_constantCoeff_zero <| ?_
-    rw [←subst_map <| has_subst i, constantCoeff_map, constantCoeff_frobnius_F_zero, map_zero]
+    rw [subst_map <| has_subst i, constantCoeff_map, constantCoeff_frobnius_F_zero, map_zero]
   nth_rw 2 [h1]
   rw [tsum_subst _ has_subst_aux]
   apply tsum_congr
@@ -882,7 +881,7 @@ lemma decomp_f (i : ℕ) [UniformSpace K] [T2Space K] [DiscreteUniformity K]:
     PowerSeries.subst_X has_subst_aux]
   simp only [map_smul, smul_eq_mul]
   congr! 1
-  rw [←subst_pow <|has_subst i, ←subst_pow <|has_subst i, ←map_pow, ←subst_map <|has_subst i, coeff_map]
+  rw [←subst_pow <|has_subst i, ←subst_pow <|has_subst i, ←map_pow, subst_map <|has_subst i, coeff_map]
   · obtain HasSum_aux := PowerSeries.hasSum_of_monomials_self (f.map (σ ^i))
     unfold Summable
     use ((PowerSeries.map (σ ^ i)) f)
@@ -932,11 +931,11 @@ lemma tsum_eq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         refine PowerSeries.HasSubst.of_constantCoeff_zero <| by rw [constantCoeff_map,
           constantCoeff_frobnius_F_zero, map_zero]
         refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
-        rw [←subst_map <|has_subst i, constantCoeff_map, constantCoeff_frobnius_F_zero, map_zero]
+        rw [subst_map <|has_subst i, constantCoeff_map, constantCoeff_frobnius_F_zero, map_zero]
     _ = ∑' i : ℕ, ((s i) • (((f.subst (X₀ ^ (q ^ i))).map (σ ^ i)) +
       ((f.subst (X₁ ^ (q ^ i))).map (σ ^ i)))) :=
       tsum_congr <| fun i => by
-        rw [subst_add <|has_subst i, ←subst_map <|has_subst i, ←subst_map <|has_subst i]
+        rw [subst_add <|has_subst i, subst_map <|has_subst i, subst_map <|has_subst i]
         congr! 3
         · rw [PowerSeries.subst, subst_comp_subst_apply
           (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _) <|has_subst i]
@@ -1138,7 +1137,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       (MvPowerSeries.map (σ ^ i)) (subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] F) ^ j) := sorry
     nth_rw 2 [f.as_tsum]
     rw [tsum_subst ⟨f, PowerSeries.hasSum_of_monomials_self f⟩ (PowerSeries.HasSubst.monomial' (q_pow_neZero hp_prime hq) 1),
-      ←PowerSeries.subst_map has_subst_F, tsum_subst _ has_subst_F, coeff_map,
+      PowerSeries.subst_map has_subst_F, tsum_subst _ has_subst_F, coeff_map,
       Summable.map_tsum _ _ (WithPiTopology.continuous_coeff K n)]
     have eq_aux₃ {i_1 : ℕ}: ((PowerSeries.monomial (i_1 * q ^ i))
       (f.coeff i_1)).subst F = f.coeff i_1 • F ^ (i_1 * q ^ i) := by

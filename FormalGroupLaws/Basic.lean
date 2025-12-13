@@ -63,12 +63,12 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
 lemma MvPowerSeries.subst_map {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
-    (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
+    (ha : HasSubst a): (f.map h).subst a = (f.subst a).map h := by
 
   sorry
 
 lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
-  (ha : HasSubst a): (f.subst a).map h = (f.map h).subst a := by
+  (ha : HasSubst a): (f.map h).subst a = (f.subst a).map h  := by
   sorry
 
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)

@@ -303,6 +303,28 @@ theorem PowerSeries.le_order_subst (a : MvPowerSeries τ S) (ha : HasSubst a) (f
   -- simp [order_eq_order]
 
 end
+
+section
+
+lemma PowerSeries.coeff_subst_X_s {s : σ} [DecidableEq σ] {f : PowerSeries R} :
+    (f.subst (MvPowerSeries.X s)).coeff (Finsupp.single s 1) = f.coeff 1 := by
+  rw [coeff_subst (.X _), finsum_eq_single _ 1]
+  simp
+  intro d hd
+  rw [MvPowerSeries.X_pow_eq, MvPowerSeries.coeff_monomial, if_neg _, smul_zero]
+  refine Finsupp.ne_iff.mpr ⟨s, by simp [hd.symm]⟩
+
+lemma PowerSeries.coeff_subst_X_s' {s t: σ} [DecidableEq σ] {f : PowerSeries R} (h : s ≠ t) :
+    (f.subst (MvPowerSeries.X s (R := R))).coeff (Finsupp.single t 1) = 0 := by
+  rw [coeff_subst (.X _), finsum_eq_zero_of_forall_eq_zero]
+  intro d
+  rw [MvPowerSeries.X_pow_eq, MvPowerSeries.coeff_monomial, if_neg _, smul_zero]
+  refine Finsupp.ne_iff.mpr ?_
+  use t
+  simp [Finsupp.single_eq_of_ne' h]
+
+
+end
 -- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
 --     (ha : PowerSeries.HasSubst a) :
 --     a.order * f.order ≤ (f.subst a).order := by
