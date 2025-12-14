@@ -62,14 +62,35 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
-lemma MvPowerSeries.subst_map {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
-    (ha : HasSubst a): (f.map h).subst a = (f.subst a).map h := by
+lemma RingHom.eq_toAddMonoidHom {S T : Type*} [Semiring S] [Semiring T] (f : S →+* T) {x : S} :
+  f x = f.toAddMonoidHom x := rfl
 
-  sorry
+open AddMonoidHom in
+lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
+    (ha : HasSubst a): (f.map h).subst (fun i => (a i).map h) = (f.subst a).map h := by
+  ext n
+  have ha' : HasSubst (fun i => (a i).map h) := hasSubst_of_constantCoeff_nilpotent fun s => by
+    rw [constantCoeff_map]
+    exact IsNilpotent.map (ha.const_coeff s) h
+  rw [coeff_subst ha', coeff_map, coeff_subst ha, h.eq_toAddMonoidHom,
+    map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
+  intro d
+  simp only [coeff_map, smul_eq_mul, RingHom.toAddMonoidHom_eq_coe, coe_coe, map_mul]
+  simp_rw [←coeff_map, Finsupp.prod]
+  simp
 
+open AddMonoidHom in
 lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
-  (ha : HasSubst a): (f.map h).subst a = (f.subst a).map h  := by
-  sorry
+    (ha : HasSubst a): (f.map h).subst (a.map h) =(f.subst a).map h := by
+  ext n
+  simp
+  have ha' : HasSubst (a.map h) := by
+    rw [HasSubst, constantCoeff_map]
+    exact IsNilpotent.map ha h
+  rw [coeff_subst ha, coeff_subst ha', h.eq_toAddMonoidHom,
+    map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
+  intro d
+  simp [←map_pow]
 
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
     (hg : constantCoeff g = 0) : HasSubst ![f, g] :=
