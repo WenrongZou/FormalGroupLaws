@@ -987,7 +987,7 @@ lemma G_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
 
 include hs₁ hs₂ in
 /-- functional equaltion lemma II: let `g'` be another power series with coefficient in `R`,
-  then the coefficient of $f_g^{-1} (f_{g'} (X)) are all in `R`$. -/
+then the coefficient of $f_g^{-1} (f_{g'} (X)) are all in `R`$. -/
 lemma coeff_inv_RecurFun_g'_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs0 : s 0 = 0) :
     let f_g' := (RecurFun ht hq σ s hg')

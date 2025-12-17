@@ -41,8 +41,6 @@ In this file, I also prove in this definition of Formal Group Law `F`, it follow
 `F(X,0) = X` and `F(0,Y) = Y`.
 -/
 
-
-
 -- Definition of Formal Group
 -- Assume the coeffiecient ring `R` to be commutative ring.
 variable {R : Type*} [CommRing R] {σ τ: Type*} (F : MvPowerSeries (Fin 2) R) (α : PowerSeries R)
@@ -65,9 +63,11 @@ abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 lemma RingHom.eq_toAddMonoidHom {S T : Type*} [Semiring S] [Semiring T] (f : S →+* T) {x : S} :
   f x = f.toAddMonoidHom x := rfl
 
+omit [Algebra R S] in
 open AddMonoidHom in
-lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries τ R} {h : R →+* R} {f : MvPowerSeries σ R}
-    (ha : HasSubst a): (f.map h).subst (fun i => (a i).map h) = (f.subst a).map h := by
+lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries τ R} {h : R →+* S}
+    {f : MvPowerSeries σ R}
+    (ha : HasSubst a) : (f.map h).subst (fun i => (a i).map h) = (f.subst a).map h := by
   ext n
   have ha' : HasSubst (fun i => (a i).map h) := hasSubst_of_constantCoeff_nilpotent fun s => by
     rw [constantCoeff_map]
@@ -79,8 +79,9 @@ lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries 
   simp_rw [←coeff_map, Finsupp.prod]
   simp
 
+omit [Algebra R S] in
 open AddMonoidHom in
-lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* R} {f : PowerSeries R}
+lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* S} {f : PowerSeries R}
     (ha : HasSubst a): (f.map h).subst (a.map h) =(f.subst a).map h := by
   ext n
   simp
