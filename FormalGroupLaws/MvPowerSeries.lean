@@ -207,15 +207,14 @@ lemma PowerSeries.HasSum.increase_order {x : ℕ → PowerSeries R}
     rw [coeff_mk] at hU₁
     exact hU₁
     intro i _ hi
-    sorry
-    -- by_cases hxi : (x i).order = ⊤
-    -- · exact ((weightedOrder_eq_top_iff fun x ↦ 1).mp hxi) ▸ (coeff_zero _)
-    -- · simp only [mem_range, not_lt] at hi
-    --   rw [coeff_of_lt_order]
-    --   specialize hx i
-    --   rw [←(ENat.coe_toNat hxi)] at ⊢ hx
-    --   norm_cast at ⊢ hx
-    --   linarith
+    by_cases hxi : (x i).order = ⊤
+    · exact ((x i).order_eq_top.mp hxi) ▸ (coeff_zero _)
+    · simp  at hi
+      rw [coeff_of_lt_order]
+      specialize hx i
+      rw [← (ENat.coe_toNat hxi)] at ⊢ hx
+      norm_cast at ⊢ hx
+      linarith
 
 open Finset in
 /-- A series of multi variate power series is summable if the order of the sequence
@@ -230,6 +229,10 @@ section
 variable (w : τ → ℕ) {a : σ → MvPowerSeries τ R}
 
 open MvPowerSeries
+
+-- lemma MvPowerSeries.subst_C (ha : HasSubst a) (r : R) : subst a (C r) = C r := by
+--   conv_lhs => rw [← mul_one (C r), ← smul_eq_C_mul, subst_smul ha, ← substAlgHom_apply ha,
+--     map_one, smul_eq_C_mul, mul_one]
 
 omit [DecidableEq τ] in
 theorem MvPowerSeries.le_weightedOrder_subst (ha : HasSubst a) (f : MvPowerSeries σ R) :
@@ -311,6 +314,9 @@ theorem PowerSeries.le_order_smul {φ : PowerSeries R} {a : R} :
     φ.order ≤ (a • φ).order :=
   le_order _ φ.order fun i hi => by simp [coeff_of_lt_order i hi]
 
+theorem MvPowerSeries.le_order_smul {φ : MvPowerSeries σ R} {a : R} :
+    φ.order ≤ (a • φ).order := le_order fun i hi => by simp [coeff_of_lt_order hi]
+
 end
 
 section
@@ -334,6 +340,20 @@ lemma PowerSeries.coeff_subst_X_s' {s t: σ} [DecidableEq σ] {f : PowerSeries R
 
 
 end
+
+
+lemma PowerSeries.one_le_order {f : PowerSeries R} (hf : f.constantCoeff = 0) : 1 ≤ f.order := by
+  sorry
+
+lemma MvPowerSeries.one_le_order {F : MvPowerSeries σ R} (hF : F.constantCoeff = 0) :
+    1 ≤ F.order := sorry
+
+lemma MvPowerSeries.order_X_pow_ge [DecidableEq σ] {n : ℕ} (s : σ) : n ≤ ((X s (R := R))^n).order  := by
+  refine le_order fun d hd => by
+    rw [coeff_X_pow, if_neg]
+    by_contra hc
+    simp [hc] at hd
+
 -- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
 --     (ha : PowerSeries.HasSubst a) :
 --     a.order * f.order ≤ (f.subst a).order := by
@@ -374,3 +394,14 @@ end
 --             exact Finset.sum_le_sum <| fun i hi => by exact_mod_cast hc i hi
 --       obtain ⟨i, hi₀, hi₁⟩ := h
 --       rw [Finset.prod_eq_zero hi₀ (MvPowerSeries.coeff_of_lt_order hi₁)]
+
+-- section prime_pow_poly
+
+-- open Polynomial
+
+-- variable {R : Type*} {p : ℕ} [CommSemiring R] [ExpChar R p]
+
+-- theorem Polynomial.prime_pow_eq {q : Polynomial R} :
+--   q ^ p = q.expand
+
+-- end prime_pow_poly
