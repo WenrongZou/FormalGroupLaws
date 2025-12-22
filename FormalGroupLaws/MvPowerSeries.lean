@@ -171,6 +171,13 @@ lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpa
   rw [←PowerSeries.coe_substAlgHom hg, PowerSeries.substAlgHom_eq_aeval hg,
     Summable.map_tsum hx _ <| PowerSeries.continuous_aeval _]
 
+omit [DecidableEq σ]
+lemma Summable.summable_of_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R}
+    [UniformSpace R] [T2Space R] [DiscreteUniformity R] (hx : Summable x)
+    (hg : PowerSeries.HasSubst g) : Summable fun i => (x i).subst g := by
+  rw [←PowerSeries.coe_substAlgHom hg, PowerSeries.substAlgHom_eq_aeval hg]
+  exact Summable.map hx _ <| PowerSeries.continuous_aeval (PowerSeries.HasSubst.hasEval hg)
+
 open Finset in
 /-- A series of multi variate power series is summable if the order of the sequence
   strictly increase. -/
@@ -220,8 +227,15 @@ open Finset in
 /-- A series of multi variate power series is summable if the order of the sequence
   strictly increase. -/
 lemma MvPowerSeries.Summable.increase_order {x : ℕ → MvPowerSeries σ R}
-    [TopologicalSpace R] (hx : ∀ n, (x n).order ≥ n) : Summable x :=
+    [TopologicalSpace R] (hx : ∀ n, n ≤ (x n).order) : Summable x :=
   ⟨(fun n => ∑ i ∈ Finset.range (n.degree + 1), ((x i).coeff n)), HasSum.increase_order hx⟩
+
+open Finset in
+/-- A series of multi variate power series is summable if the order of the sequence
+  strictly increase. -/
+lemma PowerSeries.Summable.increase_order {x : ℕ → PowerSeries R}
+    [TopologicalSpace R] (hx : ∀ n, n ≤ (x n).order) : Summable x :=
+  ⟨(.mk fun n => ∑ i ∈ Finset.range (n + 1), (((x i).coeff n))), HasSum.increase_order hx⟩
 
 
 section
@@ -310,6 +324,11 @@ theorem PowerSeries.le_order_map (f : R →+* S) {φ : PowerSeries R} :
     φ.order ≤ (φ.map f).order :=
   le_order _ _ fun i hi => by simp [coeff_of_lt_order i hi]
 
+omit [Algebra R S]
+theorem MvPowerSeries.le_order_map (f : R →+* S) {φ : MvPowerSeries σ R} :
+    φ.order ≤ (φ.map f).order :=
+  le_order  fun i hi => by simp [coeff_of_lt_order hi]
+
 theorem PowerSeries.le_order_smul {φ : PowerSeries R} {a : R} :
     φ.order ≤ (a • φ).order :=
   le_order _ φ.order fun i hi => by simp [coeff_of_lt_order i hi]
@@ -353,6 +372,13 @@ lemma MvPowerSeries.order_X_pow_ge [DecidableEq σ] {n : ℕ} (s : σ) : n ≤ (
     rw [coeff_X_pow, if_neg]
     by_contra hc
     simp [hc] at hd
+
+lemma PowerSeries.le_order_monomial (n : ℕ) (r : R): n ≤ (monomial n r).order  :=
+  le_order _ _ fun d hd => by
+    rw [coeff_monomial, if_neg (Nat.ne_of_lt (ENat.coe_lt_coe.mp hd)) ]
+
+
+
 
 -- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
 --     (ha : PowerSeries.HasSubst a) :
