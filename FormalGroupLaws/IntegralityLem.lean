@@ -189,10 +189,12 @@ lemma refinement_hs: ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
 include hs₂ in
 lemma refinement_hs₂ : ∀ (i r : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^r))
     → b * a ∈ R.subtype '' I) → (∀ a, a ∈ R.subtype '' ↑(I^r)
-    → ((σ)^[i] b) * a ∈ R.subtype '' I) := fun i r b h => by
+    → ((σ ^ i) b) * a ∈ R.subtype '' I) := fun i r b h => by
   induction i with
   | zero => exact h
-  | succ k hk => exact (Function.iterate_succ_apply' σ k b) ▸ hs₂ r _ hk
+  | succ k hk =>
+    rw [RingHom.coe_pow] at hk ⊢
+    exact (Function.iterate_succ_apply' σ k b) ▸ hs₂ r _ hk
 
 lemma ideal_pow_mem {I : Ideal R} {r : ℕ} {a : K} : (∀ b ∈ I^r, a * b ∈ R)
     → (∀ c ∈ I^r * I, a * c ∈ R.subtype '' I) := fun h c hc => by
@@ -208,7 +210,7 @@ lemma ideal_pow_mem {I : Ideal R} {r : ℕ} {a : K} : (∀ b ∈ I^r, a * b ∈ 
     use (x₁ + y₁)
     simp [←hx₂, ←hy₂, (Submodule.add_mem_iff_right I hx₁).mpr hy₁]
 
-lemma ideal_pow_mem' {I : Ideal R} {r s: ℕ} {x : K} (hs : s > r) : (∀ b ∈ I^r, x * b ∈ R)
+lemma ideal_pow_mem' {I : Ideal R} {r s: ℕ} {x : K} (hs : r < s) : (∀ b ∈ I^r, x * b ∈ R)
     → (∀ c ∈ I^s, x * c ∈ R.subtype '' I) :=
   fun h c hc => (ideal_pow_mem h) c ((Ideal.pow_le_pow_right hs) hc)
 
@@ -627,14 +629,15 @@ lemma tsum_eq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       rw [Summable.tsum_add (summable_X_x ht hq σ s hg hs0 0) (summable_X_x ht hq σ s hg hs0 1)]
       ring
 
-lemma mem_ideal_aux {m : ℕ} {α : ℕ → K} (h : ∀ i, α i ∈ ⇑(algebraMap (↥R) K) '' ↑I) :
+lemma mem_ideal_aux {m : ℕ} {α : ℕ → K} (h : ∀ i ∈ range m, α i ∈ ⇑(algebraMap (↥R) K) '' ↑I) :
     ∑ i ∈ range m, α i ∈ ⇑(algebraMap (↥R) K) '' ↑I := by
   induction m with
   | zero => simp
   | succ k ih =>
     rw [range_add_one, sum_insert (by simp)]
-    specialize h k
-    simp at ih h ⊢
+    specialize ih fun i hi => h i (mem_range.mpr (by nlinarith [mem_range.mp hi]))
+    specialize h k (self_mem_range_succ k)
+    simp at h ⊢ ih
     obtain ⟨a, ha₀, ha₁, ha₂⟩ := ih
     obtain ⟨b, hb₀, hb₁, hb₂⟩ := h
     have : (⟨a + b, Subring.add_mem R ha₀ hb₀⟩ : R) = ⟨a, ha₀⟩ + ⟨b, hb₀⟩ := rfl
@@ -831,14 +834,40 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     refine hs₁ i _ ?_
     rw [Summable.map_tsum _ _ (WithPiTopology.continuous_coeff K n), ]
     /- there should be a tsum to finite -/
-    rw [tsum_eq_sum (s := range (Finsupp.degree n + 1))]
+    rw [tsum_eq_sum (s := range (n.degree + 1))]
+    have eq_aux : (MvPowerSeries.coeff n) (PowerSeries.subst F ((MvPowerSeries.map (σ ^ i))
+      (f.subst (PowerSeries.monomial (q ^ i) 1)))) = ∑ b ∈ range (n.degree + 1),
+      MvPowerSeries.coeff n ((σ ^ i) ((PowerSeries.coeff b) f) • F ^ (q ^ i * b)) := sorry
+    rw [eq_aux, ← sum_sub_distrib]
+    simp_rw [MvPowerSeries.coeff_smul, ← mul_sub]
+    apply mem_ideal_aux
+    intro b hb
+    have mem_aux : ((MvPowerSeries.coeff n) ((MvPowerSeries.map (σ ^ i))
+      (MvPowerSeries.subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] F) ^ b) - (MvPowerSeries.coeff n)
+        (F ^ (q ^ i * b))) ∈ R.subtype '' ↑(I ^ (multiplicity q b + 1)) := by
+      /- this is the second technical lemma-/
+      sorry
+    refine refinement_hs₂ σ hs₂ i (multiplicity q b + 1) _ ?_ _ mem_aux
+    intro a ha
+    have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ I ^ (multiplicity q b + 1) := by
+      obtain ⟨a', ha'₁, ha'₂⟩ := ha
+      simp_rw [← ha'₂]
+      simpa using ha'₁
+    obtain h1 := coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg b 1 ⟨a, image_of_incl_mem a ha⟩ a_mem
+    simpa using h1
+    · intro b hb
 
-    sorry
-    sorry
+      sorry
     have summable_aux : ∀ n, (σ ^ i) ((PowerSeries.coeff n) f) • (MvPowerSeries.map (σ ^ i))
       (MvPowerSeries.subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] F) ^ n = PowerSeries.subst
       (MvPowerSeries.subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] ((MvPowerSeries.map (σ ^ i)) F))
-      ((PowerSeries.monomial n) ((PowerSeries.coeff n) ((PowerSeries.map (σ ^ i)) f))) := sorry
+      ((PowerSeries.monomial n) ((PowerSeries.coeff n) ((PowerSeries.map (σ ^ i)) f))) := by
+      intro n
+      rw [PowerSeries.monomial_eq_C_mul_X_pow, ← PowerSeries.smul_eq_C_mul,
+        PowerSeries.subst_smul (has_subst₁ _), subst_pow (has_subst₁ _), subst_X (has_subst₁ _),
+        PowerSeries.coeff_map, ← MvPowerSeries.subst_map (has_subst_X_pow hq i)]
+      congr! 4 with j
+      fin_cases j <;> simp
     simp_rw [summable_aux]
     exact Summable.summable_of_subst ⟨_, PowerSeries.hasSum_of_monomials_self _⟩ (has_subst₁ i)
   · intro b hb
@@ -1015,6 +1044,8 @@ include hs₁ hs₂ in
 lemma coeff_g_G_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0):
     ∀ n : ℕ, PowerSeries.coeff n (g.subst ((inv_RecurFun ht hq σ s hg hg_unit).subst
       (RecurFun ht hq σ s hg'))) ∈ R := by
+  intro n
+
   sorry
 
 lemma constantCoeff_G :
