@@ -295,11 +295,13 @@ lemma p_pow_mod_p {G : MvPowerSeries (Fin 2) R} {l : ℕ} (l_pos : 0 < l) :
   exact ⟨Ideal.IsTwoSided.mul_mem_of_left pk hp_mem, by simp⟩
 
 include ht hq hp_mem hs in
-/- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
+/- I think here should be `G ∈ K⟦X,Y⟧` and change the set up for `σ` to be
+`∀ a ∈ K, σ a ≡ a ^ q mod I`-/
+/- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ K⟦X,Y⟧`  with assumption that $n=q^r m$,
 we have that $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
-theorem pow_ModEq {G : MvPowerSeries (Fin 2) R} {n r l m : ℕ} (hn : n = q ^ r * m) (hl : l > 0) :
-    ∀ d, ((G ^ (n * q ^ l)).map R.subtype -
-      ((G.subst ![X₀^(q^l), X₁^(q^l)])^n).map (σ^l)).coeff d ∈ R.subtype '' ↑(I^r) := by
+theorem pow_ModEq (G : MvPowerSeries (Fin 2) K) {n r l m : ℕ} (hn : n = q ^ r * m) (hl : 0 < l) :
+    ∀ d, (G ^ (n * q ^ l) -
+      ((G.subst ![X₀^(q^l), X₁^(q^l)])^n).map (σ^l)).coeff d ∈ R.subtype '' ↑(I^(r + 1)) := by
   sorry
 
 end technical_lemma
@@ -745,7 +747,7 @@ lemma tsum_to_finite₂ {n : Fin 2 →₀ ℕ} [UniformSpace K] [T2Space K]
     (.trans (by norm_cast) (le_order₁ ..))
 
 open PowerSeries in
-include hs₁ hs₂ in
+include hs hp_mem hs₁ hs₂ in
 /-- f(F(X,Y)) ≡ g(F(X,Y)) + f(X) + f(Y) - g(X) - g(Y) [MOD R]-/
 lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs0 : s 0 = 0):
@@ -760,6 +762,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   have has_subst_F : PowerSeries.HasSubst F := HasSubst.inv_add_RecurFun ht hq σ s hg hg_unit
   have has_subst_monomial (i : ℕ) := PowerSeries.HasSubst.monomial'
     (q_pow_neZero hq (x := i)) (1 : K)
+  have le_q_pow {i : ℕ} : 1 ≤ q ^ i := Nat.one_le_pow i q (by positivity [q_neZero hq])
   by_cases hn₀ : n = 0
   ·
     /- all these terms are equal to zero. -/
@@ -837,7 +840,34 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     rw [tsum_eq_sum (s := range (n.degree + 1))]
     have eq_aux : (MvPowerSeries.coeff n) (PowerSeries.subst F ((MvPowerSeries.map (σ ^ i))
       (f.subst (PowerSeries.monomial (q ^ i) 1)))) = ∑ b ∈ range (n.degree + 1),
-      MvPowerSeries.coeff n ((σ ^ i) ((PowerSeries.coeff b) f) • F ^ (q ^ i * b)) := sorry
+      MvPowerSeries.coeff n ((σ ^ i) ((PowerSeries.coeff b) f) • F ^ (q ^ i * b)) := by
+      /- to finite-/
+      have eq_aux₁ : (PowerSeries.subst F ((MvPowerSeries.map (σ ^ i))
+        ((PowerSeries.monomial (q ^ i)) 1))) = F ^ (q ^ i) := by
+        rw [PowerSeries.monomial, map_monomial, map_one]
+        erw [PowerSeries.monomial_eq_C_mul_X_pow]
+        rw [← PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul has_subst_F,
+          PowerSeries.subst_pow has_subst_F, PowerSeries.subst_X has_subst_F, one_smul]
+      rw [← PowerSeries.subst_map (has_subst_monomial i), PowerSeries.subst_comp_subst_apply _ has_subst_F, eq_aux₁]
+      rw [PowerSeries.coeff_subst (HasSubst.pow has_subst_F le_q_pow)]
+      simp_rw [MvPowerSeries.coeff_smul, PowerSeries.coeff_map, smul_eq_mul, pow_mul]
+      refine finsum_eq_finset_sum_of_support_subset _ (Function.support_subset_iff'.mpr ?_)
+      intro d hd
+      simp at hd
+      have : (MvPowerSeries.coeff n) ((F ^ q ^ i) ^ d) = 0 := by
+        refine MvPowerSeries.coeff_of_lt_order
+          <| (ENat.add_one_le_iff (ENat.coe_ne_top (n.degree))).mp ?_
+        rw [← pow_mul]
+        have aux : d ≤ (q ^ i * d) • (1 : ENat) := by
+          simp only [nsmul_eq_mul, Nat.cast_mul, Nat.cast_pow, mul_one]
+          exact_mod_cast Nat.le_mul_of_pos_left d (Nat.pow_pos (q.pos_of_ne_zero (q_neZero hq)))
+        refine .trans (.trans (.trans (by norm_cast) aux) (nsmul_le_nsmul_right (F.one_le_order
+          (constantCoeff_inv_add_RecurFun ..)) _)) (MvPowerSeries.le_order_pow (q ^ i * d))
+      simp [this]
+      · refine HasSubst.of_constantCoeff_zero' ?_
+        erw [PowerSeries.constantCoeff_map]
+        rw [← PowerSeries.coeff_zero_eq_constantCoeff,
+          PowerSeries.coeff_monomial, if_neg (q_pow_neZero hq).symm, map_zero]
     rw [eq_aux, ← sum_sub_distrib]
     simp_rw [MvPowerSeries.coeff_smul, ← mul_sub]
     apply mem_ideal_aux
@@ -845,8 +875,23 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     have mem_aux : ((MvPowerSeries.coeff n) ((MvPowerSeries.map (σ ^ i))
       (MvPowerSeries.subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] F) ^ b) - (MvPowerSeries.coeff n)
         (F ^ (q ^ i * b))) ∈ R.subtype '' ↑(I ^ (multiplicity q b + 1)) := by
-      /- this is the second technical lemma-/
-      sorry
+      by_cases hi₀ : i = 0
+      · have aux : (MvPowerSeries.coeff n) ((MvPowerSeries.map (1 : K →+* K)) (MvPowerSeries.subst ![X₀, X₁] F) ^ b) -
+          (MvPowerSeries.coeff n) (F ^ b) = 0 := by
+          have aux : MvPowerSeries.subst ![X₀, X₁] F = F := by
+            have : ![X₀, X₁] = (MvPowerSeries.X : Fin 2 → MvPowerSeries (Fin 2) K) := by
+              funext s; fin_cases s <;> rfl
+            rw [this, MvPowerSeries.subst_self, id]
+          simp [MvPowerSeries.map, MvPowerSeries.coeff_apply, aux]
+        simp [hi₀, aux]
+      · obtain ⟨m, hm⟩ := pow_multiplicity_dvd q b
+        obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq ht hq σ hs hp_mem F hm (i.zero_lt_of_ne_zero hi₀) n
+        rw [mul_comm b, map_sub] at hx₂
+        have {a b : K} : a - b = - (b - a) := by ring
+        rw [this, ← map_pow, ← hx₂]
+        use -x
+        rw [SetLike.mem_coe] at hx₁
+        simpa using Submodule.neg_mem _ hx₁
     refine refinement_hs₂ σ hs₂ i (multiplicity q b + 1) _ ?_ _ mem_aux
     intro a ha
     have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ I ^ (multiplicity q b + 1) := by
@@ -856,8 +901,21 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     obtain h1 := coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg b 1 ⟨a, image_of_incl_mem a ha⟩ a_mem
     simpa using h1
     · intro b hb
-
-      sorry
+      simp only [mem_range, not_lt] at hb
+      apply MvPowerSeries.coeff_of_lt_order
+      refine (ENat.add_one_le_iff (ENat.coe_ne_top (n.degree))).mp ?_
+      have le_aux : b ≤ ((MvPowerSeries.map (σ ^ i)) (MvPowerSeries.subst ![(X₀ (R := K)) ^ q ^ i,
+        X₁ ^ q ^ i] F) ^ b).order := by
+        refine .trans ?_ (MvPowerSeries.le_order_pow b)
+        have le_aux' : 1 ≤ ((MvPowerSeries.map (σ ^ i)) (MvPowerSeries.subst
+          ![X₀ (R := K) ^ q ^ i, X₁ ^ q ^ i] F)).order := by
+          refine ENat.one_le_iff_ne_zero.mpr <|
+            MvPowerSeries.order_ne_zero_iff_constCoeff_eq_zero.mpr ?_
+          rw [MvPowerSeries.constantCoeff_map, constantCoeff_subst_zero
+            (fun x => by fin_cases x <;> simp [zero_pow (q_pow_neZero hq)])
+              (constantCoeff_inv_add_RecurFun ..), map_zero]
+        exact .trans (by simp) (nsmul_le_nsmul_right le_aux' b)
+      refine .trans (by norm_cast) (.trans le_aux (MvPowerSeries.le_order_smul))
     have summable_aux : ∀ n, (σ ^ i) ((PowerSeries.coeff n) f) • (MvPowerSeries.map (σ ^ i))
       (MvPowerSeries.subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] F) ^ n = PowerSeries.subst
       (MvPowerSeries.subst ![X₀ ^ q ^ i, X₁ ^ q ^ i] ((MvPowerSeries.map (σ ^ i)) F))
@@ -889,8 +947,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     rw [order_eq_order]
     refine .trans (PowerSeries.le_order_subst _ (has_subst_monomial (i := b)) f) ?_
     rw [order_eq_order]
-  ·
-    intro b hb
+  · intro b hb
     simp at hb
     rw [tsum_eq_subst]
     exact MvPowerSeries.coeff_of_lt_order <| (ENat.add_one_le_iff (ENat.coe_ne_top (n.degree))).mp
@@ -923,7 +980,7 @@ lemma coeff_subst_X_mem_aux {n : Fin 2 →₀ ℕ} {x : Fin 2} :
     norm_cast
   simp [eq_aux]
 
-include hs₁ hs₂ in
+include hs hp_mem hs₁ hs₂ in
 /-- by above lemma we can deduce that all coefficient in g(F(X,Y)) is in `R`, since
   f(F(X,Y)) = f(X) + f(Y).-/
 lemma RModEq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0) :
@@ -931,7 +988,7 @@ lemma RModEq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s
     ∀ n, (g.subst F).coeff n ∈ R := by
   intro F n
   have F_def : F = (inv_add_RecurFun ht hq σ s hg hg_unit) := rfl
-  obtain h₀ := RModEq_aux ht hq σ s hs₁ hs₂ hg hg_unit hs0 n
+  obtain h₀ := RModEq_aux ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs0 n
   rw [f_F_eq_f_add, ←F_def] at h₀
   ring_nf at h₀
   simp at h₀
@@ -1003,7 +1060,7 @@ lemma F_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         exfalso
         exact (h_neZero b (mem_range.mp hb)) (neq_aux b hb hb')
 
-include hs₁ hs₂ in
+include hs hp_mem hs₁ hs₂ in
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, the coeff of this multi variate
   power series are all in `R`.-/
 lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
@@ -1019,7 +1076,7 @@ lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity
     rw [eq_aux, mul_assoc]
     exact Subring.mul_mem R (SetLike.coe_mem _) <| by
       simpa using (Subring.add_mem _ (F_coeff_mem_ind ht hq σ s hg hg_unit h hk)
-        (RModEq_aux₂ ht hq σ s hs₁ hs₂ hg hg_unit hs0 n))
+        (RModEq_aux₂ ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs0 n))
 
 end PartI
 

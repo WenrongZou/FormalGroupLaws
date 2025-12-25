@@ -377,8 +377,13 @@ lemma PowerSeries.le_order_monomial (n : ℕ) (r : R): n ≤ (monomial n r).orde
   le_order _ _ fun d hd => by
     rw [coeff_monomial, if_neg (Nat.ne_of_lt (ENat.coe_lt_coe.mp hd)) ]
 
-
-
+lemma PowerSeries.HasSubst.pow {f : MvPowerSeries σ R} (hf : HasSubst f) {n : ℕ} (hn : 1 ≤ n) :
+    HasSubst (f ^ n) := by
+  induction n, hn using Nat.le_induction with
+  | base => simp [hf]
+  | succ k hk ih =>
+    rw [pow_add, pow_one]
+    exact HasSubst.mul_left ih
 
 -- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
 --     (ha : PowerSeries.HasSubst a) :
