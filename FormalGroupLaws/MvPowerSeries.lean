@@ -31,20 +31,6 @@ section ToSubring
 
 variable {σ : Type*} (p : MvPowerSeries σ R) (T : Subring R)
 
-/-- Given a multivariate formal power series `p` and a subring `T` that contains the
- coefficients of `p`,return the corresponding multivariate formal power series
- whose coefficients are in `T`. -/
-def MvPowerSeries.toSubring (hp : ∀ n, p n ∈ T) : MvPowerSeries σ T := fun n => ⟨p n, hp n⟩
-
-variable (hp : ∀ n, p n ∈ T)
-
-@[simp]
-theorem coeff_toSubring {n : σ →₀ ℕ} : ↑((toSubring p T hp).coeff n) = p.coeff n := rfl
-
-@[simp]
-theorem constantCoeff_toSubring : ↑(toSubring p T hp).constantCoeff =
-  p.constantCoeff := rfl
-
 /-- Given a multivariate formal power series whose coefficients are in some subring, return
 the multivariate formal power series whose coefficients are in the ambient ring. -/
 def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
@@ -103,7 +89,7 @@ def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
       _ = (coeff n) (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun) := by
         rw [coeff_subst <| has_subst_aux₁ F.zero_constantCoeff, coeff_subst has_subst_aux₀]
         obtain h₁ := coeff_subst_finite has_subst_aux₀ (F.toFun.toSubring T hF) n
-        rw [← @Algebra.algebraMap_ofSubsemiring_apply, aux', AddMonoidHom.map_finsum (algebraMap
+        erw [← Algebra.algebraMap_ofSubsemiring_apply, AddMonoidHom.map_finsum (algebraMap
           (↥T.toSubsemiring) R).toAddMonoidHom h₁]
         simp [Algebra.algebraMap_ofSubsemiring_apply]
         congr! 3 with i
@@ -114,8 +100,8 @@ def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
             congr! 2 with x_1 x_2 x_3 x_4
             obtain h₂ := coeff_subst_finite (has_subst_XY (R := T)) (F.toFun.toSubring T hF)
               (x_1 x_3)
-            rw [← @Algebra.algebraMap_ofSubsemiring_apply, @coeff_apply,
-              aux', ←coeff_apply (subst ![Y₀, Y₁] (F.toFun.toSubring T hF)) (x_1 x_3),
+            erw [← @Algebra.algebraMap_ofSubsemiring_apply, coeff_apply,
+               ←coeff_apply (subst ![Y₀, Y₁] (F.toFun.toSubring T hF)) (x_1 x_3),
               coeff_subst has_subst_XY,
               AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₂]
             simp [Algebra.algebraMap_ofSubsemiring_apply]
@@ -127,8 +113,8 @@ def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
           · simp [Y₂, ←eq_aux 2, coeff_pow, coeff_pow]
       _ = _ := by
         obtain h₁ := coeff_subst_finite has_subst_aux₀' (F.toFun.toSubring T hF) n
-        rw [F.assoc, coeff_subst <| has_subst_aux₂ F.zero_constantCoeff,
-          coeff_subst has_subst_aux₀', ← @Algebra.algebraMap_ofSubsemiring_apply, aux',
+        erw [F.assoc, coeff_subst <| has_subst_aux₂ F.zero_constantCoeff,
+          coeff_subst has_subst_aux₀', ← @Algebra.algebraMap_ofSubsemiring_apply,
           AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₁]
         simp [Algebra.algebraMap_ofSubsemiring_apply]
         congr! 3 with d
@@ -138,8 +124,8 @@ def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
         simp [coeff_pow]
         congr! 3 with x_1 x_2 x_3 x_4
         obtain h₂ := coeff_subst_finite has_subst_aux' (F.toFun.toSubring T hF) (x_1 x_3)
-        rw [coeff_subst has_subst_YZ, coeff_subst has_subst_aux',
-          ← @Algebra.algebraMap_ofSubsemiring_apply, aux',
+        erw [coeff_subst has_subst_YZ, coeff_subst has_subst_aux',
+          ← Algebra.algebraMap_ofSubsemiring_apply,
           AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₂]
         simp [Algebra.algebraMap_ofSubsemiring_apply]
         congr! 3 with d
@@ -248,44 +234,6 @@ open MvPowerSeries
 --   conv_lhs => rw [← mul_one (C r), ← smul_eq_C_mul, subst_smul ha, ← substAlgHom_apply ha,
 --     map_one, smul_eq_C_mul, mul_one]
 
-omit [DecidableEq τ] in
-theorem MvPowerSeries.le_weightedOrder_subst (ha : HasSubst a) (f : MvPowerSeries σ R) :
-    ⨅ (d : σ →₀ ℕ) (_ : coeff d f ≠ 0), d.weight (weightedOrder w ∘ a) ≤
-      (f.subst a).weightedOrder w := by
-  classical
-  apply MvPowerSeries.le_weightedOrder
-  intro d hd
-  rw [coeff_subst ha, finsum_eq_zero_of_forall_eq_zero]
-  intro x
-  by_cases hfx : f.coeff x = 0
-  · simp [hfx]
-  rw [coeff_eq_zero_of_lt_weightedOrder w, smul_zero]
-  refine hd.trans_le (((biInf_le _ hfx).trans ?_).trans (le_weightedOrder_prod ..))
-  simp only [Finsupp.weight_apply, Finsupp.sum, Function.comp_apply]
-  exact Finset.sum_le_sum fun i hi ↦ .trans (by simp) (le_weightedOrder_pow ..)
-
-omit [DecidableEq τ] in
-theorem MvPowerSeries.le_weightedOrder_subst_of_forall_ne_zero
-    (ha : MvPowerSeries.HasSubst a) (ha0 : ∀ i, a i ≠ 0) (f : MvPowerSeries σ R) :
-    f.weightedOrder (ENat.toNat ∘ weightedOrder w ∘ a) ≤ (f.subst a).weightedOrder w := by
-  refine .trans ?_ (le_weightedOrder_subst w ha f)
-  simp only [ne_eq, le_iInf_iff]
-  refine fun i hi ↦ (weightedOrder_le _ hi).trans ?_
-  simp [Finsupp.weight_apply, Finsupp.sum, (ne_zero_iff_weightedOrder_finite _).mp (ha0 _)]
-
-omit [DecidableEq τ] in
-theorem MvPowerSeries.le_order_subst (ha : HasSubst a) (f : MvPowerSeries σ R) :
-    (⨅ i, (a i).order) * f.order ≤ (f.subst a).order := by
-  refine .trans ?_ (le_weightedOrder_subst _ ha _)
-  simp only [ne_eq, le_iInf_iff]
-  intro i hi
-  trans (⨅ (i : σ), (order ∘ a) i) * ↑i.degree
-  · refine mul_le_mul_right (order_le hi ) _
-  · simp only [Function.comp_apply, order, Finsupp.degree, AddMonoidHom.coe_mk, ZeroHom.coe_mk,
-      Nat.cast_sum, Finset.mul_sum, Finsupp.weight_apply, nsmul_eq_mul]
-    exact Finset.sum_le_sum fun j hj => by
-      simp [mul_comm, mul_le_mul_right (iInf_le_iff.mpr fun _ a ↦ a j)]
-
 end
 
 open PowerSeries in
@@ -300,24 +248,6 @@ theorem order_eq_order {φ : PowerSeries R} : φ.order = MvPowerSeries.order φ 
       exact MvPowerSeries.coeff_of_lt_order hi
 
 section
-
-variable {a : MvPowerSeries τ R}
-
-omit [DecidableEq τ] in
-theorem PowerSeries.le_weightedOrder_subst (w : τ → ℕ) (ha : HasSubst a) (f : PowerSeries R) :
-    f.order * (a.weightedOrder w) ≤ (f.subst a).weightedOrder w := by
-  refine .trans ?_ (MvPowerSeries.le_weightedOrder_subst _ (PowerSeries.hasSubst_iff.mp ha) _)
-  simp only [ne_eq, Function.comp_const, le_iInf_iff]
-  intro i hi
-  trans i () * MvPowerSeries.weightedOrder w a
-  · exact mul_le_mul_left (f.order_le (i ()) (by delta PowerSeries.coeff; convert hi; aesop)) _
-  · simp [Finsupp.weight_apply, Finsupp.sum_fintype]
-
-theorem PowerSeries.le_order_subst (a : MvPowerSeries τ S) (ha : HasSubst a) (f : PowerSeries R) :
-    a.order * f.order ≤ (f.subst a).order := by
-  sorry
-  -- refine .trans ?_ (MvPowerSeries.le_order_subst (PowerSeries.hasSubst_iff.mp ha) _)
-  -- simp [order_eq_order]
 
 omit [Algebra R S]
 theorem PowerSeries.le_order_map (f : R →+* S) {φ : PowerSeries R} :
