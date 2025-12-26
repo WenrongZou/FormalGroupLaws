@@ -608,31 +608,26 @@ lemma tsum_eq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         ext n
         rw [eq_aux, PowerSeries.coeff_subst, PowerSeries.coeff_subst, finsum_congr]
         intro d
-
-        sorry
-        sorry
-        sorry
-        -- nth_rw 1 [map_X_pow σ i, subst_map <|has_subst i]
-        -- refine PowerSeries.HasSubst.of_constantCoeff_zero <| by rw [constantCoeff_map,
-        --   constantCoeff_frobnius_F_zero, map_zero]
-        -- refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
-        -- nth_rw 1 [map_X_pow]
-        -- rw [subst_map (has_subst i), constantCoeff_map, constantCoeff_frobnius_F_zero, map_zero]
+        rw [map_expand]
+        · refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
+          rw [constantCoeff_map, constantCoeff_expand, constantCoeff_inv_add_RecurFun, map_zero]
+        · refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
+          rw [constantCoeff_expand, constantCoeff_map, constantCoeff_inv_add_RecurFun, map_zero]
     _ = ∑' i, (s i • ((f.subst (X₀ ^ (q ^ i))).map (σ ^ i) +
       (f.subst (X₁ ^ (q ^ i))).map (σ ^ i))) := tsum_congr <| fun i => by
-        sorry
-      -- rw [subst_add (has_subst i), map_X_pow, subst_map (has_subst i), subst_map (has_subst i)]
-      -- congr! 3
-      -- · rw [PowerSeries.subst, subst_comp_subst_apply
-      --   (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _) (has_subst _)]
-      --   apply subst_congr
-      --   funext s
-      --   simp [subst_X (has_subst i)]
-      -- · rw [PowerSeries.subst, subst_comp_subst_apply
-      --   (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _) (has_subst i)]
-      --   apply subst_congr
-      --   funext s
-      --   simp [subst_X (has_subst i)]
+        simp [map_add, expand]
+        have (x : Fin 2): subst (fun s ↦ X s ^ q ^ i) (((f.subst (X x)).map (σ ^ i))) =
+          ((f.subst ((X x) ^ q ^ i)).map (σ ^ i)) := by
+          rw [PowerSeries.map_subst (PowerSeries.HasSubst.X _), PowerSeries.map_subst,
+            PowerSeries.subst, subst_comp_subst_apply _ (HasSubst.X_pow (q_pow_neZero hq))]
+          apply subst_congr
+          funext s
+          simp only [map_X, map_pow]
+          rw [subst_X (HasSubst.X_pow (q_pow_neZero hq))]
+          · simpa using PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)
+          · refine PowerSeries.HasSubst.pow (PowerSeries.HasSubst.X _)
+              (Nat.one_le_iff_ne_zero.mpr (q_pow_neZero hq))
+        rw [this 0, this 1]
     _ = _ := by
       simp_rw [smul_add, Fun_eq_of_RecurFun_XY ht hq σ s hg hs0]
       rw [Summable.tsum_add (summable_X_x ht hq σ s hg hs0 0) (summable_X_x ht hq σ s hg hs0 1)]
