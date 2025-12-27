@@ -4,6 +4,7 @@ import Mathlib.RingTheory.PowerSeries.PiTopology
 import FormalGroupLaws.MvPowerSeries
 import Mathlib.Algebra.CharP.Lemmas
 import Mathlib.RingTheory.MvPowerSeries.Expand
+import Mathlib.RingTheory.PowerSeries.Expand
 import FormalGroupLaws.ForMathlib.MvPowerSeries
 
 /-!
@@ -87,7 +88,7 @@ lemma coeff_RecurFun_unit (hg_unit : IsUnit (g.coeff 1)) :
 open PowerSeries FiniteMultiplicity in
 include ht hq hg in
 lemma hasSum_aux [TopologicalSpace K] (hs₀ : s 0 = 0) :
-    HasSum (fun i ↦ s i • ((RecurFun ht hq σ s hg).subst ((monomial (q^i)) 1)).map (σ^i))
+    HasSum (fun i ↦ s i • ((RecurFun ht hq σ s hg).expand (q^i) (q_pow_neZero hq)).map (σ^i))
       (RecurFun ht hq σ s hg - g.map R.subtype) := by
   classical
   let x := fun i ↦ s i • ((RecurFun ht hq σ s hg).subst ((monomial (q^i)) 1)).map (σ^i)
@@ -135,27 +136,28 @@ lemma hasSum_aux [TopologicalSpace K] (hs₀ : s 0 = 0) :
                 (hc ▸ Nat.dvd_mul_left _ _ )
         simp [eq_zero]
   rw [eq_aux]
-  apply MvPowerSeries.HasSum.increase_order
-  intro n
-  have : (MvPowerSeries.map (σ ^ n)) ((monomial (q ^ n)) 1) = monomial (q^n) 1 := by
-    ext d
-    erw [coeff_map, coeff_monomial, MonoidWithZeroHom.map_ite_one_zero]
-  rw [smul_eq_C_mul, ← subst_map (.monomial' (q_pow_neZero hq) 1), this]
-  refine .trans (le_add_of_le_right (.trans ?_ (le_order_subst _
-    (HasSubst.monomial' (q_pow_neZero hq) 1) _))) (MvPowerSeries.le_order_mul)
-  rw [← PowerSeries.order_eq_order, order_monomial]
-  have neZero : ((PowerSeries.map (σ ^ n)) (RecurFun ht hq σ s hg)).order ≠ 0 :=
-    order_ne_zero_iff_constCoeff_eq_zero.mpr <| by simp [constantCoeff_RecurFun ht hq σ s hg]
-  split_ifs with h
-  · rw [ENat.top_mul neZero]; exact le_top
-  obtain h := (Nat.lt_pow_self (n := n) (hq ▸ Nat.one_lt_pow ht (Nat.Prime.one_lt' p).out)).le
-  exact .trans (ENat.self_le_mul_right ↑n (zero_ne_one' ℕ∞).symm) <| mul_le_mul' (by norm_cast)
-    <| ENat.one_le_iff_ne_zero.mpr neZero
+  sorry
+  -- apply MvPowerSeries.HasSum.increase_order
+  -- intro n
+  -- have : (MvPowerSeries.map (σ ^ n)) ((monomial (q ^ n)) 1) = monomial (q^n) 1 := by
+  --   ext d
+  --   erw [coeff_map, coeff_monomial, MonoidWithZeroHom.map_ite_one_zero]
+  -- rw [smul_eq_C_mul, ← subst_map (.monomial' (q_pow_neZero hq) 1), this]
+  -- refine .trans (le_add_of_le_right (.trans ?_ (le_order_subst _
+  --   (HasSubst.monomial' (q_pow_neZero hq) 1) _))) (MvPowerSeries.le_order_mul)
+  -- rw [← PowerSeries.order_eq_order, order_monomial]
+  -- have neZero : ((PowerSeries.map (σ ^ n)) (RecurFun ht hq σ s hg)).order ≠ 0 :=
+  --   order_ne_zero_iff_constCoeff_eq_zero.mpr <| by simp [constantCoeff_RecurFun ht hq σ s hg]
+  -- split_ifs with h
+  -- · rw [ENat.top_mul neZero]; exact le_top
+  -- obtain h := (Nat.lt_pow_self (n := n) (hq ▸ Nat.one_lt_pow ht (Nat.Prime.one_lt' p).out)).le
+  -- exact .trans (ENat.self_le_mul_right ↑n (zero_ne_one' ℕ∞).symm) <| mul_le_mul' (by norm_cast)
+  --   <| ENat.one_le_iff_ne_zero.mpr neZero
 
 open PowerSeries in
 include ht hq hg in
 lemma summable_aux [TopologicalSpace K] (hs₀ : s 0 = 0) :
-    Summable (fun i ↦ s i • ((RecurFun ht hq σ s hg).subst ((monomial (q^i)) 1)).map (σ^i)) :=
+    Summable (fun i ↦ s i • ((RecurFun ht hq σ s hg).expand (q ^ i) (q_pow_neZero hq)).map (σ^i)) :=
   ⟨(RecurFun ht hq σ s hg - g.map R.subtype), hasSum_aux ht hq σ s hg hs₀ ⟩
 
 open PowerSeries in
@@ -163,7 +165,7 @@ open PowerSeries in
   $f_g(X) = g(X) + ∑' s_i * σ^i f(X^{q^i})$-/
 theorem FunEq_of_RecurFun [TopologicalSpace K] [T2Space K] (hs₀ : s 0 = 0) :
     let f := (RecurFun ht hq σ s hg)
-    f = g.map R.subtype + ∑' (i : ℕ), s i • (f.subst ((monomial (q^i)) 1)).map (σ^i) := by
+    f = g.map R.subtype + ∑' (i : ℕ), s i • (f.expand (q ^ i) (q_pow_neZero hq)).map (σ^i) := by
   intro _
   rw [HasSum.tsum_eq <| hasSum_aux ht hq σ s hg hs₀]
   ring
@@ -303,8 +305,6 @@ lemma p_pow_mod_p (G : MvPowerSeries (Fin 2) K) {l : ℕ} (l_pos : 0 < l) :
 
 
 include ht hq hp_mem hs in
-/- IMPORTANT HERE : I think here should be `G ∈ K⟦X,Y⟧` and change the set up for `σ` to be
-`∀ a ∈ K, σ a ≡ a ^ q mod I`-/
 /- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
 we have that $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
 theorem pow_ModEq (G : MvPowerSeries (Fin 2) R) {n r l m : ℕ} (hn : n = q ^ r * m) (hl : 0 < l) :
@@ -558,10 +558,10 @@ theorem Fun_eq_of_RecurFun_XY [UniformSpace K] [T2Space K] [DiscreteUniformity K
       nth_rw 1 [← map_X (σ ^ i) x]
       erw [PowerSeries.subst_map has_subst_aux]
       congr! 2
-      rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.monomial' (q_pow_neZero hq) 1)
-        has_subst_aux, PowerSeries.subst_congr]
+      rw [PowerSeries.expand_apply, PowerSeries.subst_comp_subst_apply
+        (PowerSeries.HasSubst.X_pow (q_pow_neZero hq)) has_subst_aux, PowerSeries.subst_congr]
       funext d
-      rw [←PowerSeries.X_pow_eq, PowerSeries.subst_pow has_subst_aux,
+      rw [PowerSeries.subst_pow has_subst_aux,
         PowerSeries.subst_X has_subst_aux]
 
 include ht hq hg in
@@ -570,26 +570,16 @@ lemma summable_X_x  [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s
     Summable (fun i ↦ (s i • ((PowerSeries.subst ((X x) ^ q ^ i) f).map (σ ^ i)))) := by
   intro f
   have eq_aux : ∀ i, s i • (MvPowerSeries.map (σ ^ i)) (PowerSeries.subst ((X x) ^ q ^ i) f)
-      =  PowerSeries.subst (X x) (s i • ((RecurFun ht hq σ s hg).subst
-      ((PowerSeries.monomial (q ^ i)) 1)).map (σ^i)) := fun i => by
-    rw [PowerSeries.subst_smul (PowerSeries.HasSubst.X x), ← PowerSeries.subst_map,
-      ← PowerSeries.subst_map , PowerSeries.subst_comp_subst_apply _ (PowerSeries.HasSubst.X x)]
+      =  PowerSeries.subst (X x) (s i • ((RecurFun ht hq σ s hg).expand (q ^ i) (
+      q_pow_neZero hq)).map (σ^i)) := fun i => by
+    rw [PowerSeries.subst_smul (PowerSeries.HasSubst.X x), ← PowerSeries.subst_map
+      (PowerSeries.HasSubst.pow (PowerSeries.HasSubst.X x) (Nat.one_le_iff_ne_zero.mpr
+        (q_pow_neZero hq))), PowerSeries.map_expand, PowerSeries.expand_apply,
+          PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.X_pow (q_pow_neZero hq))
+          (PowerSeries.HasSubst.X x)]
     congr! 2
-    simp
-    have aux : X x = (X x).map (σ ^ i) := by simp
-    nth_rw 2 [aux]
-    rw [PowerSeries.monomial_eq_C_mul_X_pow, ← PowerSeries.smul_eq_C_mul, one_smul]
-    erw [PowerSeries.subst_map (PowerSeries.HasSubst.X x)]
-    rw [PowerSeries.subst_pow (PowerSeries.HasSubst.X x), PowerSeries.subst_X
-      (PowerSeries.HasSubst.X x)]
-    simp
-    · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
-      erw [PowerSeries.constantCoeff_map]
-      rw [← PowerSeries.coeff_zero_eq_constantCoeff,
-        PowerSeries.coeff_monomial, if_neg (q_pow_neZero hq).symm, map_zero]
-    · refine PowerSeries.HasSubst.monomial' (q_pow_neZero hq) 1
-    · refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
-      simp [zero_pow (q_pow_neZero hq)]
+    simp [PowerSeries.subst_pow (PowerSeries.HasSubst.of_constantCoeff_zero _),
+      PowerSeries.subst_X (PowerSeries.HasSubst.of_constantCoeff_zero _)]
   simp_rw [eq_aux]
   exact Summable.summable_of_subst (summable_aux ht hq σ s hg hs0) (PowerSeries.HasSubst.X x)
 
@@ -734,8 +724,8 @@ lemma tsum_to_finite₁ {n : Fin 2 →₀ ℕ} (hn₀ : n ≠ 0) [UniformSpace K
   rw [tsum_eq_zero_of_not_summable hsum, coeff_zero, mul_zero]
 
 lemma le_order₁ {b : ℕ} : b ≤ (PowerSeries.subst (inv_add_RecurFun ht hq σ s hg hg_unit)
-    (PowerSeries.C (s b) * (PowerSeries.map (σ ^ b)) (PowerSeries.subst
-      (PowerSeries.monomial (q ^ b) 1) (RecurFun ht hq σ s hg)))).order := by
+    (PowerSeries.C (s b) * (PowerSeries.map (σ ^ b)) ((RecurFun ht hq σ s hg).expand (q ^ b)
+      (q_pow_neZero hq)))).order := by
   have aux : (b : ENat) ≤ q ^ b := by
     exact_mod_cast (Nat.lt_pow_self (IsPrimePow.one_lt (isPrimePow_q ht hq))).le
   refine (.trans aux ?_)
@@ -754,16 +744,17 @@ lemma le_order₁ {b : ℕ} : b ≤ (PowerSeries.subst (inv_add_RecurFun ht hq �
   rw [← PowerSeries.smul_eq_C_mul]
   refine .trans le_aux₁ (.trans ?_ (PowerSeries.le_order_smul))
   rw [← order_eq_order]
-  exact PowerSeries.le_order_map _
+  sorry
+  -- exact PowerSeries.le_order_map _
 
 lemma tsum_to_finite₂ {n : Fin 2 →₀ ℕ} [UniformSpace K] [T2Space K]
     [DiscreteUniformity K] :
     let f := (RecurFun ht hq σ s hg)
     let F := (inv_add_RecurFun ht hq σ s hg hg_unit)
     ∑' (i : ℕ), (coeff n) (PowerSeries.subst F (PowerSeries.C (s i)
-    * (PowerSeries.map (σ ^ i)) (PowerSeries.subst ((PowerSeries.monomial (q ^ i)) 1) f))) =
+    * (PowerSeries.map (σ ^ i)) (f.expand (q ^ i) (q_pow_neZero hq)))) =
     ∑ i ∈ range (n.degree + 1), (coeff n) (PowerSeries.subst F (PowerSeries.C (s i) *
-    (PowerSeries.map (σ ^ i)) (PowerSeries.subst ((PowerSeries.monomial (q ^ i)) 1) f))) := by
+    (PowerSeries.map (σ ^ i)) (f.expand (q ^ i) (q_pow_neZero hq)))) := by
   refine tsum_eq_sum ?_
   intro b hb
   simp at hb
@@ -866,7 +857,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     congr! 2 with i
     rw [PowerSeries.monomial_eq_C_mul_X_pow, ← PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul
       (has_subst₁ _), PowerSeries.coeff_map, PowerSeries.subst_pow (has_subst₁ _),
-        PowerSeries.subst_X (has_subst₁ b), map_expand]
+        PowerSeries.subst_X (has_subst₁ b), MvPowerSeries.map_expand]
     exact ⟨_, PowerSeries.hasSum_of_monomials_self _⟩
   have b_le_qb (b : ℕ) : (b : ENat) ≤ q ^ b := by
     exact_mod_cast (Nat.lt_pow_self (IsPrimePow.one_lt (isPrimePow_q ht hq))).le
@@ -911,7 +902,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     /- there should be a tsum to finite -/
     rw [tsum_eq_sum (s := range (n.degree + 1))]
     have eq_aux : (MvPowerSeries.coeff n) (PowerSeries.subst F ((MvPowerSeries.map (σ ^ i))
-      (f.subst (PowerSeries.monomial (q ^ i) 1)))) = ∑ b ∈ range (n.degree + 1),
+      (f.expand (q ^ i) (q_pow_neZero hq)))) = ∑ b ∈ range (n.degree + 1),
       MvPowerSeries.coeff n ((σ ^ i) ((PowerSeries.coeff b) f) • F ^ (q ^ i * b)) := by
       /- to finite-/
       have eq_aux₁ : (PowerSeries.subst F ((MvPowerSeries.map (σ ^ i))
@@ -920,27 +911,28 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         erw [PowerSeries.monomial_eq_C_mul_X_pow]
         rw [← PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul has_subst_F,
           PowerSeries.subst_pow has_subst_F, PowerSeries.subst_X has_subst_F, one_smul]
-      rw [← PowerSeries.subst_map (has_subst_monomial i), PowerSeries.subst_comp_subst_apply _ has_subst_F, eq_aux₁]
-      rw [PowerSeries.coeff_subst (HasSubst.pow has_subst_F le_q_pow)]
-      simp_rw [MvPowerSeries.coeff_smul, PowerSeries.coeff_map, smul_eq_mul, pow_mul]
-      refine finsum_eq_finset_sum_of_support_subset _ (Function.support_subset_iff'.mpr ?_)
-      intro d hd
-      simp at hd
-      have : (MvPowerSeries.coeff n) ((F ^ q ^ i) ^ d) = 0 := by
-        refine MvPowerSeries.coeff_of_lt_order
-          <| (ENat.add_one_le_iff (ENat.coe_ne_top (n.degree))).mp ?_
-        rw [← pow_mul]
-        have aux : d ≤ (q ^ i * d) • (1 : ENat) := by
-          simp only [nsmul_eq_mul, Nat.cast_mul, Nat.cast_pow, mul_one]
-          exact_mod_cast Nat.le_mul_of_pos_left d (Nat.pow_pos (q.pos_of_ne_zero (q_neZero hq)))
-        refine .trans (.trans (.trans (by norm_cast) aux) (nsmul_le_nsmul_right (F.one_le_order
-          (constantCoeff_inv_add_RecurFun ..)) _)) (MvPowerSeries.le_order_pow (q ^ i * d))
-      simp [this]
-      · refine HasSubst.of_constantCoeff_zero' ?_
-        erw [PowerSeries.constantCoeff_map]
-        rw [← PowerSeries.coeff_zero_eq_constantCoeff,
-          PowerSeries.coeff_monomial, if_neg (q_pow_neZero hq).symm, map_zero]
-    rw [eq_aux, ← sum_sub_distrib]
+      sorry
+      -- rw [← PowerSeries.subst_map (has_subst_monomial i), PowerSeries.subst_comp_subst_apply _ has_subst_F, eq_aux₁]
+      -- rw [PowerSeries.coeff_subst (HasSubst.pow has_subst_F le_q_pow)]
+      -- simp_rw [MvPowerSeries.coeff_smul, PowerSeries.coeff_map, smul_eq_mul, pow_mul]
+      -- refine finsum_eq_finset_sum_of_support_subset _ (Function.support_subset_iff'.mpr ?_)
+      -- intro d hd
+      -- simp at hd
+      -- have : (MvPowerSeries.coeff n) ((F ^ q ^ i) ^ d) = 0 := by
+      --   refine MvPowerSeries.coeff_of_lt_order
+      --     <| (ENat.add_one_le_iff (ENat.coe_ne_top (n.degree))).mp ?_
+      --   rw [← pow_mul]
+      --   have aux : d ≤ (q ^ i * d) • (1 : ENat) := by
+      --     simp only [nsmul_eq_mul, Nat.cast_mul, Nat.cast_pow, mul_one]
+      --     exact_mod_cast Nat.le_mul_of_pos_left d (Nat.pow_pos (q.pos_of_ne_zero (q_neZero hq)))
+      --   refine .trans (.trans (.trans (by norm_cast) aux) (nsmul_le_nsmul_right (F.one_le_order
+      --     (constantCoeff_inv_add_RecurFun ..)) _)) (MvPowerSeries.le_order_pow (q ^ i * d))
+      -- simp [this]
+      -- · refine HasSubst.of_constantCoeff_zero' ?_
+      --   erw [PowerSeries.constantCoeff_map]
+      --   rw [← PowerSeries.coeff_zero_eq_constantCoeff,
+      --     PowerSeries.coeff_monomial, if_neg (q_pow_neZero hq).symm, map_zero]
+    rw [PowerSeries.map, eq_aux, ← sum_sub_distrib]
     simp_rw [MvPowerSeries.coeff_smul, ← mul_sub]
     apply mem_ideal_aux
     intro b hb
@@ -972,7 +964,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq ht hq σ hs hp_mem F₁ hm (i.zero_lt_of_ne_zero hi₀) n
         have eq_aux₁ : (MvPowerSeries.coeff n) ((MvPowerSeries.map (σ ^ i)) (F.expand (q ^ i)
           (q_pow_neZero hq)) ^ b) = (MvPowerSeries.coeff n) ((MvPowerSeries.map (σ ^ i))
-            ((expand (q ^ i) (q_pow_neZero hq)) (F₁.map (R.subtype))) ^ b) := by
+            ((MvPowerSeries.expand (q ^ i) (q_pow_neZero hq)) (F₁.map (R.subtype))) ^ b) := by
           simp
           rw [coeff_coe_aux ht hq σ h hi₀ F₁_apply _ (constantCoeff_inv_add_RecurFun ..)]
           · have aux : MvPowerSeries.constantCoeff F₁ = (0 : K) := by
@@ -1049,7 +1041,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       intro n
       rw [PowerSeries.monomial_eq_C_mul_X_pow, ← PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul (has_subst₁ _),
         PowerSeries.subst_pow (has_subst₁ _), PowerSeries.subst_X (has_subst₁ _),
-          PowerSeries.coeff_map, map_expand]
+          PowerSeries.coeff_map, MvPowerSeries.map_expand]
     simp_rw [summable_aux]
     exact Summable.summable_of_subst ⟨_, PowerSeries.hasSum_of_monomials_self _⟩ (has_subst₁ _)
   · intro b hb
@@ -1069,7 +1061,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     refine .trans le_aux' ?_
     rw [PowerSeries.order_eq_order]
     refine .trans (PowerSeries.le_order_subst _ (has_subst_monomial (i := b)) f) ?_
-    rw [PowerSeries.order_eq_order]
+    simp [PowerSeries.order_eq_order, PowerSeries.expand_apply, monomial_eq_C_mul_X_pow]
   · intro b hb
     simp at hb
     rw [tsum_eq_subst]
@@ -1079,13 +1071,14 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       (MvPowerSeries.smul_eq_C_mul _ (s n)) ▸ (le_order₁ ..)
   · exact MvPowerSeries.Summable.increase_order fun n => tsum_eq_subst ▸ le_order_aux
   · exact PowerSeries.Summable.increase_order fun n => by
-      have le_aux : n ≤ ((MvPowerSeries.map (σ ^ n)) (PowerSeries.subst
-        ((PowerSeries.monomial (q ^ n)) (1 : K)) (RecurFun ht hq σ s hg))).order := by
-        refine .trans (le_mul_of_le_of_one_le ?_ ?_) (.trans (PowerSeries.le_order_subst _ (has_subst_monomial n) _)
-          (MvPowerSeries.le_order_map _))
-        rw [← PowerSeries.order_eq_order]
-        refine .trans (b_le_qb n) (PowerSeries.le_order_monomial _ (1 : K))
-        refine PowerSeries.one_le_order (constantCoeff_RecurFun ..)
+      have le_aux : n ≤ ((MvPowerSeries.map (σ ^ n)) ((RecurFun ht hq σ s hg).expand (q ^ n)
+        (q_pow_neZero hq))).order := by
+        sorry
+        -- refine .trans (le_mul_of_le_of_one_le ?_ ?_) (.trans (PowerSeries.le_order_subst _ ?_ _)
+        --   (MvPowerSeries.le_order_map _))
+        -- rw [← PowerSeries.order_eq_order]
+        -- refine .trans (b_le_qb n) (PowerSeries.le_order_monomial _ (1 : K))
+        -- refine PowerSeries.one_le_order (constantCoeff_RecurFun ..)
       rw [PowerSeries.order_eq_order]
       exact .trans le_aux (MvPowerSeries.le_order_smul)
 
@@ -1222,10 +1215,12 @@ lemma f_g'_eq_f_G :
       (.of_constantCoeff_zero' (constantCoeff_RecurFun ..))]
 
 include hs₁ hs₂ in
-lemma coeff_g_G_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0):
-    ∀ n : ℕ, PowerSeries.coeff n (g.subst ((inv_RecurFun ht hq σ s hg hg_unit).subst
-      (RecurFun ht hq σ s hg'))) ∈ R := by
-  intro n
+lemma coeff_g_G_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0) {n : ℕ}:
+    let f_g' := (RecurFun ht hq σ s hg')
+    let G := (inv_RecurFun ht hq σ s hg hg_unit).subst f_g'
+    (h_ind : ∀ m < n, (PowerSeries.coeff m) G ∈ R) → PowerSeries.coeff n (g.subst G) ∈ R := by
+  intro f_g' G h_ind
+
 
   sorry
 
@@ -1312,7 +1307,7 @@ lemma coeff_inv_RecurFun_g'_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUn
     rw [eq_aux, mul_assoc]
     exact Subring.mul_mem R (SetLike.coe_mem _) <| by
       simpa using (Subring.add_mem _ (G_coeff_mem_ind ht hq σ s hg hg_unit hg' hk)
-        (coeff_g_G_mem ht hq σ s hs₁ hs₂ hg hg_unit hg' hs0 k))
+        (coeff_g_G_mem ht hq σ s hs₁ hs₂ hg hg_unit hg' hs0 hk))
 
 end PartII
 
