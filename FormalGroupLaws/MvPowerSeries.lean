@@ -336,6 +336,20 @@ lemma Rchar_p {p : ℕ} {I : Ideal R} (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)
       sorry
     · sorry
   sorry
+
+lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
+    {G : MvPowerSeries σ R} (f : PowerSeries R)
+    (hG : HasSubst G) :
+    f.subst G = ∑' i, (f.coeff i) • G ^ i := by
+
+  sorry
+
+-- lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
+--     {G : MvPowerSeries σ R} (f : PowerSeries R)
+--     (hG : HasSubst G) :
+--     expand p hp ∑' i, (f.coeff i) • G ^ i := by
+
+
 -- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
 --     (ha : PowerSeries.HasSubst a) :
 --     a.order * f.order ≤ (f.subst a).order := by
