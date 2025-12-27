@@ -847,7 +847,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   refine Subring.sum_mem R <| fun i hi => by
     simp_rw [PowerSeries.subst_smul has_subst_F, MvPowerSeries.coeff_smul, ← mul_sub]
     refine hs₁ i _ ?_
-    rw [Summable.map_tsum _ _ (WithPiTopology.continuous_coeff K n), ]
+    rw [Summable.map_tsum _ _ (WithPiTopology.continuous_coeff K n)]
     /- there should be a tsum to finite -/
     rw [tsum_eq_sum (s := range (n.degree + 1))]
     have eq_aux : (MvPowerSeries.coeff n) (PowerSeries.subst F ((MvPowerSeries.map (σ ^ i))
@@ -1216,10 +1216,17 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   refine Subring.sum_mem R ?_
   intro i hi
   refine hs₁ i _ ?_
-
-
+  rw [PowerSeries.subst_express_as_tsum _ (has_subst_G), PowerSeries.subst_express_as_tsum _
+    (PowerSeries.HasSubst.pow has_subst_G (Nat.one_le_iff_ne_zero.mpr (q_pow_neZero hq))),
+    PowerSeries.expand_tsum (q_pow_neZero hq), PowerSeries.coeff_map,
+    Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n)]
+  sorry
+  -- refine continuous_of_continuousAt_zero (PowerSeries.map (σ ^ i)) ?_
 
   sorry
+
+  sorry
+
   sorry
   · intro b hb
     simp only [mem_range, not_lt] at hb
@@ -1237,11 +1244,6 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   · sorry
   · -- summable
     sorry
-
-
-    -- tsum_eq_sum (s := range (n + 1)), tsum_eq_sum (s := range (n + 1))]
-
-
 
 include hs₁ hs₂ in
 lemma coeff_g_G_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0) {n : ℕ}:
