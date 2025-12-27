@@ -315,6 +315,27 @@ lemma PowerSeries.HasSubst.pow {f : MvPowerSeries σ R} (hf : HasSubst f) {n : �
     rw [pow_add, pow_one]
     exact HasSubst.mul_left ih
 
+lemma Rchar_p {p : ℕ} {I : Ideal R} (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)] :
+    ExpChar (R ⧸ I) p := by
+  by_cases h : Nontrivial (R ⧸ I)
+  · have aux : CharP (R ⧸ I) p := by
+
+      refine (CharP.charP_iff_prime_eq_zero hp.out).mpr ?_
+      simpa using Ideal.Quotient.eq_zero_iff_mem.mpr hI
+    exact expChar_prime _ p
+  -- charP_iff
+
+  simp_all
+  have aux : CharP (R ⧸ I) p := by
+    rw [charP_iff]
+    intro x
+    constructor
+    · intro hx
+      obtain h₁ := Ideal.Quotient.eq_zero_iff_mem.mp hx
+      simp_all
+      sorry
+    · sorry
+  sorry
 -- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
 --     (ha : PowerSeries.HasSubst a) :
 --     a.order * f.order ≤ (f.subst a).order := by
@@ -366,3 +387,7 @@ lemma PowerSeries.HasSubst.pow {f : MvPowerSeries σ R} (hf : HasSubst f) {n : �
 --   q ^ p = q.expand
 
 -- end prime_pow_poly
+
+section
+
+end
