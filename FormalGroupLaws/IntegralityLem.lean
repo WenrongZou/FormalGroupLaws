@@ -1352,8 +1352,7 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   apply mem_ideal_aux
   intro b hb
   rw [PowerSeries.coeff_smul, PowerSeries.expand_smul, PowerSeries.coeff_map,
-    PowerSeries.coeff_smul]
-  rw [smul_eq_mul, map_mul, smul_eq_mul, ← mul_sub]
+    PowerSeries.coeff_smul, smul_eq_mul, map_mul, smul_eq_mul, ← mul_sub]
   refine refinement_hs₂ σ hs₂ i (multiplicity q b + 1) _ ?_ _
     (coeff_mem_aux ht hq σ hs hp_mem hi₀ (constantCoeff_G ..) h_ind)
   · intro a ha
@@ -1507,17 +1506,235 @@ end PartII
 
 section PartIII
 
+lemma PartIII.tsum_eq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    {h : PowerSeries R} (h₀ : h.constantCoeff = 0) {i : ℕ}:
+    let f := (RecurFun ht hq σ s hg)
+    let f₁ : PowerSeries K := f.subst (h.map R.subtype)
+    (f₁.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i) =
+      ∑' n, (σ ^ i) (f.coeff n) • ((h.expand (q^i) (q_pow_neZero hq)).map
+        ((σ ^ i).comp R.subtype)) ^ n := by
+  intro f f₁
+  have f_def : f = RecurFun ht hq σ s hg := rfl
+  have f₁_def : f₁ = f.subst (h.map R.subtype) := rfl
+  rw [PowerSeries.map_expand, PowerSeries.map, PowerSeries.map_subst _ ,
+    PowerSeries.expand, PowerSeries.expand_subst _, PowerSeries.subst_express_as_tsum]
+  apply tsum_congr
+  intro j
+  rw [PowerSeries.coeff_map, PowerSeries.map_expand]
+  rfl
+  · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    erw [PowerSeries.constantCoeff_expand, PowerSeries.constantCoeff_map]
+    simp [h₀]
+  · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    erw [PowerSeries.constantCoeff_map]
+    simp [h₀]
+  · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    simp [h₀]
+
+lemma PartIII.tsum_eq_aux₁ [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    {h : PowerSeries R} (h₀ : h.constantCoeff = 0) {i : ℕ}:
+    let f := (RecurFun ht hq σ s hg)
+    let f₁ : PowerSeries K := f.subst (h.map R.subtype)
+    f₁.expand (q ^ i) (q_pow_neZero hq) =
+      ∑' n, (f.coeff n) • ((h.expand (q^i) (q_pow_neZero hq)).map (R.subtype)) ^ n := by
+  intro f f₁
+  rw [PowerSeries.expand, PowerSeries.expand_subst _, PowerSeries.subst_express_as_tsum]
+  apply tsum_congr
+  intro j
+  rw [PowerSeries.map_expand]
+  rfl
+  · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    erw [PowerSeries.constantCoeff_expand]
+    simp [h₀]
+  · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    simp [h₀]
+
+lemma PartIII.tsum_eq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    {h : PowerSeries R} (h₀ : h.constantCoeff = 0) (i: ℕ) :
+    let f := (RecurFun ht hq σ s hg)
+    ((f.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)).subst (h.map R.subtype) =
+    ∑' n, (σ ^ i) (f.coeff n) • h.map (R.subtype) ^ (q ^ i * n) := by
+  intro f
+  have has_subst_h : PowerSeries.HasSubst (h.map R.subtype) :=
+    PowerSeries.HasSubst.of_constantCoeff_zero' (by simp [h₀])
+  rw [PowerSeries.map_expand, PowerSeries.expand_apply, PowerSeries.subst_comp_subst_apply
+    (PowerSeries.HasSubst.X_pow (q_pow_neZero hq)) has_subst_h,
+    PowerSeries.subst_express_as_tsum]
+  apply tsum_congr
+  intro b
+  rw [PowerSeries.coeff_map, PowerSeries.subst_pow has_subst_h,
+    PowerSeries.subst_X has_subst_h, pow_mul]
+  · refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    apply PowerSeries.constantCoeff_subst_zero
+    simp [h₀]
+    simp [zero_pow (q_pow_neZero hq)]
+
+include ht hs hp_mem in
+lemma PartIII.coeff_mem_aux {i b n : ℕ} {h : PowerSeries R} (hi : i ≠ 0):
+    (σ ^ i) ((PowerSeries.coeff n) ((PowerSeries.map R.subtype) ((PowerSeries.expand (q ^ i)
+      (q_pow_neZero hq)) h) ^ b)) - (PowerSeries.coeff n) ((PowerSeries.map R.subtype)
+      h ^ (q ^ i * b)) ∈ ⇑R.subtype '' ↑(I ^ (multiplicity q b + 1)) := by
+  simp_rw [← map_pow, PowerSeries.coeff_map]
+  rw [Subring.subtype_apply, Subring.subtype_apply]
+  obtain ⟨m, hm⟩ := pow_multiplicity_dvd q b
+  obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq' ht hq σ hs hp_mem h hm (i.zero_lt_of_ne_zero hi)
+    (Finsupp.single () n)
+  use x
+  rw [SetLike.mem_coe] at hx₁
+  simp [hx₁, hx₂, ← map_expand]
+  rw [← map_pow, ← map_pow,← map_pow ((MvPowerSeries.map R.subtype))]
+  erw [PowerSeries.coeff_map, PowerSeries.coeff_map, PowerSeries.coeff_map]
+  simp only [Subring.subtype_apply]
+  congr
+
+include hs hp_mem hs₁ hs₂ in
+lemma PartIII.coeff_tsum_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    {h : PowerSeries R} (h₀ : h.constantCoeff = 0) (n : ℕ) (hs₀ : s 0 = 0):
+    let f := (RecurFun ht hq σ s hg)
+    let f₁ : PowerSeries K := f.subst (h.map R.subtype)
+    PowerSeries.coeff n (∑' i, s i • (f₁.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)
+      - ∑' i, s i • ((f.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)).subst (h.map R.subtype)) ∈ R := by
+  intro f f'
+  have le_order_aux₁ (i b : ℕ) : b ≤ PowerSeries.order
+    ((PowerSeries.map R.subtype) ((PowerSeries.expand (q ^ i) (q_pow_neZero hq)) h) ^ b) := by
+    rw [← map_pow]
+    refine .trans (.trans ?_ (PowerSeries.le_order_pow _ b)) (PowerSeries.le_order_map _)
+    have : 1 ≤ ((PowerSeries.expand (q ^ i) (q_pow_neZero hq)) h).order := by
+      apply PowerSeries.one_le_order
+      rw [PowerSeries.constantCoeff_expand, h₀]
+    refine .trans (by simp) (nsmul_le_nsmul_right this b)
+  have le_order_aux₂ (i b : ℕ) : b ≤ PowerSeries.order
+    ((PowerSeries.map R.subtype) h ^ (q ^ i * b)) := by
+    rw [← map_pow]
+    refine .trans (.trans ?_ (PowerSeries.le_order_pow _ _)) (PowerSeries.le_order_map _)
+    have le_aux : b ≤ q ^ i * b :=
+      Nat.le_mul_of_pos_left b <|  Nat.pow_pos (Nat.pos_of_ne_zero (q_neZero hq))
+    refine .trans ?_ (nsmul_le_nsmul_right (PowerSeries.one_le_order h₀) (q ^ i * b))
+    simp only [nsmul_eq_mul, Nat.cast_mul, Nat.cast_pow, mul_one]
+    norm_cast
+  have le_expand_aux (b : ℕ) {f : PowerSeries K} (hf : f.constantCoeff = 0) :
+    ↑b ≤ ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f).order := by
+    rw [PowerSeries.order_expand]
+    exact .trans (by simp) (smul_le_smul (Nat.lt_pow_self (one_lt_q ht hq)).le
+      (PowerSeries.one_le_order hf) b.zero_le (zero_le _))
+  have le_order_aux₃ (b : ℕ) : b ≤ PowerSeries.order (PowerSeries.subst ((PowerSeries.map
+    R.subtype) h) (((f.expand (q ^ b) (q_pow_neZero hq)).map (σ ^ b)))) := by
+    have : ((PowerSeries.map R.subtype) h).order * ((PowerSeries.map (σ ^ b))
+      ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f)).order ≤ PowerSeries.order
+      (PowerSeries.subst ((PowerSeries.map R.subtype) h) ((PowerSeries.map (σ ^ b))
+      ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f))) := by
+      conv_rhs => rw [PowerSeries.order_eq_order]
+      rw [PowerSeries.order_eq_order]
+      exact PowerSeries.le_order_subst _
+        (PowerSeries.HasSubst.of_constantCoeff_zero' (by simp [h₀])) _
+    have le_aux : b ≤ ((PowerSeries.map (σ ^ b)) ((PowerSeries.expand (q ^ b)
+      (q_pow_neZero hq)) f)).order := by
+      refine .trans ?_ (PowerSeries.le_order_map _)
+      exact le_expand_aux b (constantCoeff_RecurFun ..)
+    exact .trans (.trans (by simp) (mul_le_mul (PowerSeries.one_le_order (by simp [h₀]))
+      le_aux b.cast_nonneg' (zero_le _))) this
+  have le_order_aux₄ (b : ℕ) : b ≤ PowerSeries.order ((PowerSeries.map (σ ^ b))
+    ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f')) := by
+    refine .trans (le_expand_aux b <| PowerSeries.constantCoeff_subst_zero (by simp [h₀])
+      <| constantCoeff_RecurFun ..) (PowerSeries.le_order_map _)
+  rw [map_sub, Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
+    Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
+    tsum_eq_sum (s := range (n + 1)), tsum_eq_sum (s := range (n + 1)), ← sum_sub_distrib]
+  refine Subring.sum_mem R ?_
+  intro i hi
+  by_cases hi₀ : i = 0
+  · simp [hi₀, hs₀]
+  simp_rw [PowerSeries.coeff_smul, smul_eq_mul, ← mul_sub]
+  refine hs₁ i _ ?_
+  rw [PowerSeries.coeff_map, PartIII.tsum_eq_aux₁ ht hq σ s hg h₀,
+    PartIII.tsum_eq_aux₂ ht hq σ s hg h₀ i,
+    Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
+    Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
+    tsum_eq_sum (s := range (n + 1)), tsum_eq_sum (s := range (n + 1)), map_sum, ← sum_sub_distrib]
+  apply mem_ideal_aux
+  intro b hb
+  simp_rw [PowerSeries.coeff_smul, smul_eq_mul, map_mul, ← mul_sub]
+  refine refinement_hs₂ σ hs₂ i (multiplicity q b + 1) _ ?_ _
+    (PartIII.coeff_mem_aux ht hq σ hs hp_mem hi₀)
+  · intro a ha
+    have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ I ^ (multiplicity q b + 1) := by
+      obtain ⟨a', ha'₁, ha'₂⟩ := ha
+      simp_rw [← ha'₂]
+      simpa using ha'₁
+    obtain h1 := coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg b 1 ⟨a, image_of_incl_mem a ha⟩ a_mem
+    simpa using h1
+  · intro b hb
+    simp only [mem_range, not_lt] at hb
+    refine PowerSeries.coeff_of_lt_order _ <| (ENat.add_one_le_iff (ENat.coe_ne_top n)).mp
+      <| .trans (.trans (by norm_cast) (le_order_aux₂ _ _)) PowerSeries.le_order_smul
+  · intro b hb
+    simp only [mem_range, not_lt] at hb
+    refine PowerSeries.coeff_of_lt_order _ <| (ENat.add_one_le_iff (ENat.coe_ne_top n)).mp
+      <| .trans (.trans (by norm_cast) (le_order_aux₁ _ _)) PowerSeries.le_order_smul
+  · exact PowerSeries.Summable.increase_order fun b =>
+      .trans (.trans (by norm_cast) (le_order_aux₂ _ _)) PowerSeries.le_order_smul
+  · exact PowerSeries.Summable.increase_order fun b =>
+      .trans (.trans (by norm_cast) (le_order_aux₁ _ _)) PowerSeries.le_order_smul
+  · intro b hb
+    simp only [mem_range, not_lt] at hb
+    refine PowerSeries.coeff_of_lt_order _ <| (ENat.add_one_le_iff (ENat.coe_ne_top n)).mp
+      <| .trans (.trans (by norm_cast) (le_order_aux₃ _)) PowerSeries.le_order_smul
+  · intro b hb
+    simp only [mem_range, not_lt] at hb
+    refine PowerSeries.coeff_of_lt_order _ <| (ENat.add_one_le_iff (ENat.coe_ne_top n)).mp
+      <| .trans (.trans (by norm_cast) (le_order_aux₄ _)) PowerSeries.le_order_smul
+  · exact PowerSeries.Summable.increase_order fun b =>
+      .trans (.trans (by norm_cast) (le_order_aux₃ _)) PowerSeries.le_order_smul
+  · exact PowerSeries.Summable.increase_order fun b =>
+      .trans (.trans (by norm_cast) (le_order_aux₄ _)) PowerSeries.le_order_smul
+
 /- functional equaltion lemma III: let `h` be another power series with coefficient in `R`,
   then there exist a power series `h₁` over `R` such that `f(h(X)) = f_{h₁}(X)`, this is
   equivalent to say that `f₁(X) - ∑s_i σ^i(f₁(X^{q^i}))` is a power series in `R`, where
   `f₁(X) := f(h(X))` and `f(X) := f_g(X)` -/
+include hs hp_mem hs₁ hs₂ in
 lemma coeff_inv_RecurFun_g'_mem_Subring' [UniformSpace K] [T2Space K] [DiscreteUniformity K]
-    (hs0 : s 0 = 0) {h : PowerSeries R}:
+    (hs₀ : s 0 = 0) {h : PowerSeries R} (h₀ : h.constantCoeff = 0):
     let f := (RecurFun ht hq σ s hg)
     let f₁ : PowerSeries K := f.subst (h.map R.subtype)
-    ∀ n, (f₁ - ∑' i : ℕ, PowerSeries.C (s i) * f₁.subst (PowerSeries.monomial (q^i)
-    (1 : K))).coeff n ∈ R := by
-  sorry
+    ∀ n, (f₁ - ∑' i, (s i) • (f₁.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)).coeff n ∈ R := by
+  intro f f₁ n
+  have has_subst_h : PowerSeries.HasSubst ((PowerSeries.map R.subtype) h) :=
+    PowerSeries.HasSubst.of_constantCoeff_zero' (by simp [h₀])
+  have eq_aux : f₁ - ∑' i, (s i) • (f₁.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i) =
+    (f₁ - ∑' i, s i • ((f.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)).subst (h.map R.subtype)) - (∑' i, s i • (f₁.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)
+    - ∑' i, s i • ((f.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)).subst (h.map R.subtype))
+    := by ring
+  rw [eq_aux, map_sub]
+  refine Subring.sub_mem R ?_ (PartIII.coeff_tsum_mem ht hq σ hs hp_mem s hs₁ hs₂ hg h₀ n hs₀)
+  have eq_aux₁ : (f₁ - ∑' (i : ℕ), s i • PowerSeries.subst ((PowerSeries.map R.subtype) h)
+    ((PowerSeries.map (σ ^ i)) ((PowerSeries.expand (q ^ i) (q_pow_neZero hq)) f))) =
+    (g.map (R.subtype)).subst (h.map (R.subtype)) := by
+    have : g.map (R.subtype) = f - ∑' (i : ℕ), s i • (PowerSeries.map (σ ^ i))
+      ((PowerSeries.expand (q ^ i) (q_pow_neZero hq)) f) := by
+      unfold f
+      nth_rw 1 [FunEq_of_RecurFun ht hq σ s hg hs₀]
+      ring
+    rw [this, PowerSeries.subst_sub has_subst_h, tsum_subst _ has_subst_h]
+    congr
+    funext i
+    rw [PowerSeries.subst_smul has_subst_h]
+    · apply PowerSeries.Summable.increase_order
+      intro n
+      have le_expand_aux (b : ℕ) {f : PowerSeries K} (hf : f.constantCoeff = 0) :
+        ↑b ≤ ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f).order := by
+        rw [PowerSeries.order_expand]
+        exact .trans (by simp) (smul_le_smul (Nat.lt_pow_self (one_lt_q ht hq)).le
+          (PowerSeries.one_le_order hf) b.zero_le (zero_le _))
+      refine .trans (.trans (le_expand_aux n (constantCoeff_RecurFun ..))
+        (PowerSeries.le_order_map _)) PowerSeries.le_order_smul
+  rw [eq_aux₁]
+  have eq_aux₂ : (PowerSeries.coeff n) (PowerSeries.subst ((PowerSeries.map R.subtype) h)
+    (g.map (R.subtype))) = PowerSeries.coeff n (g.subst h) := by
+    erw [← PowerSeries.map_subst (PowerSeries.HasSubst.of_constantCoeff_zero' h₀),
+      PowerSeries.coeff_map, Subring.subtype_apply]
+  rw [eq_aux₂]
+  exact SetLike.coe_mem _
 
 end PartIII
 

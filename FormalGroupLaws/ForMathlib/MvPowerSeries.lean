@@ -62,12 +62,22 @@ theorem PowerSeries.constantCoeff_expand : (φ.expand p hp).constantCoeff = φ.c
   conv_lhs => rw [← coeff_zero_eq_constantCoeff, ← mul_zero p, coeff_expand_mul]
   simp
 
+theorem PowerSeries.expand_subst {f : MvPowerSeries τ S} (hf : HasSubst f) (φ : PowerSeries S) :
+    (subst f φ).expand p hp = subst (f.expand p hp) φ := by
+  have : MvPowerSeries.HasSubst (fun (x : Unit) ↦ f) := by
+    exact HasSubst.const hf
+  rw [PowerSeries.subst, MvPowerSeries.expand_subst hp this (φ := φ)]
+  rfl
+
 theorem PowerSeries.le_order_pow_n (hφ : φ.constantCoeff = 0) {n : ℕ} :
     n ≤ PowerSeries.order (φ ^ n) := by
   refine .trans ?_ (le_order_pow _ n)
   obtain h := one_le_order hφ
   simp
   exact le_mul_of_one_le_right' h
+
+theorem PowerSeries.expand_eq_expand :
+    MvPowerSeries.expand p hp φ = PowerSeries.expand p hp φ := sorry
 
 lemma PowerSeries.expand_smul (a : R):
     expand p hp (a • φ) = a • φ.expand p hp := by sorry
@@ -79,4 +89,8 @@ lemma PowerSeries.expand_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R
     {x : ℕ → PowerSeries R} (hx : Summable x):
     expand p hp (∑' i, x i) = ∑' i, (x i).expand p hp := by sorry
 
+omit [Finite σ] in
+theorem PowerSeries.subst_sub {a : MvPowerSeries σ R} (ha : HasSubst a) (f g : PowerSeries R) :
+    subst a (f - g) = subst a f - subst a g := by
+  rw [← coe_substAlgHom ha, map_sub]
 end
