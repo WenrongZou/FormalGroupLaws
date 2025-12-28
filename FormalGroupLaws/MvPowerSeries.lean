@@ -290,13 +290,6 @@ lemma PowerSeries.coeff_subst_X_s' {s t: σ} [DecidableEq σ] {f : PowerSeries R
 
 end
 
-
-lemma PowerSeries.one_le_order {f : PowerSeries R} (hf : f.constantCoeff = 0) : 1 ≤ f.order := by
-  sorry
-
-lemma MvPowerSeries.one_le_order {F : MvPowerSeries σ R} (hF : F.constantCoeff = 0) :
-    1 ≤ F.order := sorry
-
 lemma MvPowerSeries.order_X_pow_ge [DecidableEq σ] {n : ℕ} (s : σ) : n ≤ ((X s (R := R))^n).order  := by
   refine le_order fun d hd => by
     rw [coeff_X_pow, if_neg]
