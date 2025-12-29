@@ -27,8 +27,8 @@ theorem MvPowerSeries.order_expand : (φ.expand p hp).order = p • φ.order := 
   · sorry
 
 omit [Finite σ] in
-theorem MvPowerSeries.expand_subst {f : σ → MvPowerSeries τ S} (hf : HasSubst f)
-    {φ : MvPowerSeries σ S} :
+theorem MvPowerSeries.expand_subst {f : σ → MvPowerSeries τ R} (hf : HasSubst f)
+    {φ : MvPowerSeries σ R} :
     expand p hp (subst f φ) = subst (fun i ↦ (f i).expand p hp) φ := by
   rw [← substAlgHom_apply hf, expand_substAlgHom, substAlgHom_apply]
 
