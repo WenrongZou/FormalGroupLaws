@@ -1661,7 +1661,63 @@ end PartIII
 
 section PartIV
 
+/- also could generalize to the theorem above. name : `mem_ideal_aux`-/
+lemma mem_ideal_aux' {m r: ℕ} {α : ℕ → K} (h : ∀ i ∈ range m, α i ∈ ⇑(algebraMap (↥R) K) '' ↑(I ^ r)) :
+    ∑ i ∈ range m, α i ∈ ⇑(algebraMap (↥R) K) '' ↑(I ^ r) := by
+  induction m with
+  | zero => simp
+  | succ k ih =>
+    rw [range_add_one, sum_insert (by simp)]
+    specialize ih fun i hi => h i (mem_range.mpr (by nlinarith [mem_range.mp hi]))
+    specialize h k (self_mem_range_succ k)
+    simp at h ⊢ ih
+    obtain ⟨a, ha₀, ha₁, ha₂⟩ := ih
+    obtain ⟨b, hb₀, hb₁, hb₂⟩ := h
+    have : (⟨a + b, Subring.add_mem R ha₀ hb₀⟩ : R) = ⟨a, ha₀⟩ + ⟨b, hb₀⟩ := rfl
+    use (a + b), Subring.add_mem R ha₀ hb₀, ((Submodule.add_mem_iff_right _ ha₁).mpr hb₁)
+    rw [←hb₂, ←ha₂, this, map_add]
+    ring_nf
 
+theorem congr_equiv_forward [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
+    {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0)
+    (r : ℕ) :
+    let f := RecurFun ht hq σ s hg
+    (∀ n, α.coeff n - β.coeff n ∈ R.subtype '' ↑(I ^ r)) →
+      (∀ n, PowerSeries.coeff n (f.subst (α.map R.subtype)) - PowerSeries.coeff n (f.subst β)
+        ∈ R.subtype '' ↑(I ^ r)) := by
+  intro f h_congr n
+  have has_subst_α : PowerSeries.HasSubst ((PowerSeries.map R.subtype) α) := by
+    refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+    simp [hα]
+  have has_subst_β : PowerSeries.HasSubst β := PowerSeries.HasSubst.of_constantCoeff_zero' hβ
+  rw [PowerSeries.subst_express_as_tsum _ has_subst_α, PowerSeries.subst_express_as_tsum _ has_subst_β,
+    Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
+    Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
+    tsum_eq_sum (s := range (n + 1)), tsum_eq_sum (s := range (n + 1)), ← sum_sub_distrib,
+    ]
+  apply mem_ideal_aux'
+  intro i hi
+  simp_rw [PowerSeries.coeff_smul, smul_eq_mul, ← mul_sub]
+  /- now only need to prove that α^i ≡ β^i (mod I ^ (r + multiplicity q i)) and use the
+  first technical lemma -/
+
+  sorry
+  sorry
+  sorry
+  sorry
+  sorry
+
+
+
+theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
+    {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0) (r : ℕ) :
+    let f := RecurFun ht hq σ s hg
+    (∀ n, α.coeff n - β.coeff n ∈ R.subtype '' ↑(I ^ r)) ↔
+      (∀ n, PowerSeries.coeff n (f.subst (α.map R.subtype)) - PowerSeries.coeff n (f.subst β)
+        ∈ R.subtype '' ↑(I ^ r)) := by
+  constructor
+  · exact congr_equiv_forward ht hq σ s hg hs₀ hα hβ r
+  sorry
 
 end PartIV
 
