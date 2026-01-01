@@ -5,8 +5,11 @@ import Mathlib.RingTheory.PowerSeries.PiTopology
 import Mathlib.Topology.Instances.ENNReal.Lemmas
 import Mathlib.RingTheory.MvPowerSeries.Order
 import Mathlib.Data.Finsupp.Weight
+import Mathlib.Logic.Unique
+import Mathlib.RingTheory.MvPowerSeries.Expand
+import Mathlib.Algebra.CharP.Lemmas
 
-variable {R S: Type*} [CommRing R] [CommRing S] {σ τ: Type*} {I : Ideal R} [DecidableEq σ] {n : ℕ}
+variable {R S: Type*} [CommRing R] [CommRing S] {σ τ: Type*} (I : Ideal R) [DecidableEq σ] {n : ℕ}
   [DecidableEq τ] [Algebra R S]
 
 open MvPowerSeries
@@ -31,17 +34,17 @@ section ToSubring
 
 variable {σ : Type*} (p : MvPowerSeries σ R) (T : Subring R)
 
-/-- Given a multivariate formal power series whose coefficients are in some subring, return
-the multivariate formal power series whose coefficients are in the ambient ring. -/
-def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
-  fun n => (p n : R)
+-- /-- Given a multivariate formal power series whose coefficients are in some subring, return
+-- the multivariate formal power series whose coefficients are in the ambient ring. -/
+-- def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
+--   fun n => (p n : R)
 
-def PowerSeries.ofSubring (p : PowerSeries T) : PowerSeries R :=
-  fun n => (p n : R)
+-- def PowerSeries.ofSubring (p : PowerSeries T) : PowerSeries R :=
+--   fun n => (p n : R)
 
-@[simp]
-theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubring T p).coeff n = p.coeff n
-  := rfl
+-- @[simp]
+-- theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubring T p).coeff n = p.coeff n
+--   := rfl
 
 variable (F : FormalGroup R)
 
@@ -308,27 +311,18 @@ lemma PowerSeries.HasSubst.pow {f : MvPowerSeries σ R} (hf : HasSubst f) {n : �
     rw [pow_add, pow_one]
     exact HasSubst.mul_left ih
 
-lemma Rchar_p {p : ℕ} {I : Ideal R} (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)] :
+-- lemma Rchar_p {p : ℕ} {I : Ideal R} (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)] :
+--     ringChar (R ⧸ I) = p := by
+
+--   sorry
+
+lemma Rchar_p {p : ℕ} {I : Ideal R} (hI_neTop : I ≠ ⊤) (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)] :
     ExpChar (R ⧸ I) p := by
-  by_cases h : Nontrivial (R ⧸ I)
-  · have aux : CharP (R ⧸ I) p := by
-
-      refine (CharP.charP_iff_prime_eq_zero hp.out).mpr ?_
+  haveI : Nontrivial (R ⧸ I) := Submodule.Quotient.nontrivial_iff.mpr hI_neTop
+  haveI : CharP (R ⧸ I) p :=
+    (CharP.charP_iff_prime_eq_zero hp.out).mpr <| by
       simpa using Ideal.Quotient.eq_zero_iff_mem.mpr hI
-    exact expChar_prime _ p
-  -- charP_iff
-
-  simp_all
-  have aux : CharP (R ⧸ I) p := by
-    rw [charP_iff]
-    intro x
-    constructor
-    · intro hx
-      obtain h₁ := Ideal.Quotient.eq_zero_iff_mem.mp hx
-      simp_all
-      sorry
-    · sorry
-  sorry
+  exact expChar_prime _ p
 
 lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
     {G : MvPowerSeries σ R} (f : PowerSeries R)
@@ -337,63 +331,24 @@ lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUn
 
   sorry
 
+theorem map_iterateFrobenius_expand (f : MvPowerSeries σ R) [Finite σ] (p n : ℕ) [ExpChar R p]
+    (hp : p ≠ 0) :
+    map (iterateFrobenius R p n) (expand (p ^ n) (pow_ne_zero n hp) f) = f ^ p ^ n := by
+  sorry
+  -- induction n with
+  -- | zero => simp [map_id]
+  -- | succ k n_ih =>
+  --   symm
+  --   conv_lhs => rw [pow_succ, pow_mul, ← n_ih]
+  --   simp_rw [← map_frobenius_expand p hp, pow_succ', add_comm k, iterateFrobenius_add,
+  --     ← map_map, ← map_expand, ← expand_mul, iterateFrobenius_one]
+
+
 -- lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
 --     {G : MvPowerSeries σ R} (f : PowerSeries R)
 --     (hG : HasSubst G) :
 --     expand p hp ∑' i, (f.coeff i) • G ^ i := by
 
-
--- lemma PowerSeries.le_order_subst (a : MvPowerSeries τ S) (f : PowerSeries R)
---     (ha : PowerSeries.HasSubst a) :
---     a.order * f.order ≤ (f.subst a).order := by
---   by_cases hf₀ : f.order = 0
---   · simp [hf₀]
---   apply MvPowerSeries.le_order
---   intro d hd
---   rw [coeff_subst ha, finsum_eq_zero_of_forall_eq_zero]
---   intro x
---   by_cases hf : f.order = ⊤
---   · simp [order_eq_top.mp hf]
---   · by_cases ha' : a.order = ⊤
---     · simp only [order_eq_top_iff.mp ha']
---       by_cases hx : x = 0
---       · simp [hx, order_ne_zero_iff_constCoeff_eq_zero.mp hf₀]
---       · simp [zero_pow hx]
---     by_cases hx : x < f.order
---     · rw [coeff_of_lt_order x hx, zero_smul]
---     · suffices (MvPowerSeries.coeff d) (a ^ x) = 0 by rw [this, smul_zero]
---       rw [MvPowerSeries.coeff_pow, Finset.sum_eq_zero]
---       intro l hl
---       rw [←ENat.coe_toNat hf, ←ENat.coe_toNat ha'] at hd
---       rw [←ENat.coe_toNat hf] at hx
---       norm_cast at hx hd
---       simp only [Finset.mem_finsuppAntidiag] at hl
---       have h : ∃ i ∈ Finset.range x, (l i).degree < a.order := by
---         rw [← ENat.coe_toNat ha']
---         by_contra hc
---         simp only [not_exists, not_and, not_lt] at hc
---         suffices a.order.toNat * f.order.toNat ≤ d.degree by linarith
---         calc
---           _ ≤ a.order.toNat * x :=
---             Nat.mul_le_mul_left a.order.toNat <| Nat.le_of_not_lt hx
---           _ = ∑ i ∈ Finset.range x, a.order.toNat := by
---             rw [Finset.sum_const, Finset.card_range, Nat.mul_comm, Nat.nsmul_eq_mul]
---           _ ≤ _ := by
---             rw [←hl.1, map_sum]
---             exact Finset.sum_le_sum <| fun i hi => by exact_mod_cast hc i hi
---       obtain ⟨i, hi₀, hi₁⟩ := h
---       rw [Finset.prod_eq_zero hi₀ (MvPowerSeries.coeff_of_lt_order hi₁)]
-
--- section prime_pow_poly
-
--- open Polynomial
-
--- variable {R : Type*} {p : ℕ} [CommSemiring R] [ExpChar R p]
-
--- theorem Polynomial.prime_pow_eq {q : Polynomial R} :
---   q ^ p = q.expand
-
--- end prime_pow_poly
 
 section
 

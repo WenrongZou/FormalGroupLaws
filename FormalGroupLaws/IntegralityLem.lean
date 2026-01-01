@@ -24,7 +24,7 @@ open scoped MvPowerSeries.WithPiTopology
   `I` is an ideal of `A`, `p` is a prime number and `q` is a power of `p`, `s_i` are
   elements of `K`. -/
 
-variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} {τ : Type*}
+variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} (hI : I ≠ ⊤) {τ : Type*}
   {p t q : ℕ} [hp : Fact (Nat.Prime p)] (ht : t ≠ 0) (hq : q = p ^ t)
   (σ : K →+* K)  (hs : ∀ (a : R), σ a ∈ R) (a_congr : ∀ a : R, ⟨σ a, hs a⟩ ≡  (a ^ q) [SMOD I])
   (hp_mem : (p : R) ∈ I) (s : ℕ → K) (hs₁ : ∀ i, ∀ a, a ∈ R.subtype '' I → s i * a ∈ R)
@@ -272,24 +272,163 @@ lemma coeff_RecurFun_mul_mem_i (n i: ℕ) :
     obtain ⟨x₁, hx₁, hx₂⟩ := hy
     obtain ⟨y₁, hy₁, hy₂⟩ := hz
     use (x₁ + y₁)
-    simp [←hx₂, ←hy₂, (Submodule.add_mem_iff_right (I ^ i) hx₁).mpr hy₁]
+    simp [← hx₂, ← hy₂, (Submodule.add_mem_iff_right (I ^ i) hx₁).mpr hy₁]
 
-include hq hp_mem in
-lemma p_pow_mod_p (G : MvPowerSeries (Fin 2) K) {l : ℕ} (l_pos : 0 < l) :
-    ∀ d, ((G ^ (q ^ l)) - ((G.expand (q ^ l) (q_pow_neZero hq)).map (σ^l))).coeff d
-      ∈ R.subtype '' I := by
-  intro d
-  have mem_aux : (G ^ (q ^ l) -
-    ((G.expand (q ^l) (q_pow_neZero hq)).map (σ^l))).coeff d ∈ R := by
-    /- this is by my theorem expand_char. -/
-    sorry
-  have pdvd : (p : R) ∣ ⟨_, mem_aux⟩ := by
-    sorry
-  obtain ⟨pk, hpk⟩ := pdvd
-  use ⟨_, mem_aux⟩
-  nth_rw 1 [hpk]
-  exact ⟨Ideal.IsTwoSided.mul_mem_of_left pk hp_mem, (by simp)⟩
+-- include hq hp_mem in
+-- lemma p_pow_mod_p (G : MvPowerSeries (Fin 2) K) {l : ℕ} (l_pos : 0 < l) :
+--     ∀ d, ((G ^ (q ^ l)) - ((G.expand (q ^ l) (q_pow_neZero hq)).map (σ^l))).coeff d
+--       ∈ R.subtype '' I := by
+--   intro d
+--   have mem_aux : (G ^ (q ^ l) -
+--     ((G.expand (q ^l) (q_pow_neZero hq)).map (σ^l))).coeff d ∈ R := by
+--     /- this is by my theorem expand_char. -/
+--     sorry
+--   have pdvd : (p : R) ∣ ⟨_, mem_aux⟩ := by
+--     sorry
+--   obtain ⟨pk, hpk⟩ := pdvd
+--   use ⟨_, mem_aux⟩
+--   nth_rw 1 [hpk]
+--   exact ⟨Ideal.IsTwoSided.mul_mem_of_left pk hp_mem, (by simp)⟩
 
+include hs in
+lemma refine_hs : ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
+  induction j with
+  | zero =>
+    simp
+  | succ k ih =>
+    intro a
+    rw [RingHom.coe_pow, Function.iterate_succ_apply']
+    exact hs ⟨_, ih _⟩
+
+include hs in
+lemma coeff_aux_mem {G : MvPowerSeries τ R} : ∀ (j : ℕ), ∀ (n : τ →₀ ℕ),
+  (G.map ((σ ^ j).comp R.subtype)).coeff n ∈ R := fun j n => refine_hs σ hs j (G n)
+
+-- include hp hI hp_mem in
+-- lemma sigma_pow_eq_iterateFrobenuis (G: MvPowerSeries τ (R ⧸ I)) {l : ℕ} (l_pos : 0 < l)  :
+--     haveI : ExpChar (R ⧸ I) p := Rchar_p hI hp_mem
+--     ∀ n, coeff n (G.map (iterateFrobenius _ p (t * l))) = coeff n (G.map ((σ ^ l).comp ))
+
+
+include hp hI hp_mem in
+lemma p_pow_mod_p [Finite τ] {G : MvPowerSeries τ R} {l : ℕ} (l_pos : 0 < l) :
+    G ^ (q ^ l) ≡ ((G.expand (q ^ l) (q_pow_neZero hq)).map ((σ^l).comp R.subtype)).toSubring _
+    (coeff_aux_mem σ hs l) [SMOD I.MvPowerSeries] := by
+  apply SModEq.sub_mem.mpr
+  simp [Ideal.MvPowerSeries]
+  intro n
+  have aux {f g : MvPowerSeries τ R} {n : τ →₀ ℕ} : (f - g) n = coeff n f - coeff n g := by rfl
+  rw [aux]
+  simp_rw [hq, ← pow_mul]
+  have pneq : p ≠ 0 := (NeZero.ne' p).symm
+  let φ := Ideal.Quotient.mk I
+  haveI : ExpChar (R ⧸ I) p := Rchar_p hI hp_mem
+  obtain eq_aux₁ := map_iterateFrobenius_expand (G.map φ) p (t * l) pneq
+
+  -- have : ((MvPowerSeries.map
+  --   (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
+  --   ((MvPowerSeries.map φ) G))) = MvPowerSeries.map φ ((G.expand (p ^ (t * l)) (pow_ne_zero _ pneq)).map (iterateFrobenius R p (t * l))) := sorry
+  have eq_zero : ∀ n, coeff n ((MvPowerSeries.map φ) G ^ p ^ (t * l)) - coeff n ((MvPowerSeries.map
+    (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
+    ((MvPowerSeries.map φ) G))) = 0:= by
+    simp [eq_aux₁]
+
+  -- have mem_aux : ∀ n, coeff n ((MvPowerSeries.map φ) G ^ p ^ (t * l)) - coeff n ((MvPowerSeries.map
+  --   (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
+  --   ((MvPowerSeries.map φ) G))) ∈ I := by
+  --   sorry
+
+
+
+  -- have eq_aux : (coeff n) (((MvPowerSeries.map (σ ^ l)) (ofSubring R
+  --   (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G))).toSubring R (coeff_aux_mem σ hs l))
+  --   = ⟨(σ ^ l) (coeff n (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G)), sigma_pow_mem σ hs l
+  --     ((coeff n) (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G))⟩ := sorry
+  sorry
+
+include hI ht hq hs hp_mem in
+/-- Forall `r m ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`, we have that
+  $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
+theorem pow_ModEq_aux
+    (G : MvPowerSeries τ R) [Finite τ] {n r l m : ℕ} (hn : n = q ^ r * m) (hl : 0 < l) :
+    (((G.expand (q ^ l) (q_pow_neZero hq))^n).map ((σ ^ l).comp R.subtype)).toSubring _
+      (coeff_aux_mem σ hs l)  ≡
+    (G ^ (q ^ l * n)) [SMOD (I^(r + 1)).MvPowerSeries] := by
+  have mod_aux (r : ℕ) : G ^ (q ^ l * q ^ r) ≡ (((G.expand (q^l) (q_pow_neZero hq)) ^ (q ^ r)).map
+    ((σ^l).comp R.subtype)).toSubring _
+    (coeff_aux_mem σ hs l) [SMOD (I^(r + 1)).MvPowerSeries] := by
+    induction r with
+    | zero =>
+      simp
+      refine SModEq.trans (p_pow_mod_p hI hq σ hs hp_mem hl) (by congr; simp)
+    | succ k ih =>
+      obtain ⟨a, a_mem, ha⟩ := exists_eq_right'.mpr <| SModEq.sub_mem.mp ih
+      have eq_aux : G ^ (q ^ k * q ^ l) =
+        (((G.expand (q ^ l) (q_pow_neZero hq)) ^ q ^ k).map ((σ ^ l).comp R.subtype)).toSubring
+        R (coeff_aux_mem σ hs l) + a := by rw [←ha]; ring
+      have mod_eq_aux :
+        (G ^ (q ^ k * q ^ l)) ^ q ≡
+        (((G.expand (q ^ l) (q_pow_neZero hq)) ^ q ^ (k + 1)).map ((σ ^ l).comp R.subtype)).toSubring
+        R (coeff_aux_mem σ hs l) [SMOD (I ^(k + 1 + 1)).MvPowerSeries]
+        := by
+        apply SModEq.sub_mem.mpr
+        obtain ⟨r, hr⟩ := exists_add_pow_prime_pow_eq hp.out
+          ((((G.expand (q ^ l) (q_pow_neZero hq)) ^ q ^ k).map ((σ ^ l).comp R.subtype)).toSubring
+          R (coeff_aux_mem σ hs l)) a t
+        nth_rw 3 [hq]
+        rw [eq_aux, hr]
+        have eq_aux' : (((G.expand (q ^ l) (q_pow_neZero hq)) ^ q ^ k).map ((σ^l).comp R.subtype)).toSubring
+          R (coeff_aux_mem σ hs l) ^ p ^ t =
+          (((G.expand (q^l) (q_pow_neZero hq)) ^ (q ^ (k + 1))).map ((σ^l).comp R.subtype)).toSubring R (coeff_aux_mem σ hs l) := by
+          rw [← hq]
+          ext n
+          simp [coeff_pow, pow_add, pow_one, pow_mul]
+        rw [eq_aux']
+        ring_nf
+        refine Submodule.add_mem (Ideal.MvPowerSeries _) ?_ ?_
+        · rw [mul_assoc _ _ r, ←pow_add]
+          have mem_aux : a * ↑p ∈ (I ^ (2 + k)).MvPowerSeries := by
+            rw [show I ^ (2 + k) = I ^ (k + 1) * I by ring]
+            apply MvPowerSeries.mul_mem_mul _ a_mem
+            unfold Ideal.MvPowerSeries
+            simp
+            have aux : (p : MvPowerSeries τ R) = C (p : R) := rfl
+            intro n
+            rw [aux, show C (p : R) n = coeff n (C (p : R)) by rfl, coeff_C]
+            by_cases hn : n = 0
+            · simp [if_pos hn, hp_mem]
+            · simp [if_neg hn]
+          exact Ideal.IsTwoSided.mul_mem_of_left _ mem_aux
+        · have aux : p ^ t = 1 + 1 + (p ^ t - 2) := by
+            have ge_aux : p ^ t ≥ 2 :=
+              le_trans (Nat.Prime.two_le hp.out) <| Nat.le_self_pow ht p
+            omega
+          rw [aux, pow_add, pow_add, show I ^ 2 * I ^ k = I ^ (k + 1) * I by ring]
+          simp
+          have mem_aux : a * a ∈ (I ^ (k + 1) * I).MvPowerSeries := by
+            apply MvPowerSeries.mul_mem_mul _ a_mem
+            unfold Ideal.MvPowerSeries
+            simp
+            intro n
+            obtain h1 := a_mem n
+            have subset_aux : I ^ (k + 1) ≤ I :=
+              Ideal.pow_le_self <| Ne.symm (Nat.zero_ne_add_one k)
+            exact subset_aux (a_mem n)
+          exact Ideal.IsTwoSided.mul_mem_of_left _ mem_aux
+      refine SModEq.trans ?_ mod_eq_aux
+      rw [←pow_mul]
+      congr! 1
+      ring
+  calc
+    _ ≡ (G ^ (q ^ l * q ^ r)) ^ m [SMOD (I^(r + 1)).MvPowerSeries] := by
+      rw [hn, pow_mul]
+      refine .trans ?_ (SModEq.pow _ (mod_aux r).symm)
+      apply congrArg Submodule.Quotient.mk
+      ext n
+      simp [coeff_pow]
+    _ ≡ _ [SMOD (I^(r + 1)).MvPowerSeries] := by
+      rw [←pow_mul, hn]; congr! 1
+      ring
 
 include ht hq hp_mem hs in
 /- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
@@ -1678,7 +1817,8 @@ lemma mem_ideal_aux' {m r: ℕ} {α : ℕ → K} (h : ∀ i ∈ range m, α i �
     rw [←hb₂, ←ha₂, this, map_add]
     ring_nf
 
-theorem congr_equiv_forward [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
+include hs₁ hs₂ in
+theorem congr_equiv_forward₀ [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
     {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0)
     (r : ℕ) :
     let f := RecurFun ht hq σ s hg
@@ -1690,6 +1830,12 @@ theorem congr_equiv_forward [UniformSpace K] [T2Space K] [DiscreteUniformity K] 
     refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
     simp [hα]
   have has_subst_β : PowerSeries.HasSubst β := PowerSeries.HasSubst.of_constantCoeff_zero' hβ
+  have le_order_aux₁ (b : ℕ) : b ≤ ((f.coeff b) • β ^ b).order := by
+    refine .trans (.trans ?_ (PowerSeries.le_order_pow _ b)) PowerSeries.le_order_smul
+
+    -- rw [PowerSeries.order_pow]
+    sorry
+  have le_order_aux₂ (b : ℕ) : b ≤ ((f.coeff b) • (α.map R.subtype) ^ b).order := sorry
   rw [PowerSeries.subst_express_as_tsum _ has_subst_α, PowerSeries.subst_express_as_tsum _ has_subst_β,
     Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
     Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
@@ -1700,15 +1846,31 @@ theorem congr_equiv_forward [UniformSpace K] [T2Space K] [DiscreteUniformity K] 
   simp_rw [PowerSeries.coeff_smul, smul_eq_mul, ← mul_sub]
   /- now only need to prove that α^i ≡ β^i (mod I ^ (r + multiplicity q i)) and use the
   first technical lemma -/
+  have mem_aux : ((PowerSeries.coeff n) ((PowerSeries.map R.subtype) α ^ i) -
+    (PowerSeries.coeff n) (β ^ i)) ∈ (algebraMap R K) '' ↑(I ^ (multiplicity q i + r)) := by
+    /- here need to use the same strategy as in the first technical lemma-/
+    sorry
+  have mem_aux' : ⟨_, image_of_incl_mem _ mem_aux⟩ ∈ (I ^ ( multiplicity q i + r)) := by
+    obtain ⟨a, ha₁, ha₂⟩ := mem_aux
+    simp_rw [← ha₂]
+    exact ha₁
+  obtain h1 := coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg i r ⟨_, image_of_incl_mem _ mem_aux⟩ mem_aux'
+  simp only [Subring.subtype_apply, Set.mem_image, SetLike.mem_coe, Subtype.exists,
+    exists_and_right, exists_eq_right] at h1
+  obtain ⟨ha₁, ha₂⟩ := h1
+  simpa using ⟨_ , ⟨ha₁, ⟨ha₂, rfl⟩⟩⟩
+  · intro b hb
+    simp only [mem_range, not_lt] at hb
+    refine PowerSeries.coeff_of_lt_order _ <| (ENat.add_one_le_iff (ENat.coe_ne_top _)).mp
+      <| (.trans (by norm_cast) (le_order_aux₁ _))
+  · intro b hb
+    simp only [mem_range, not_lt] at hb
+    refine PowerSeries.coeff_of_lt_order _ <| (ENat.add_one_le_iff (ENat.coe_ne_top _)).mp
+      <| (.trans (by norm_cast) (le_order_aux₂ _))
+  · exact PowerSeries.Summable.increase_order fun n => (le_order_aux₁ n)
+  · exact PowerSeries.Summable.increase_order fun n => (le_order_aux₂ n)
 
-  sorry
-  sorry
-  sorry
-  sorry
-  sorry
-
-
-
+include hs₁ hs₂ in
 theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
     {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0) (r : ℕ) :
     let f := RecurFun ht hq σ s hg
@@ -1716,7 +1878,7 @@ theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ :
       (∀ n, PowerSeries.coeff n (f.subst (α.map R.subtype)) - PowerSeries.coeff n (f.subst β)
         ∈ R.subtype '' ↑(I ^ r)) := by
   constructor
-  · exact congr_equiv_forward ht hq σ s hg hs₀ hα hβ r
+  · exact congr_equiv_forward₀ ht hq σ s hs₁ hs₂ hg hs₀ hα hβ r
   sorry
 
 end PartIV
