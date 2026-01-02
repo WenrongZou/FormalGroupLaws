@@ -1830,12 +1830,12 @@ theorem congr_equiv_forward₀ [UniformSpace K] [T2Space K] [DiscreteUniformity 
     refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
     simp [hα]
   have has_subst_β : PowerSeries.HasSubst β := PowerSeries.HasSubst.of_constantCoeff_zero' hβ
-  have le_order_aux₁ (b : ℕ) : b ≤ ((f.coeff b) • β ^ b).order := by
-    refine .trans (.trans ?_ (PowerSeries.le_order_pow _ b)) PowerSeries.le_order_smul
-
-    -- rw [PowerSeries.order_pow]
-    sorry
-  have le_order_aux₂ (b : ℕ) : b ≤ ((f.coeff b) • (α.map R.subtype) ^ b).order := sorry
+  have le_order_aux₁ (b : ℕ) : b ≤ ((f.coeff b) • β ^ b).order :=
+    .trans (.trans (.trans (by simp) (nsmul_le_nsmul_right (PowerSeries.one_le_order hβ) b))
+      (PowerSeries.le_order_pow _ b)) PowerSeries.le_order_smul
+  have le_order_aux₂ (b : ℕ) : b ≤ ((f.coeff b) • (α.map R.subtype) ^ b).order :=
+    .trans (.trans (.trans (by simp) (nsmul_le_nsmul_right (PowerSeries.one_le_order
+      (by simp [hα])) b)) (PowerSeries.le_order_pow _ b)) PowerSeries.le_order_smul
   rw [PowerSeries.subst_express_as_tsum _ has_subst_α, PowerSeries.subst_express_as_tsum _ has_subst_β,
     Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
     Summable.map_tsum _ _ (PowerSeries.WithPiTopology.continuous_coeff K n),
@@ -1871,15 +1871,47 @@ theorem congr_equiv_forward₀ [UniformSpace K] [T2Space K] [DiscreteUniformity 
   · exact PowerSeries.Summable.increase_order fun n => (le_order_aux₂ n)
 
 include hs₁ hs₂ in
+theorem congr_equiv_backward_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    (hs₀ : s 0 = 0)
+    {α : PowerSeries K} (hα : α.constantCoeff = 0) (r : ℕ) :
+    let f := RecurFun ht hq σ s hg
+    (∀ n, α.coeff n ∈ R.subtype '' ↑(I ^ r)) →
+      ∀ n, PowerSeries.coeff n ((inv_RecurFun ht hq σ s hg hg_unit).subst α)
+        ∈ R.subtype '' ↑(I ^ r) := sorry
+
+include hs₁ hs₂ hg_unit in
 theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
     {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0) (r : ℕ) :
     let f := RecurFun ht hq σ s hg
+    let F := (inv_RecurFun ht hq σ s hg hg_unit).subst
+      (f.toMvPowerSeries (0 : Fin 2) + f.toMvPowerSeries 1)
     (∀ n, α.coeff n - β.coeff n ∈ R.subtype '' ↑(I ^ r)) ↔
       (∀ n, PowerSeries.coeff n (f.subst (α.map R.subtype)) - PowerSeries.coeff n (f.subst β)
         ∈ R.subtype '' ↑(I ^ r)) := by
+  intro f F
   constructor
   · exact congr_equiv_forward₀ ht hq σ s hs₁ hs₂ hg hs₀ hα hβ r
-  sorry
+  · intro h n
+    let δ := (inv_RecurFun ht hq σ s hg hg_unit).subst (f.subst (α.map R.subtype) - f.subst β)
+    /- δ (X) ≡ 0 [SMOD I ^ r] -/
+    have δ_coeff_mem : ∀ n, PowerSeries.coeff n δ ∈ R.subtype '' ↑(I ^ r) := by
+      refine congr_equiv_backward_aux ht hq σ s hs₁ hs₂ hg hg_unit hs₀ ?_ r h
+      rw [map_sub, PowerSeries.constantCoeff, PowerSeries.constantCoeff_subst_zero hβ
+        (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_zero (by simp [hα])
+          (constantCoeff_RecurFun ..), sub_zero]
+    /- here β (X) = f⁻¹ (f (δ(X)) + f (α (X))), and follow by the first functional equation lemma,
+    F (X, Y) = f⁻¹ (f (X) + f (Y)) has coefficient in R, and F (0, Y) = 0, (this followed by F is a
+    formal group law), and δ (X) ≡ 0 [SMOD I ^ r]. here I could try to prove that for any
+    formal group law F (X, Y), F (X, Y) = X + Y * f(X, Y). -/
+    have eq_aux : β = F.subst ![δ, β] := sorry
+    have mem_aux : ∀ n, PowerSeries.coeff n α - PowerSeries.coeff n (F.subst ![δ, β])
+      ∈ R.subtype '' ↑(I ^ r) := sorry
+
+
+
+
+
+    sorry
 
 end PartIV
 
