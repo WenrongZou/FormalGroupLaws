@@ -450,7 +450,7 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
 
 
 
-variable {F : FormalGroup R} {f : PowerSeries R}
+variable (F : FormalGroup R) {f : PowerSeries R}
 
 @[simp]
 lemma PowerSeries.coeff_coe  (n : ℕ) : MvPowerSeries.coeff (Finsupp.single () n) f
@@ -705,7 +705,7 @@ theorem subst_X_eq_X  :
   subst ![PowerSeries.X, 0] F.toFun = PowerSeries.X (R := R) := by
   have h₀ : IsUnit (PowerSeries.coeff 1 (subst ![PowerSeries.X, 0] F.toFun) (R := R)) := by
     simp [coeff_of_X₀_of_subst_X₀]
-  obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ constantCoeff_of_subst_X₀
+  obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ (constantCoeff_of_subst_X₀ F)
   have eq_aux :
     (PowerSeries.subst g) ∘ (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) ∘
     (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) =
@@ -714,7 +714,7 @@ theorem subst_X_eq_X  :
     rw [self_comp_aux]
   simp [←Function.comp_assoc, hg₂] at eq_aux
   exact (PowerSeries.subst_eq_id_iff_eq_X (subst ![PowerSeries.X, 0] F.toFun)
-    (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₀))).mp eq_aux
+    (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₀ F))).mp eq_aux
 
 
 /-- Given a formal group law `F`, `F(0, X) = X`. -/
@@ -722,7 +722,7 @@ theorem subst_X₁_eq_X₁ :
   subst ![0, PowerSeries.X] F.toFun = PowerSeries.X (R := R) := by
   have h₀ : IsUnit (PowerSeries.coeff 1 (subst ![0, PowerSeries.X] F.toFun) (R := R)) := by
     simp [coeff_of_X₁_of_subst_X₁]
-  obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ constantCoeff_of_subst_X₁
+  obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ (constantCoeff_of_subst_X₁ F)
   have eq_aux :
     (PowerSeries.subst g) ∘ (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) ∘
     (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) =
@@ -731,7 +731,7 @@ theorem subst_X₁_eq_X₁ :
     rw [self_comp_aux']
   simp [←Function.comp_assoc, hg₂] at eq_aux
   exact (PowerSeries.subst_eq_id_iff_eq_X (subst ![0, PowerSeries.X] F.toFun)
-    (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₁))).mp eq_aux
+    (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₁ F))).mp eq_aux
 
 lemma zero_add_eq_self {f : MvPowerSeries σ R} (h : constantCoeff f = 0) :
   0 +[F] f = f := calc
@@ -828,6 +828,26 @@ theorem decomp_X_add : ∃ G, F.toFun = X₀ + X₁ * G := by
   rw [← hG]
   ring
 
+/- given a formal group law `F (X, Y)`, then there is a multivariate power series`G (X, Y)` with
+two variables, such that F = Y + X * G (X, Y). -/
+theorem decomp_Y_add : ∃ G, F.toFun = X₁ + X₀ * G := by
+  have dvd_aux : X₀ ∣ F.toFun - X₁ := by
+    refine X_dvd_iff.mpr ?_
+    intro m hm
+    have meq : m = single 1 (m 1) := by
+      ext i; fin_cases i <;> simp [hm]
+    rw [meq, map_sub]
+    by_cases hm₁ : m 1 = 1
+    · rw [hm₁, F.lin_coeff_Y, coeff_X, if_pos rfl, sub_self]
+    · rw [coeff_pow_X₁, coeff_X, if_neg, sub_zero]
+      refine ne_iff.mpr ?_
+      use 1
+      · simpa
+      · simpa
+  obtain ⟨G, hG⟩ := dvd_aux
+  use G
+  rw [← hG]
+  ring
 
 /-- Let `G₁, G₂` be two formal group laws over `CommRing A`. A homomorphism (over `A`)
   `F (X, Y) → G (X, Y)` is a power series `α(X) = b₁ * X + b₂ * X ^ 2 + ⋯` with coefficients

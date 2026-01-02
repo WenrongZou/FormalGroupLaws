@@ -24,6 +24,14 @@ def Ideal.MvPowerSeries : Ideal (MvPowerSeries σ R) where
   smul_mem' := fun c {_} hx _ ↦
     I.sum_mem <| fun d _ => mul_mem_left I ((coeff d.1) c) (hx d.2)
 
+def Ideal.PowerSeries : Ideal (PowerSeries R) where
+  carrier := {p | ∀ n, p.coeff n ∈ I}
+  add_mem' := fun ha hb n => add_mem (ha n) (hb n)
+  zero_mem' := fun _ => (Submodule.Quotient.mk_eq_zero I).mp rfl
+  smul_mem' := fun f g hx n ↦ by
+    rw [smul_eq_mul, PowerSeries.coeff_mul]
+    refine I.sum_mem fun d hd => mul_mem_left I ((PowerSeries.coeff d.1 f)) (hx d.2)
+
 omit [DecidableEq σ] in
 lemma MvPowerSeries.mul_mem_mul {a b : MvPowerSeries σ R} {J : Ideal R}
     (ha : a ∈ I.MvPowerSeries) (hb : b ∈ J.MvPowerSeries) :
@@ -32,31 +40,13 @@ lemma MvPowerSeries.mul_mem_mul {a b : MvPowerSeries σ R} {J : Ideal R}
 
 section ToSubring
 
-variable {σ : Type*} (p : MvPowerSeries σ R) (T : Subring R)
+variable {σ : Type*} (T : Subring R)
 
--- /-- Given a multivariate formal power series whose coefficients are in some subring, return
--- the multivariate formal power series whose coefficients are in the ambient ring. -/
--- def MvPowerSeries.ofSubring (p : MvPowerSeries σ T) : MvPowerSeries σ R :=
---   fun n => (p n : R)
+-- /- If `F` is a formal group with coefficient in `T`, where `T` is a subring of `R`, then
+--   `F` is a formal group with coefficient in `R`.-/
+-- def FormalGroup.ofSubring : FormalGroup T → FormalGroup R := fun F => F.map (Subring.subtype T)
 
--- def PowerSeries.ofSubring (p : PowerSeries T) : PowerSeries R :=
---   fun n => (p n : R)
-
--- @[simp]
--- theorem coeff_ofSubring {n : σ →₀ ℕ} (p : MvPowerSeries σ T) : (ofSubring T p).coeff n = p.coeff n
---   := rfl
-
-variable (F : FormalGroup R)
-
--- lemma subst_aux (hp : ∀ n, p n ∈ T) : ∀ n, (HasSubst n) → subst n p = subst n (p.toSubring T hp) := by
---   sorry
-
-/- If `F` is a formal group with coefficient in `T`, where `T` is a subring of `R`, then
-  `F` is a formal group with coefficient in `R`.-/
-def FormalGroup.ofSubring : FormalGroup T → FormalGroup R := fun F => F.map (Subring.subtype T)
-
-
-def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
+def FormalGroup.toSubring (F : FormalGroup R) (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
   toFun := F.toFun.toSubring _ hF
   zero_constantCoeff := by
     rw [← @coeff_zero_eq_constantCoeff_apply]
@@ -135,6 +125,19 @@ def FormalGroup.toSubring (hF : ∀ n, F.toFun n ∈ T) : FormalGroup T where
         simp [coeff_mul]
         rw [Y₂, Y₂, ←eq_aux 2]
         simp [coeff_pow]
+
+lemma CommFormalGroup.toSubring_comm (F : CommFormalGroup R) (hF : ∀ n, F.toFun n ∈ T) :
+    F.toFun.toSubring _ hF = (F.toFun.toSubring _ hF).subst ![X₁, X₀] := sorry
+
+def CommFormalGroup.toSubring (F : CommFormalGroup R) (hF : ∀ n, F.toFun n ∈ T) :
+    CommFormalGroup T where
+  toFun := F.toFun.toSubring _ hF
+  zero_constantCoeff := ((F : FormalGroup R).toSubring _ hF).zero_constantCoeff
+  lin_coeff_X := ((F : FormalGroup R).toSubring _ hF).lin_coeff_X
+  lin_coeff_Y := ((F : FormalGroup R).toSubring _ hF).lin_coeff_Y
+  assoc := ((F : FormalGroup R).toSubring _ hF).assoc
+  comm := F.toSubring_comm _ hF
+-- def CommFormalGroup.toSubring
 
 end ToSubring
 

@@ -488,16 +488,28 @@ lemma constantCoeff_inv_RecurFun :
     (inv_RecurFun ht hq σ s hg hg_unit).constantCoeff = 0 := by
   simp [inv_RecurFun, PowerSeries.subst_inv, PowerSeries.invFun_aux]
 
+/-- f⁻¹ (f (X)) = X. -/
+lemma inv_RecurFun_comp_RecurFun :
+    let f := RecurFun ht hq σ s hg
+    let f_inv := inv_RecurFun ht hq σ s hg hg_unit
+    f_inv.subst f = PowerSeries.X := sorry
+
+/-- f⁻¹ (f (X)) = X. -/
+lemma RecurFun_comp_inv_RecurFun :
+    let f := RecurFun ht hq σ s hg
+    let f_inv := inv_RecurFun ht hq σ s hg hg_unit
+    f.subst f_inv = PowerSeries.X := sorry
+
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, and we will prove this to be
 a formal group law over coefficient ring `R`. Now we denote `F(X,Y) = f_g⁻¹(f_g(X) + f_g(Y))`
 and `f (X) = f_g (X)` for convention. -/
 def inv_add_RecurFun :=
-    (inv_RecurFun ht hq σ s hg hg_unit).subst ((RecurFun ht hq σ s hg).subst (X₀ (R := K)) +
-    (RecurFun ht hq σ s hg).subst X₁)
+    (inv_RecurFun ht hq σ s hg hg_unit).subst ((RecurFun ht hq σ s hg).toMvPowerSeries
+      (0 : Fin 2) + (RecurFun ht hq σ s hg).toMvPowerSeries 1)
 
 /-- constant coefficient of $f_g(X)+f_g(Y)$ is zero-/
-lemma constantCoeff_add_RecurFun : constantCoeff ((RecurFun ht hq σ s hg).subst (X₀ (R := K)) +
-    (RecurFun ht hq σ s hg).subst X₁) = 0 := by
+lemma constantCoeff_add_RecurFun : constantCoeff ((RecurFun ht hq σ s hg).toMvPowerSeries
+    (0 : Fin 2) + (RecurFun ht hq σ s hg).toMvPowerSeries 1) = 0 := by
   rw [RingHom.map_add, PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun ..,
     PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun .., add_zero]
 
@@ -515,6 +527,7 @@ lemma coeff_X_inv_add_RecurFun :
   · simp [hx₀, constantCoeff_inv_RecurFun]
   rw [coeff_pow, Finset.sum_eq_zero _, smul_zero]
   intro d hd
+  unfold PowerSeries.toMvPowerSeries
   simp only [Fin.isValue, mem_finsuppAntidiag] at hd
   have exist_aux : ∃ i ∈ range x, d i = 0 := by
     have xge : x ≥ 2 := by omega
@@ -1204,6 +1217,47 @@ lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity
       simpa using (Subring.add_mem _ (F_coeff_mem_ind ht hq σ s hg hg_unit h hk)
         (RModEq_aux₂ ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs0 h hk))
 
+def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
+  toFun := inv_add_RecurFun ht hq σ s hg hg_unit
+  zero_constantCoeff := sorry
+  lin_coeff_X := sorry
+  lin_coeff_Y := sorry
+  assoc := sorry
+  comm := sorry
+
+def CommFormalGroup.InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    (hs₀ : s 0 = 0) : CommFormalGroup R :=
+    (CommFormalGroup.InvAdd_RecurFun_Aux ht hq σ s hg hg_unit).toSubring _
+      (coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀)
+
+include hs hp_mem hs₁ hs₂ in
+theorem decomp_InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    (hs₀ : s 0 = 0) : ∃ (G : MvPowerSeries (Fin 2) R),
+    (inv_add_RecurFun ht hq σ s hg hg_unit) = X₁ + X₀ * G.map R.subtype := by
+  obtain ⟨G, hG⟩ := decomp_Y_add (CommFormalGroup.InvAdd_RecurFun ht hq σ hs hp_mem s hs₁
+    hs₂ hg hg_unit hs₀ : FormalGroup R)
+  use G
+  simp only [CommFormalGroup.InvAdd_RecurFun, CommFormalGroup.toSubring,
+    CommFormalGroup.InvAdd_RecurFun_Aux] at hG
+  have : ∀ n, coeff n (inv_add_RecurFun ht hq σ s hg hg_unit) =
+    (coeff n (X₁ + X₀ * G) : R) := by simp [← hG]
+  ext n
+  simp only [this, map_add, Subring.coe_add]
+  congr
+  · simp_rw [coeff_X]
+    split_ifs with h <;> simp
+  rw [coeff_mul, coeff_mul]
+  simp only [AddSubmonoidClass.coe_finset_sum, Subring.coe_mul, coeff_map, Subring.subtype_apply]
+  congr! 2 with l  hl
+  simp_rw [coeff_X]
+  split_ifs with h <;> simp
+
+include hs hp_mem hs₁ hs₂ in
+theorem decomp_InvAdd_RecurFun_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    (hs₀ : s 0 = 0) : ∃ (G : MvPowerSeries (Fin 2) R),
+    (inv_add_RecurFun ht hq σ s hg hg_unit).toSubring _
+      (coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀) = X₁ + X₀ * G := sorry
+
 end PartI
 
 section PartII
@@ -1879,39 +1933,146 @@ theorem congr_equiv_backward_aux [UniformSpace K] [T2Space K] [DiscreteUniformit
       ∀ n, PowerSeries.coeff n ((inv_RecurFun ht hq σ s hg hg_unit).subst α)
         ∈ R.subtype '' ↑(I ^ r) := sorry
 
-include hs₁ hs₂ hg_unit in
+lemma coeff_pow_mem {f : MvPowerSeries τ K} (h : ∀ i, f.coeff i ∈ R) {n : ℕ} :
+    ∀ i, (f ^ n).coeff i ∈ R :=
+  fun _ => (coeff_pow f _) ▸  Subring.sum_mem _ fun l _ => Subring.prod_mem R fun c _ ↦ h (l c)
+
+lemma PowerSeries.coeff_pow_mem {f : PowerSeries K} (h : ∀ i, f.coeff i ∈ R) {n : ℕ} :
+    ∀ i, (f ^ n).coeff i ∈ R :=
+  fun _ => (coeff_pow _ _ f) ▸  Subring.sum_mem _ fun l _ => Subring.prod_mem R fun c _ ↦ h (l c)
+
+include hs hp_mem hs₁ hs₂ hg_unit in
 theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
-    {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0) (r : ℕ) :
+    {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0)
+    (r : ℕ) :
     let f := RecurFun ht hq σ s hg
-    let F := (inv_RecurFun ht hq σ s hg hg_unit).subst
-      (f.toMvPowerSeries (0 : Fin 2) + f.toMvPowerSeries 1)
     (∀ n, α.coeff n - β.coeff n ∈ R.subtype '' ↑(I ^ r)) ↔
       (∀ n, PowerSeries.coeff n (f.subst (α.map R.subtype)) - PowerSeries.coeff n (f.subst β)
         ∈ R.subtype '' ↑(I ^ r)) := by
-  intro f F
+  intro f
+  let F := inv_add_RecurFun ht hq σ s hg hg_unit
+  let f_inv := inv_RecurFun ht hq σ s hg hg_unit
   constructor
   · exact congr_equiv_forward₀ ht hq σ s hs₁ hs₂ hg hs₀ hα hβ r
   · intro h n
-    let δ := (inv_RecurFun ht hq σ s hg hg_unit).subst (f.subst (α.map R.subtype) - f.subst β)
+    let δ := f_inv.subst (f.subst β - f.subst (α.map R.subtype))
     /- δ (X) ≡ 0 [SMOD I ^ r] -/
     have δ_coeff_mem : ∀ n, PowerSeries.coeff n δ ∈ R.subtype '' ↑(I ^ r) := by
-      refine congr_equiv_backward_aux ht hq σ s hs₁ hs₂ hg hg_unit hs₀ ?_ r h
-      rw [map_sub, PowerSeries.constantCoeff, PowerSeries.constantCoeff_subst_zero hβ
+      refine congr_equiv_backward_aux ht hq σ s hs₁ hs₂ hg hg_unit hs₀ ?_ r ?_
+      · rw [map_sub, PowerSeries.constantCoeff, PowerSeries.constantCoeff_subst_zero hβ
         (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_zero (by simp [hα])
           (constantCoeff_RecurFun ..), sub_zero]
+      · intro d
+        obtain ⟨x, hx₁, hx₂⟩ := h d
+        use -x
+        exact ⟨by simpa, by simp [map_neg, hx₂]⟩
+    have δ_coeff_mem_R : ∀ n, (PowerSeries.coeff n) δ ∈ R :=
+      fun n ↦ image_of_incl_mem ((PowerSeries.coeff n) δ) (δ_coeff_mem n)
+    let δ' := PowerSeries.toSubring δ _ δ_coeff_mem_R
     /- here β (X) = f⁻¹ (f (δ(X)) + f (α (X))), and follow by the first functional equation lemma,
     F (X, Y) = f⁻¹ (f (X) + f (Y)) has coefficient in R, and F (0, Y) = 0, (this followed by F is a
     formal group law), and δ (X) ≡ 0 [SMOD I ^ r]. here I could try to prove that for any
     formal group law F (X, Y), F (X, Y) = X + Y * f(X, Y). -/
-    have eq_aux : β = F.subst ![δ, β] := sorry
-    have mem_aux : ∀ n, PowerSeries.coeff n α - PowerSeries.coeff n (F.subst ![δ, β])
-      ∈ R.subtype '' ↑(I ^ r) := sorry
-
-
-
-
-
-    sorry
+    have constantCoeff_δ : constantCoeff δ = 0 := by
+      unfold δ
+      rw [PowerSeries.constantCoeff_subst_zero]
+      · rw [← sub_zero 0, map_sub]
+        congr
+        · rw [PowerSeries.constantCoeff_subst_zero hβ (constantCoeff_RecurFun ..)]
+        · rw [PowerSeries.constantCoeff_subst_zero (by simp [hα]) (constantCoeff_RecurFun ..)]
+      · exact constantCoeff_inv_RecurFun ht hq σ s hg hg_unit
+    have has_subst_aux : HasSubst ![δ, (PowerSeries.map R.subtype) α] :=
+      HasSubst.FinPairing constantCoeff_δ (by simp [hα])
+    have has_subst_aux' : HasSubst ![δ', α] := by
+      refine HasSubst.FinPairing ?_ (by simp [hα])
+      simpa [δ', PowerSeries.toSubring] using (Subring.coe_eq_zero_iff R).mp constantCoeff_δ
+    have eq_aux₀ : f.subst δ =  f.subst β - f.subst (α.map R.subtype) := by
+      unfold δ
+      have : PowerSeries.HasSubst (PowerSeries.subst β f - PowerSeries.subst
+        ((PowerSeries.map R.subtype) α) f) := by
+        refine PowerSeries.HasSubst.of_constantCoeff_zero' ?_
+        rw [map_sub, PowerSeries.constantCoeff, PowerSeries.constantCoeff_subst_zero hβ
+          (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_zero (by simp [hα])
+          (constantCoeff_RecurFun ..), sub_zero]
+      rw [← PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.of_constantCoeff_zero' rfl)
+        this, RecurFun_comp_inv_RecurFun, PowerSeries.subst_X this]
+    have eq_aux : β = F.subst ![δ, α.map R.subtype] := by
+      have : f.subst β = f.subst (α.map R.subtype) + f.subst δ := by
+        rw [eq_aux₀]
+        ring_nf
+      have has_subst_const {i : Fin 2}: HasSubst fun (x : Unit) ↦ (X i (R := K)) :=
+        (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _))
+      calc
+        _ = f_inv.subst (f.subst β) := by
+          rw [← PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.of_constantCoeff_zero'
+            (constantCoeff_RecurFun ..)) ((PowerSeries.HasSubst.of_constantCoeff_zero' hβ)),
+            inv_RecurFun_comp_RecurFun,
+            PowerSeries.subst_X (PowerSeries.HasSubst.of_constantCoeff_zero' hβ)]
+        _ = _ := by
+          simp [this, F, inv_add_RecurFun]
+          simp_rw [PowerSeries.subst]
+          rw [subst_comp_subst_apply _ has_subst_aux, subst_congr]
+          funext i
+          rw [subst_add has_subst_aux, subst_comp_subst_apply has_subst_const has_subst_aux,
+            subst_comp_subst_apply has_subst_const
+            has_subst_aux, subst_X has_subst_aux, subst_X has_subst_aux,
+            _root_.add_comm]
+          rfl
+          · refine PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero ?_
+            rw [map_add, constantCoeff_subst_zero, constantCoeff_subst_zero, add_zero]
+            all_goals simp [constantCoeff_RecurFun ht hq σ s hg]
+    have β_coeff_mem_R : ∀ d, PowerSeries.coeff d β ∈ R := by
+      rw [eq_aux]
+      intro d
+      rw [PowerSeries.coeff, coeff_subst has_subst_aux, finsum_eq_sum _
+        (coeff_subst_finite has_subst_aux F (Finsupp.single () d))]
+      refine Subring.sum_mem _ ?_
+      intro c hc
+      rw [smul_eq_mul]
+      refine Subring.mul_mem _ ?_ ?_
+      exact coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀ c
+      simp only [Finsupp.prod, Nat.succ_eq_add_one, Nat.reduceAdd, PowerSeries.coeff_coe]
+      rw [PowerSeries.coeff_prod]
+      refine Subring.sum_mem _ ?_
+      intro c' hc'
+      refine Subring.prod_mem _ ?_
+      intro i hi
+      fin_cases i
+      · simpa using PowerSeries.coeff_pow_mem δ_coeff_mem_R  _
+      · simpa using PowerSeries.coeff_pow_mem (by simp) _
+    let β' := β.toSubring _ β_coeff_mem_R
+    let F' := F.toSubring _ (coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀)
+    have coeff_δ_eq : ∀ d, PowerSeries.coeff d δ = δ'.coeff d := by simp [δ']
+    have coeff_β_eq : ∀ d, β.coeff d = β'.coeff d := by simp [β']
+    have eq_aux' : β' = F'.subst ![δ', α] := by
+      ext n
+      have aux {a : R} : R.subtype a = R.subtype.toAddMonoidHom a := rfl
+      rw [← coeff_β_eq, eq_aux, PowerSeries.coeff, coeff_subst has_subst_aux,
+        PowerSeries.coeff, coeff_subst has_subst_aux', ← Subring.subtype_apply, aux,
+        AddMonoidHom.map_finsum _ (coeff_subst_finite has_subst_aux' F' (Finsupp.single () n)),
+          finsum_congr]
+      intro d
+      simp [F', δ', PowerSeries.coeff_mul]
+      congr! 2 with l hl
+      all_goals simp [PowerSeries.coeff_pow]
+    obtain ⟨G, hG⟩ := decomp_InvAdd_RecurFun_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀
+    rw [coeff_β_eq]
+    have mem_ideal_MvPowerSeries_aux : (δ' * subst ![δ', α] G) ∈ (I ^ r).PowerSeries := by
+      refine Ideal.IsTwoSided.mul_mem_of_left _ ?_
+      simp only [Ideal.PowerSeries, Submodule.mem_mk, AddSubmonoid.mem_mk, AddSubsemigroup.mem_mk,
+        Set.mem_setOf_eq]
+      intro n
+      simp only [Subring.subtype_apply, coeff_δ_eq, Set.mem_image, SetLike.mem_coe,
+        SetLike.coe_eq_coe, exists_eq_right] at δ_coeff_mem
+      exact δ_coeff_mem _
+    have mem_aux : α.coeff n - β'.coeff n ∈ I ^ r := by
+      simp_rw [eq_aux', F', F, hG, subst_add has_subst_aux', subst_mul has_subst_aux',
+        subst_X has_subst_aux']
+      simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Matrix.cons_val_one,
+        Matrix.cons_val_fin_one, Matrix.cons_val_zero, map_add, sub_add_cancel_left, neg_mem_iff]
+      exact Submodule.mem_comap.mp (mem_ideal_MvPowerSeries_aux n)
+    use α.coeff n - β'.coeff n
+    simpa
 
 end PartIV
 
