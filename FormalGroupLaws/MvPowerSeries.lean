@@ -242,17 +242,6 @@ open MvPowerSeries
 
 end
 
-open PowerSeries in
-theorem order_eq_order {φ : PowerSeries R} : φ.order = MvPowerSeries.order φ := by
-  refine eq_of_le_of_ge ?_ ?_
-  · refine MvPowerSeries.le_order fun d hd => by
-      have : coeff ↑(Finsupp.degree d) φ = 0 := coeff_of_lt_order _ hd
-      have eq_aux : d.degree = d () := Finset.sum_eq_single _ (by simp) (by simp)
-      exact (PowerSeries.coeff_def rfl (R := R)) ▸ (eq_aux ▸ this)
-  · refine le_order φ (MvPowerSeries.order φ) fun i hi => by
-      rw [←Finsupp.degree_single () i] at hi
-      exact MvPowerSeries.coeff_of_lt_order hi
-
 section
 
 omit [Algebra R S]
@@ -354,5 +343,6 @@ theorem map_iterateFrobenius_expand (f : MvPowerSeries σ R) [Finite σ] (p n : 
 
 
 section
+
 
 end

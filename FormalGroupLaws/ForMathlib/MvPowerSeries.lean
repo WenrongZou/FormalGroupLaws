@@ -76,6 +76,21 @@ theorem PowerSeries.le_order_pow_n (hφ : φ.constantCoeff = 0) {n : ℕ} :
   simp
   exact le_mul_of_one_le_right' h
 
+lemma PowerSeries.le_order_subst_left {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0) :
+    φ.order ≤ (φ.subst f).order  := sorry
+
+lemma PowerSeries.le_order_subst_right {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0)
+    (hφ : φ.constantCoeff = 0) :
+    f.order ≤ (φ.subst f).order  := sorry
+
+lemma PowerSeries.le_order_subst_left' {f : PowerSeries R} (hf : f.constantCoeff = 0) :
+    φ.order ≤ PowerSeries.order (φ.subst f) := sorry
+
+lemma PowerSeries.le_order_subst_right' {f : PowerSeries R} (hφ : f.constantCoeff = 0)
+    (hf : φ.constantCoeff = 0) :
+    f.order ≤ PowerSeries.order (φ.subst f) := sorry
+
+
 theorem PowerSeries.expand_eq_expand :
     MvPowerSeries.expand p hp φ = PowerSeries.expand p hp φ := sorry
 
