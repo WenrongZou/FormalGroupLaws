@@ -237,94 +237,69 @@ lemma refinement_hs₂ : ∀ (i r : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑
 
 include hs₂ in
 /-- for all natural number `i` and `r`, for all element `b ∈ K`, then
-`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
-lemma refinement_hs₂'_aux : ∀ (i j r : ℕ), ∀ (b : K), (∀ a, a ∈ (I^(r + j))
-    → b * a ∈ R.subtype '' ↑(I ^ j)) → (∀ a, a ∈ (I^(r + j))
-    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^j)) := by
-  intro i j
-  induction j with
-  | zero =>
-    intro r b h
-    rw [add_zero]
-
-    sorry
-  | succ k ih =>
-
-    sorry
-
-
+`I ^ r * b ⊆ I` implies `I ^ r * (σ ^ i) (b) ⊆ I`. -/
+lemma hs₂_aux : ∀ (i r : ℕ), ∀ (b : K), (∀ a, (a ∈ (I^r))
+    → b * a ∈ R.subtype '' I) → (∀ a, a ∈ (I^r)
+    → ((σ ^ i) b) * a ∈ R.subtype '' I) := by
+  intro i r b h a ha
+  have h' : ∀ a, a ∈ R.subtype '' ↑(I ^ r) → b * a ∈ R.subtype '' I := by
+    intro x hx
+    have : ⟨x, image_of_incl_mem x hx⟩ ∈ I ^ r := by
+      obtain ⟨y, hy₁, hy₂⟩ := hx
+      simpa [← hy₂]
+    obtain ⟨y, hy₁, hy₂⟩ := h _ this
+    use y
+  obtain ⟨x, hx₁, hx₂⟩ := refinement_hs₂ σ hs₂ i r b h' a (by simpa)
+  use x
 
 include hs₂ in
 /-- for all natural number `i` and `r`, for all element `b ∈ K`, then
 `I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
-lemma refinement_hs₂' : ∀ (i r j : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^(r + j)))
-    → b * a ∈ R.subtype '' ↑(I ^ j)) → (∀ a, a ∈ R.subtype '' ↑(I^(r + j))
-    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^j)) := by
-  intro i r j b h a ha
-  obtain h' := h _ ha
-
-  induction j with
-  | zero =>
-    simp
-
-    sorry
-  | succ k ih => sorry
-
-include hs₂ in
-/-- for all natural number `i` and `r`, for all element `b ∈ K`, then
-`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
-lemma refinement_hs₂_aux : ∀ (i r j : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^(r + j)))
-    → b * a ∈ R.subtype '' ↑(I ^ (j + 1))) → (∀ a, a ∈ R.subtype '' ↑(I^(r + j))
-    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^(j + 1))) := by
+lemma refinement_hs₂'_aux : ∀ (i r j : ℕ), ∀ (b : K), (∀ a, a ∈ (I^r)
+    → b * a ∈ R.subtype '' ↑(I)) → (∀ a, a ∈ (I^(r + j))
+    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I ^ (j + 1))) := by
   intro i r j b h
-  -- a ha
-  -- obtain h' := h _ ha
-
   induction j with
   | zero =>
-    simp_rw [zero_add, add_zero, pow_one] at h ⊢
-    obtain h1 := refinement_hs₂ σ hs₂ i r b
-    exact h1 h
+    rw [zero_add, add_zero, pow_one]
+    exact hs₂_aux σ hs₂ i r b h
   | succ k ih =>
-
-    sorry
-
-include hs₂ in
-/-- for all natural number `i` and `r`, for all element `b ∈ K`, then
-`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
-lemma refinement_hs₂_aux' : ∀ (i r j : ℕ), ∀ (b : K), (∀ a, (a ∈(I^(r + j)))
-    → b * a ∈ R.subtype '' ↑(I ^ (j + 1))) → (∀ a, a ∈ (I^(r + j))
-    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^(j + 1))) := by
-  intro i r j b h
-  -- a ha
-  -- obtain h' := h _ ha
-
-  induction j with
-  | zero =>
-    simp_rw [zero_add, add_zero, pow_one] at h ⊢
-    obtain h1 := refinement_hs₂ σ hs₂ i r b
-    sorry
-    -- refine h1 ?_
-  | succ k ih =>
+    rw [← add_assoc r k 1, pow_add, pow_one]
     intro a ha
-    simp_rw [← add_assoc r k 1] at ha
     refine Submodule.mul_induction_on ha ?_ ?_
     · intro m hm n hn
-      rw [← Subring.subtype_apply, map_mul, ← mul_assoc]
-      obtain ih' := ih
-      sorry
+      obtain ih_aux := ih m hm
+      have : (σ ^ i) b * ↑m ∈ R := image_of_incl_mem _ (ih m hm)
+      have mem_aux : ⟨(σ ^ i) b * ↑m, this⟩ ∈ I ^ (k + 1) := by
+        obtain ⟨x, hx₁, hx₂⟩ := ih m hm
+        simp_rw [← hx₂]
+        simpa
+      refine ⟨⟨_, this⟩ * n, ?_, by simp [map_mul, mul_assoc]⟩
+      rw [pow_add, pow_one]
+      exact Ideal.mul_mem_mul mem_aux hn
     · intro x y hx hy
-      obtain ⟨n, hn₁, hn₂⟩ := hx
-      obtain ⟨m, hm₁, hm₂⟩ := hy
-      refine ⟨n + m, Submodule.add_mem _ hn₁ hm₁, by simp [map_add, hm₂, hn₂, mul_add]⟩
+      obtain ⟨u, hu₁, hu₂⟩ := hx
+      obtain ⟨v, hv₁, hv₂⟩ := hy
+      refine ⟨u + v, Ideal.add_mem _ hu₁ hv₁ , by simp [map_add, hv₂,  hu₂, mul_add]⟩
 
-
-    -- fun i r b h => by
-  -- induction i with
-  -- | zero => exact h
-  -- | succ k hk =>
-  --   rw [RingHom.coe_pow] at hk ⊢
-  --   exact (Function.iterate_succ_apply' σ k b) ▸ hs₂ r _ hk
+include hs₂ in
+/-- for all natural number `i` and `r`, for all element `b ∈ K`, then
+`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
+lemma refinement_hs₂' : ∀ (i r j : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^r))
+    → b * a ∈ R.subtype '' ↑(I)) → (∀ a, a ∈ R.subtype '' ↑(I^(r + j))
+    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^(j + 1))) := by
+  intro i r j b h a ha
+  have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ I ^ (r + j) := by
+    obtain ⟨x, hx₁, hx₂⟩ := ha
+    simp_rw [← hx₂]
+    simpa
+  have h' : ∀ a, a ∈ I ^ r → b * a ∈ R.subtype '' I := by
+    intro x hx
+    have : (x : K) ∈ R.subtype '' ↑(I ^ r) := ⟨x, by simpa⟩
+    obtain ⟨y, hy₁, hy₂⟩ := h _ this
+    use y
+  obtain ⟨x, hx₁, hx₂⟩ := refinement_hs₂'_aux σ hs₂ i r j b h' ⟨a, image_of_incl_mem a ha⟩ a_mem
+  use x
 
 lemma ideal_pow_mem {I : Ideal R} {r : ℕ} {a : K} : (∀ b ∈ I^r, a * b ∈ R)
     → (∀ c ∈ I^r * I, a * c ∈ R.subtype '' I) := fun h c hc => by
@@ -495,8 +470,14 @@ include ht hq hp_mem in
 lemma congr_pow_mod_add' {r : ℕ} (n : ℕ) {F G : MvPowerSeries τ R} (hr : 1 ≤ r)
     (h_congr : F ≡ G [SMOD (I^r).MvPowerSeries]) :
     F ^ n ≡ G ^ n [SMOD (I ^ (r + multiplicity q n)).MvPowerSeries] := by
-
-  sorry
+  by_cases hn₀ : n = 0
+  · simp [hn₀]
+    rfl
+  have dvd_aux : q ^  multiplicity q n ∣ n := pow_multiplicity_dvd q n
+  obtain ⟨l, hl⟩ := dvd_aux
+  nth_rw 2 3 [hl]
+  rw [pow_mul, pow_mul]
+  exact SModEq.pow l (congr_pow_mod_add ht hq hp_mem hr h_congr)
 
 include hp a_congr hp_mem in
 lemma p_pow_mod_p [Finite τ] {G : MvPowerSeries τ R} {l : ℕ} :
@@ -681,13 +662,17 @@ lemma constantCoeff_inv_RecurFun :
 lemma inv_RecurFun_comp_RecurFun :
     let f := RecurFun ht hq σ s hg
     let f_inv := inv_RecurFun ht hq σ s hg hg_unit
-    f_inv.subst f = PowerSeries.X := sorry
+    f_inv.subst f = PowerSeries.X := by
+
+  sorry
 
 /-- f⁻¹ (f (X)) = X. -/
 lemma RecurFun_comp_inv_RecurFun :
     let f := RecurFun ht hq σ s hg
     let f_inv := inv_RecurFun ht hq σ s hg hg_unit
-    f.subst f_inv = PowerSeries.X := sorry
+    f.subst f_inv = PowerSeries.X :=
+
+  sorry
 
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, and we will prove this to be
 a formal group law over coefficient ring `R`. Now we denote `F(X,Y) = f_g⁻¹(f_g(X) + f_g(Y))`
@@ -1404,7 +1389,11 @@ lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity
 
 def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
   toFun := inv_add_RecurFun ht hq σ s hg hg_unit
-  zero_constantCoeff := sorry
+  zero_constantCoeff := by
+    rw [inv_add_RecurFun, PowerSeries.constantCoeff_subst_zero _ (constantCoeff_inv_RecurFun ..)]
+    rw [map_add, PowerSeries.toMvPowerSeries]
+    simp_rw [PowerSeries.constantCoeff_subst_zero (constantCoeff_X _) (constantCoeff_RecurFun ..),
+      zero_add]
   lin_coeff_X := sorry
   lin_coeff_Y := sorry
   assoc := sorry
@@ -2381,23 +2370,25 @@ theorem congr_equiv_backward_aux [UniformSpace K] [T2Space K] [DiscreteUniformit
         · simp [hj₀, if_neg hk₀]
         rw [PowerSeries.coeff_smul, smul_eq_mul, PowerSeries.coeff_map]
         have mem_aux : (PowerSeries.coeff k) ((γ ^ q ^ i) ^ j)
-          ∈ R.subtype '' ↑(I ^ (multiplicity q j + (r + 1))) := by
-          exact coeff_pow_mem_ind₁ ht hq hp_mem constantCoeff_γ k i r j hj₀ hi₀ hr ih
+          ∈ R.subtype '' ↑(I ^ (multiplicity q j + 1 + r)) := by
+          have : multiplicity q j + 1 + r = multiplicity q j + r + 1 := by ring
+          exact this ▸  coeff_pow_mem_ind₁ ht hq hp_mem constantCoeff_γ k i r j hj₀ hi₀ hr ih
+          -- exact coeff_pow_mem_ind₁ ht hq hp_mem constantCoeff_γ k i r j hj₀ hi₀ hr ih
           /- here use the same strategy as in the first part of this lemma. -/
-        have mem_aux' : ⟨_, image_of_incl_mem _ mem_aux⟩ ∈ (I ^ ( multiplicity q j + (r + 1))) := by
+        have mem_aux' : ⟨_, image_of_incl_mem _ mem_aux⟩ ∈ (I ^ (multiplicity q j + (1 + r))) := by
+          rw [add_assoc _ 1 r] at mem_aux
           obtain ⟨a, ha₁, ha₂⟩ := mem_aux
           simp_rw [← ha₂]
           exact ha₁
         obtain h1 := coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg j _ _ mem_aux'
         -- ∀ x ∈ I ^ (multiplicity q j + (r + 1)), (PowerSeries.coeff j) (RecurFun ht hq σ s hg) * ↑x ∈ ⇑R.subtype '' ↑(I ^ (r + 1))
-        refine refinement_hs₂' σ hs₂ i (multiplicity q j) (r + 1) _ ?_ _ mem_aux
+        refine refinement_hs₂' σ hs₂ i (multiplicity q j + 1) r _ ?_ _ mem_aux
         · intro a ha
-          have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ (I ^ (multiplicity q j + (r + 1))) := by
+          have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ (I ^ (multiplicity q j + 1)) := by
             obtain ⟨x, hx₁, hx₂⟩ := ha
             simp_rw [← hx₂]
             simpa
-          obtain h1 := (coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg j (r + 1)) _ a_mem
-          simpa using h1
+          exact pow_one I ▸ coeff_RecurFun_mul_mem_i ht hq σ s hs₁ hs₂ hg j 1 _ a_mem
         /- two result about summable, use order estimate. -/
         · intro b hb
           simp only [mem_range, not_lt] at hb
