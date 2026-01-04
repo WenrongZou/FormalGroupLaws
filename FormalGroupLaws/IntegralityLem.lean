@@ -179,6 +179,10 @@ lemma refinement_hs: ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
       simp [Function.iterate_succ_apply']
     exact eq_aux ▸ hs ⟨_, ih _⟩
 
+include a_congr in
+lemma refinement_a_congr (l : ℕ) :  ∀ a : R, ⟨(σ ^ l) a, refinement_hs σ hs _ _⟩ ≡
+    (a ^ q ^ l) [SMOD I] := sorry
+
 include hs₁ in
 lemma refinement_hs₁ : ∀ i r, ∀ b, b ∈ (I ^ (r + 1)) →
     s i * b ∈ R.subtype '' ↑(I ^ r) := by
@@ -405,10 +409,13 @@ lemma congr_pow_mod_add' {r : ℕ} (n : ℕ) {F G : MvPowerSeries τ R} (hr : 1 
 
   sorry
 
-include hp hI hp_mem in
-lemma p_pow_mod_p [Finite τ] {G : MvPowerSeries τ R} {l : ℕ} (l_pos : 0 < l) :
+include hp a_congr hp_mem in
+lemma p_pow_mod_p [Finite τ] {G : MvPowerSeries τ R} {l : ℕ} :
     G ^ (q ^ l) ≡ ((G.expand (q ^ l) (q_pow_neZero hq)).map ((σ^l).comp R.subtype)).toSubring _
     (coeff_aux_mem σ hs l) [SMOD I.MvPowerSeries] := by
+  by_cases hI : I = ⊤
+  · rw [hI]
+    exact SModEq.sub_mem.mpr fun n => Submodule.mem_top
   apply SModEq.sub_mem.mpr
   simp [Ideal.MvPowerSeries]
   intro n
@@ -419,33 +426,37 @@ lemma p_pow_mod_p [Finite τ] {G : MvPowerSeries τ R} {l : ℕ} (l_pos : 0 < l)
   let φ := Ideal.Quotient.mk I
   haveI : ExpChar (R ⧸ I) p := Rchar_p hI hp_mem
   obtain eq_aux₁ := map_iterateFrobenius_expand (G.map φ) p (t * l) pneq
-
-  -- have : ((MvPowerSeries.map
-  --   (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
-  --   ((MvPowerSeries.map φ) G))) = MvPowerSeries.map φ ((G.expand (p ^ (t * l)) (pow_ne_zero _ pneq)).map (iterateFrobenius R p (t * l))) := sorry
-  have eq_zero : ∀ n, coeff n ((MvPowerSeries.map φ) G ^ p ^ (t * l)) - coeff n ((MvPowerSeries.map
+  have eq_zero : coeff n ((MvPowerSeries.map φ) G ^ p ^ (t * l)) - coeff n ((MvPowerSeries.map
     (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
-    ((MvPowerSeries.map φ) G))) = 0:= by
+    ((MvPowerSeries.map φ) G))) = 0 := by
     simp [eq_aux₁]
+  have eq_σ_pow (a : R) : (iterateFrobenius (↥R ⧸ I) p (t * l)) (φ a) =
+    φ (⟨(σ ^ l) a, refine_hs σ hs _ _ ⟩ ) := by
+    simp only [iterateFrobenius, RingHom.coe_mk, powMonoidHom_apply]
+    rw [pow_mul, ← hq]
+    obtain h1 := SModEq.sub_mem.mp <| refinement_a_congr σ hs a_congr l a
+    have aux : φ (⟨(σ ^ l) ↑a, refinement_hs σ hs _ _ ⟩ - a ^ q ^ l) = 0 :=
+      Ideal.Quotient.eq_zero_iff_mem.mpr h1
+    conv_lhs => rw [← add_zero (φ a ^ q ^ l), ← aux, map_sub, map_pow]
+    ring_nf
+  have eq_aux₂ : coeff n ((MvPowerSeries.map
+    (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
+    ((MvPowerSeries.map φ) G))) = φ (coeff n (((G.expand (q ^ l) (q_pow_neZero hq)).map ((σ^l).comp R.subtype)).toSubring _
+    (coeff_aux_mem σ hs l))) := by
+    rw [coeff_map, ← map_expand, coeff_map, eq_σ_pow]
+    congr
+    simp_rw [coeff_map, pow_mul, ← hq]
+    rfl
+  rw [eq_aux₂, ← map_pow, coeff_map, ← map_sub] at eq_zero
+  exact (Submodule.Quotient.mk_eq_zero I).mp eq_zero
 
-  -- have mem_aux : ∀ n, coeff n ((MvPowerSeries.map φ) G ^ p ^ (t * l)) - coeff n ((MvPowerSeries.map
-  --   (iterateFrobenius (↥R ⧸ I) p (t * l))) ((expand (p ^ (t * l)) (pow_ne_zero _ pneq))
-  --   ((MvPowerSeries.map φ) G))) ∈ I := by
-  --   sorry
-
-
-
-  -- have eq_aux : (coeff n) (((MvPowerSeries.map (σ ^ l)) (ofSubring R
-  --   (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G))).toSubring R (coeff_aux_mem σ hs l))
-  --   = ⟨(σ ^ l) (coeff n (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G)), sigma_pow_mem σ hs l
-  --     ((coeff n) (subst ![X₀ ^ q ^ l, X₁ ^ q ^ l] G))⟩ := sorry
-  sorry
-
-include hI ht hq hs hp_mem in
+include ht hq hs hp_mem a_congr in
 /-- Forall `r m ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`, we have that
   $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
 theorem pow_ModEq_aux
-    (G : MvPowerSeries τ R) [Finite τ] {n r l m : ℕ} (hn : n = q ^ r * m) (hl : 0 < l) :
+    (G : MvPowerSeries τ R) [Finite τ] {n r m : ℕ} (l : ℕ) (hn : n = q ^ r * m)
+    -- (hl : 0 < l)
+    :
     (((G.expand (q ^ l) (q_pow_neZero hq))^n).map ((σ ^ l).comp R.subtype)).toSubring _
       (coeff_aux_mem σ hs l)  ≡
     (G ^ (q ^ l * n)) [SMOD (I^(r + 1)).MvPowerSeries] := by
@@ -455,7 +466,7 @@ theorem pow_ModEq_aux
     induction r with
     | zero =>
       simp
-      refine SModEq.trans (p_pow_mod_p hI hq σ hs hp_mem hl) (by congr; simp)
+      refine SModEq.trans (p_pow_mod_p hq σ hs a_congr hp_mem) (by congr; simp)
     | succ k ih =>
       obtain ⟨a, a_mem, ha⟩ := exists_eq_right'.mpr <| SModEq.sub_mem.mp ih
       have eq_aux : G ^ (q ^ k * q ^ l) =
@@ -524,39 +535,34 @@ theorem pow_ModEq_aux
       rw [←pow_mul, hn]; congr! 1
       ring
 
-include ht hq hp_mem hs in
-/- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
-we have that $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
-theorem pow_ModEq (G : MvPowerSeries (Fin 2) R) {n r l m : ℕ} (hn : n = q ^ r * m) (hl : 0 < l) :
-    ∀ d, ((((G.map (R.subtype)).expand (q ^ l) (q_pow_neZero hq))^n).map (σ^l) -
-      (G ^ (q ^ l * n)).map (R.subtype)).coeff d ∈ R.subtype '' ↑(I^(r + 1)) := by
-  sorry
-  -- have mem_aux {r : ℕ} : ∀ d, (G ^ (q ^ r * q ^ l) - ((G.expand (q ^ l)
-  --     (q_pow_neZero hq))^(q ^ r)).map (σ^l)).coeff d ∈ R.subtype '' ↑(I^(r + 1)) := by
-  --   induction r  with
-  --   | zero =>
-  --     rw [pow_zero, one_mul, pow_one, pow_one]
-  --     exact p_pow_mod_p hq σ hp_mem G hl
-  --   | succ k ih =>
-  --     intro d
-  --     obtain ⟨H, hH₁, hH₂⟩ : ∃ H ∈ (I ^ (k + 1)).MvPowerSeries, G ^ (q ^ k * q ^ l) =
-  --         ((G ^ q ^ k).expand (q ^ l) (q_pow_neZero hq)).map (σ ^ l) + H.map (R.subtype) := sorry
-  --     have eq_aux : G ^ (q ^ (k + 1) * q ^ l) = (G ^ (q ^ k * q ^ l)) ^ (p ^ t) := by
-  --       rw [hq]; ring
-  --     rw [eq_aux, hH₂, add_pow_prime_pow_eq hp.out]
 
-
-  --     sorry
-  -- sorry
-
-include ht hq hp_mem hs in
+include ht hq a_congr hp_mem hs in
 /- this is more general version for second technical lemma. -/
 /- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
 we have that $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
-theorem pow_ModEq' (G : MvPowerSeries τ R) [Finite τ] {n r l m : ℕ} (hn : n = q ^ r * m)
-    (hl : 0 < l) :
+theorem pow_ModEq (G : MvPowerSeries τ R) [Finite τ] {n r m : ℕ} (l : ℕ) (hn : n = q ^ r * m)
+     :
     ∀ d, ((((G.map (R.subtype)).expand (q ^ l) (q_pow_neZero hq))^n).map (σ^l) -
-      (G ^ (q ^ l * n)).map (R.subtype)).coeff d ∈ R.subtype '' ↑(I^(r + 1)) := by sorry
+      (G ^ (q ^ l * n)).map (R.subtype)).coeff d ∈ R.subtype '' ↑(I^(r + 1)) := by
+  obtain h₁ := pow_ModEq_aux ht hq σ hs a_congr hp_mem G l hn
+  intro d
+  obtain h₂ := SModEq.sub_mem.mp h₁ d
+  have eq_aux : (((MvPowerSeries.map ((σ ^ l).comp R.subtype))
+    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l)).coeff d -
+    (G ^ (q ^ l * n)).coeff d =
+    ((((MvPowerSeries.map ((σ ^ l).comp R.subtype))
+    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l) -
+    G ^ (q ^ l * n)) d)
+    := rfl
+  use ((((MvPowerSeries.map ((σ ^ l).comp R.subtype))
+    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l) - G ^ (q ^ l * n)) d)
+  simp only [SetLike.mem_coe, h₂, Subring.subtype_apply, map_pow, map_expand, map_sub, true_and]
+  rw [← eq_aux, ← Subring.subtype_apply, map_sub]
+  congr
+  · simp only [Subring.subtype_apply, coeff_toSubring, map_pow, map_expand]
+    rfl
+  · simp [← coeff_map]
+
 
 end technical_lemma
 
@@ -945,7 +951,7 @@ lemma coeff_coe_aux {F : MvPowerSeries (Fin 2) K} {F' : MvPowerSeries (Fin 2) R}
     rw [coeff_expand_of_not_dvd _ _ _ ha, coeff_expand_of_not_dvd _ _ _ ha]
 
 open PowerSeries in
-include hs hp_mem hs₁ hs₂ in
+include hs hp_mem a_congr hs₁ hs₂ in
 /-- f(F(X,Y)) ≡ g(F(X,Y)) + f(X) + f(Y) - g(X) - g(Y) [MOD R]-/
 lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs0 : s 0 = 0) {n : Fin 2 →₀ ℕ} {k : ℕ} (h : n.degree = k) :
@@ -1078,7 +1084,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
           intro d hd
           simp [F₁, F₁_aux]
           rw [coeff_apply, if_pos hd]
-        obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq ht hq σ hs hp_mem F₁ hm (i.zero_lt_of_ne_zero hi₀) n
+        obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq ht hq σ hs a_congr hp_mem F₁ i hm n
         have eq_aux₁ : (MvPowerSeries.coeff n) ((MvPowerSeries.map (σ ^ i)) (F.expand (q ^ i)
           (q_pow_neZero hq)) ^ b) = (MvPowerSeries.coeff n) ((MvPowerSeries.map (σ ^ i))
             ((MvPowerSeries.expand (q ^ i) (q_pow_neZero hq)) (F₁.map (R.subtype))) ^ b) := by
@@ -1208,7 +1214,7 @@ lemma coeff_subst_X_mem_aux {n : Fin 2 →₀ ℕ} {x : Fin 2} :
     norm_cast
   simp [eq_aux]
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 /-- by above lemma we can deduce that all coefficient in g(F(X,Y)) is in `R`, since
   f(F(X,Y)) = f(X) + f(Y).-/
 lemma RModEq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0)
@@ -1217,7 +1223,7 @@ lemma RModEq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s
     (h_ind : ∀ m < k, ∀ (n : Fin 2 →₀ ℕ), n.degree = m → F.coeff n ∈ R) → (g.subst F).coeff n ∈ R := by
   intro F h_ind
   have F_def : F = (inv_add_RecurFun ht hq σ s hg hg_unit) := rfl
-  obtain h₀ := RModEq_aux ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs0 h h_ind
+  obtain h₀ := RModEq_aux ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs0 h h_ind
   rw [f_F_eq_f_add, ←F_def] at h₀
   ring_nf at h₀
   simp at h₀
@@ -1289,7 +1295,7 @@ lemma F_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         exfalso
         exact (h_neZero b (mem_range.mp hb)) (neq_aux b hb hb')
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, the coeff of this multi variate
   power series are all in `R`.-/
 lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
@@ -1305,7 +1311,7 @@ lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity
     rw [eq_aux, mul_assoc]
     exact Subring.mul_mem R (SetLike.coe_mem _) <| by
       simpa using (Subring.add_mem _ (F_coeff_mem_ind ht hq σ s hg hg_unit h hk)
-        (RModEq_aux₂ ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs0 h hk))
+        (RModEq_aux₂ ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs0 h hk))
 
 def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
   toFun := inv_add_RecurFun ht hq σ s hg hg_unit
@@ -1318,13 +1324,13 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
 def CommFormalGroup.InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) : CommFormalGroup R :=
     (CommFormalGroup.InvAdd_RecurFun_Aux ht hq σ s hg hg_unit).toSubring _
-      (coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀)
+      (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀)
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 theorem decomp_InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) : ∃ (G : MvPowerSeries (Fin 2) R),
     (inv_add_RecurFun ht hq σ s hg hg_unit) = X₁ + X₀ * G.map R.subtype := by
-  obtain ⟨G, hG⟩ := decomp_Y_add (CommFormalGroup.InvAdd_RecurFun ht hq σ hs hp_mem s hs₁
+  obtain ⟨G, hG⟩ := decomp_Y_add (CommFormalGroup.InvAdd_RecurFun ht hq σ hs a_congr hp_mem s hs₁
     hs₂ hg hg_unit hs₀ : FormalGroup R)
   use G
   simp only [CommFormalGroup.InvAdd_RecurFun, CommFormalGroup.toSubring,
@@ -1342,11 +1348,11 @@ theorem decomp_InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity 
   simp_rw [coeff_X]
   split_ifs with h <;> simp
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 theorem decomp_InvAdd_RecurFun_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) : ∃ (G : MvPowerSeries (Fin 2) R),
     (inv_add_RecurFun ht hq σ s hg hg_unit).toSubring _
-      (coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀) = X₁ + X₀ * G := sorry
+      (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀) = X₁ + X₀ * G := sorry
 
 end PartI
 
@@ -1405,7 +1411,7 @@ lemma tsum_eq_aux₁ [TopologicalSpace K] :
     (f.subst (PowerSeries.subst (RecurFun ht hq σ s hg') (inv_RecurFun ht hq σ s hg hg_unit)))) := by
   nth_rw 1 [f_g'_eq_f_G ht hq σ s hg hg_unit hg']
 
-include ht hs hp_mem in
+include ht hs a_congr hp_mem in
 lemma coeff_mem_aux {i b n : ℕ} (hi : i ≠ 0) {G : PowerSeries K} (hG : G.constantCoeff = 0)
     (h_ind : ∀ m < n, (PowerSeries.coeff m) G ∈ R) :
     (σ ^ i) ((PowerSeries.coeff n) ((PowerSeries.expand (q ^ i) (q_pow_neZero hq)) (G ^ b))) -
@@ -1479,7 +1485,7 @@ lemma coeff_mem_aux {i b n : ℕ} (hi : i ≠ 0) {G : PowerSeries K} (hG : G.con
     exact (prod_congr rfl fun j hj => G₁_apply (l j) (lt_aux j hj)).symm
   rw [eq_aux₁, eq_aux₂]
   obtain ⟨m, hm⟩ := pow_multiplicity_dvd q b
-  obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq' ht hq σ hs hp_mem G₁ hm (i.zero_lt_of_ne_zero hi)
+  obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq ht hq σ hs a_congr hp_mem G₁ i hm
     (Finsupp.single () n)
   use x
   rw [SetLike.mem_coe] at hx₁
@@ -1490,7 +1496,7 @@ lemma coeff_mem_aux {i b n : ℕ} (hi : i ≠ 0) {G : PowerSeries K} (hG : G.con
   congr! 2
   rw [pow_mul]
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs0 : s 0 = 0) {n : ℕ} :
     let f_g' := RecurFun ht hq σ s hg'
@@ -1555,7 +1561,7 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   rw [PowerSeries.coeff_smul, PowerSeries.expand_smul, PowerSeries.coeff_map,
     PowerSeries.coeff_smul, smul_eq_mul, map_mul, smul_eq_mul, ← mul_sub]
   refine refinement_hs₂ σ hs₂ i (multiplicity q b + 1) _ ?_ _
-    (coeff_mem_aux ht hq σ hs hp_mem hi₀ (constantCoeff_G ..) h_ind)
+    (coeff_mem_aux ht hq σ hs a_congr hp_mem hi₀ (constantCoeff_G ..) h_ind)
   · intro a ha
     have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ I ^ (multiplicity q b + 1) := by
       obtain ⟨a', ha'₁, ha'₂⟩ := ha
@@ -1605,13 +1611,13 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     refine .trans (.trans ?_ (PowerSeries.le_order_map _)) PowerSeries.le_order_smul
     exact le_order_aux₁ b
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 lemma coeff_g_G_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s 0 = 0) {n : ℕ}:
     let f_g' := RecurFun ht hq σ s hg'
     let G := (inv_RecurFun ht hq σ s hg hg_unit).subst f_g'
     (h_ind : ∀ m < n, (PowerSeries.coeff m) G ∈ R) → PowerSeries.coeff n (g.subst G) ∈ R := by
   intro f_g' G h_ind
-  obtain h := coeff_g_G_mem_aux ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hg' hs0 h_ind
+  obtain h := coeff_g_G_mem_aux ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hg' hs0 h_ind
   ring_nf at h
   rw [map_sub] at h
   rw [← sub_add_cancel ((PowerSeries.coeff n) (PowerSeries.subst G g))
@@ -1680,7 +1686,7 @@ lemma G_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         exfalso
         exact (h_neZero b hb) (neq_aux b hb hb')
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 /-- functional equaltion lemma II: let `g'` be another power series with coefficient in `R`,
 then the coefficient of $f_g^{-1} (f_{g'} (X)) are all in `R`$. -/
 lemma coeff_inv_RecurFun_g'_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
@@ -1697,7 +1703,7 @@ lemma coeff_inv_RecurFun_g'_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUn
     rw [eq_aux, mul_assoc]
     exact Subring.mul_mem R (SetLike.coe_mem _) <| by
       simpa using (Subring.add_mem _ (G_coeff_mem_ind ht hq σ s hg hg_unit hg' hk)
-        (coeff_g_G_mem ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hg' hs0 hk))
+        (coeff_g_G_mem ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hg' hs0 hk))
 
 end PartII
 
@@ -1766,15 +1772,15 @@ lemma PartIII.tsum_eq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     simp [h₀]
     simp [zero_pow (q_pow_neZero hq)]
 
-include ht hs hp_mem in
-lemma PartIII.coeff_mem_aux {i b n : ℕ} {h : PowerSeries R} (hi : i ≠ 0):
+include ht hs a_congr hp_mem in
+lemma PartIII.coeff_mem_aux {i b n : ℕ} {h : PowerSeries R} :
     (σ ^ i) ((PowerSeries.coeff n) ((PowerSeries.map R.subtype) ((PowerSeries.expand (q ^ i)
       (q_pow_neZero hq)) h) ^ b)) - (PowerSeries.coeff n) ((PowerSeries.map R.subtype)
       h ^ (q ^ i * b)) ∈ ⇑R.subtype '' ↑(I ^ (multiplicity q b + 1)) := by
   simp_rw [← map_pow, PowerSeries.coeff_map]
   rw [Subring.subtype_apply, Subring.subtype_apply]
   obtain ⟨m, hm⟩ := pow_multiplicity_dvd q b
-  obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq' ht hq σ hs hp_mem h hm (i.zero_lt_of_ne_zero hi)
+  obtain ⟨x, hx₁, hx₂⟩ := pow_ModEq ht hq σ hs a_congr hp_mem h i hm
     (Finsupp.single () n)
   use x
   rw [SetLike.mem_coe] at hx₁
@@ -1784,7 +1790,7 @@ lemma PartIII.coeff_mem_aux {i b n : ℕ} {h : PowerSeries R} (hi : i ≠ 0):
   simp only [Subring.subtype_apply]
   congr
 
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 lemma PartIII.coeff_tsum_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     {h : PowerSeries R} (h₀ : h.constantCoeff = 0) (n : ℕ) (hs₀ : s 0 = 0):
     let f := (RecurFun ht hq σ s hg)
@@ -1847,7 +1853,7 @@ lemma PartIII.coeff_tsum_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   intro b hb
   simp_rw [PowerSeries.coeff_smul, smul_eq_mul, map_mul, ← mul_sub]
   refine refinement_hs₂ σ hs₂ i (multiplicity q b + 1) _ ?_ _
-    (PartIII.coeff_mem_aux ht hq σ hs hp_mem hi₀)
+    (PartIII.coeff_mem_aux ht hq σ hs a_congr hp_mem)
   · intro a ha
     have a_mem : ⟨a, image_of_incl_mem a ha⟩ ∈ I ^ (multiplicity q b + 1) := by
       obtain ⟨a', ha'₁, ha'₂⟩ := ha
@@ -1884,7 +1890,7 @@ lemma PartIII.coeff_tsum_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K]
   then there exist a power series `h₁` over `R` such that `f(h(X)) = f_{h₁}(X)`, this is
   equivalent to say that `f₁(X) - ∑s_i σ^i(f₁(X^{q^i}))` is a power series in `R`, where
   `f₁(X) := f(h(X))` and `f(X) := f_g(X)` -/
-include hs hp_mem hs₁ hs₂ in
+include hs a_congr hp_mem hs₁ hs₂ in
 lemma coeff_inv_RecurFun_g'_mem_Subring' [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) {h : PowerSeries R} (h₀ : h.constantCoeff = 0):
     let f := (RecurFun ht hq σ s hg)
@@ -1898,7 +1904,7 @@ lemma coeff_inv_RecurFun_g'_mem_Subring' [UniformSpace K] [T2Space K] [DiscreteU
     - ∑' i, s i • ((f.expand (q ^ i) (q_pow_neZero hq)).map (σ ^ i)).subst (h.map R.subtype))
     := by ring
   rw [eq_aux, map_sub]
-  refine Subring.sub_mem R ?_ (PartIII.coeff_tsum_mem ht hq σ hs hp_mem s hs₁ hs₂ hg h₀ n hs₀)
+  refine Subring.sub_mem R ?_ (PartIII.coeff_tsum_mem ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg h₀ n hs₀)
   have eq_aux₁ : (f₁ - ∑' (i : ℕ), s i • PowerSeries.subst ((PowerSeries.map R.subtype) h)
     ((PowerSeries.map (σ ^ i)) ((PowerSeries.expand (q ^ i) (q_pow_neZero hq)) f))) =
     (g.map (R.subtype)).subst (h.map (R.subtype)) := by
@@ -1949,8 +1955,18 @@ lemma mem_ideal_aux' {m r: ℕ} {α : ℕ → K} (h : ∀ i ∈ range m, α i �
     rw [←hb₂, ←ha₂, this, map_add]
     ring_nf
 
-lemma mem_ideal_aux₂ {s : Finset ℕ} {r: ℕ} {α : ℕ → K} (h : ∀ i ∈ s, α i ∈ R.subtype '' ↑(I ^ r)) :
-    ∑ i ∈ s, α i ∈ R.subtype '' ↑(I ^ r) := sorry
+lemma mem_ideal_aux₂ {α : Type*} {s : Finset α} {r : ℕ} {f : α → K}
+     : (h : ∀ i ∈ s, f i ∈ R.subtype '' ↑(I ^ r)) →
+    ∑ i ∈ s, f i ∈ R.subtype '' ↑(I ^ r) := by
+  refine Finset.induction (by simp) ?_ s
+  intro a s' hs' ih ih'
+  have a_mem : a ∈ insert a s' := mem_insert_self a s'
+  obtain ⟨x, hx₁, hx₂⟩ := ih fun i hi => ih' _ (mem_insert_of_mem hi)
+  obtain ⟨y, hy₁, hy₂⟩ := ih' _ (mem_insert_self a s')
+  rw [sum_insert hs', ← hx₂, ← hy₂]
+  use y + x
+  simpa using (Submodule.add_mem_iff_right _ hy₁).mpr hx₁
+
 
 include hp_mem hs₁ hs₂ in
 theorem congr_equiv_forward₀ [UniformSpace K] [T2Space K] [DiscreteUniformity K]
@@ -2029,14 +2045,145 @@ theorem congr_equiv_forward₀ [UniformSpace K] [T2Space K] [DiscreteUniformity 
   · exact PowerSeries.Summable.increase_order fun n => (le_order_aux₁ n)
   · exact PowerSeries.Summable.increase_order fun n => (le_order_aux₂ n)
 
-lemma coeff_pow_mem_ind {γ : PowerSeries K} (k i r : ℕ) (h_le : 2 ≤ i) :
-    (h_ind : ∀ m < k, γ.coeff m ∈ R.subtype '' ↑(I ^ r)) →
-    (γ ^ i).coeff k ∈ R.subtype '' ↑(I ^ r):= sorry
+lemma coeff_pow_mem_ind {γ : PowerSeries K} (k i r : ℕ) (h_le : 2 ≤ i)
+    (hγ : γ.constantCoeff = 0) :
+    (∀ m < k, γ.coeff m ∈ R.subtype '' ↑(I ^ r)) →
+    (γ ^ i).coeff k ∈ R.subtype '' ↑(I ^ r):= by
+  intro ih
+  have h : ∀ m ≤ k, (γ ^ i).coeff m ∈ R.subtype '' ↑(I ^ r) := by
+    induction i, h_le using Nat.le_induction with
+    | base =>
+      intro m hm
+      rw [pow_two, PowerSeries.coeff_mul]
+      apply mem_ideal_aux₂
+      intro l hl
+      simp only [mem_antidiagonal] at hl
+      by_cases hl₁ : l.1 = 0
+      · simp [hl₁, hγ]
+      by_cases hl₁' : l.1 = k
+      · have eq_aux : l.2 = 0 := by linarith
+        simp [eq_aux, hγ]
+      have lt_aux₁ : l.1 < k := by omega
+      have lt_aux₂ : l.2 < k := by omega
+      use ⟨_, image_of_incl_mem _ (ih l.1 lt_aux₁)⟩ * ⟨_, image_of_incl_mem _ (ih _ lt_aux₂)⟩
+      refine ⟨Ideal.mul_mem_left _ _ ?_ , by simp⟩
+      obtain ⟨x, hx₁, hx₂⟩ := ih _ lt_aux₂
+      simpa [← hx₂]
+    | succ j hj hj_mem =>
+      intro m hm
+      rw [pow_succ, PowerSeries.coeff_mul]
+      apply mem_ideal_aux₂
+      intro l hl
+      simp only [mem_antidiagonal] at hl
+      by_cases hl₁ : l.2 = k
+      · have eq_aux : l.1 = 0 := by omega
+        have j_ne : j ≠ 0 := Nat.ne_zero_of_lt hj
+        have eq_aux₂ : (PowerSeries.coeff l.1) (γ ^ j) = 0 := by
+          simp [eq_aux, map_pow, hγ, zero_pow (Nat.ne_zero_of_lt hj)]
+        simp [eq_aux₂]
+      have lt_aux : l.2 < k := by omega
+      refine ⟨⟨_, image_of_incl_mem _ (hj_mem l.1 (by linarith))⟩ *
+        ⟨_, image_of_incl_mem _ (ih _ lt_aux)⟩, Ideal.mul_mem_right _ _ ?_, by simp⟩
+      obtain ⟨x, hx₁, hx₂⟩ := hj_mem l.1 (by linarith)
+      simpa [← hx₂]
+  exact h _ (le_refl _)
 
-lemma coeff_pow_mem_ind₁ {γ : PowerSeries K} (k i r j: ℕ) (i_ne : i ≠ 0) :
-    (h_ind : ∀ m < k, γ.coeff m ∈ R.subtype '' ↑(I ^ r)) →
-    (PowerSeries.coeff k) ((γ ^ q ^ i) ^ j)
-    ∈ R.subtype '' ↑(I ^ (multiplicity q j + (r + 1))) := sorry
+lemma coeff_pow_eq_ind {α : PowerSeries K} {β : PowerSeries R} {k i: ℕ} (hi : 2 ≤ i)
+    (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0) :
+    (∀ n < k, α.coeff n = β.coeff n) →  ∀ n ≤ k, (α ^ i).coeff n = (β ^ i).coeff n := by
+  intro h_ind
+  induction i, hi using Nat.le_induction with
+  | base =>
+    intro n hn
+    simp only [pow_two, PowerSeries.coeff_mul, AddSubmonoidClass.coe_finset_sum, Subring.coe_mul]
+    rw [sum_congr rfl]
+    intro l hl
+    simp only [mem_antidiagonal] at hl
+    by_cases hl₁ : l.1 = 0
+    · simp [hl₁, hα, hβ]
+    by_cases hl₂ : l.2 = 0
+    · simp [hl₂, hα, hβ]
+    rw [h_ind _ (by omega), h_ind _ (by omega)]
+  | succ m hm ih =>
+    intro n hn
+    simp only [pow_succ, PowerSeries.coeff_mul, AddSubmonoidClass.coe_finset_sum, Subring.coe_mul]
+    rw [sum_congr rfl]
+    intro l hl
+    simp only [mem_antidiagonal] at hl
+    by_cases hl₁ : l.1 = 0
+    · simp [hl₁, map_pow, hα, hβ, zero_pow (Nat.ne_zero_of_lt hm)]
+    rw [ih l.1 (by linarith), h_ind _ (by omega)]
+
+include ht hq hp_mem in
+lemma coeff_pow_mem_ind₁ {γ : PowerSeries K} (hγ : γ.constantCoeff = 0) (k i r j : ℕ)
+    (hj : j ≠ 0) (i_ne : i ≠ 0)
+    (hr : 1 ≤ r) : (h_ind : ∀ m < k, γ.coeff m ∈ R.subtype '' ↑(I ^ r)) →
+    (((γ ^ q ^ i) ^ j).coeff k) ∈ R.subtype '' ↑(I ^ (multiplicity q j + (r + 1))) := by
+  intro h_ind
+  let γ_aux := (γ.trunc k).toPowerSeries
+  have coeff_γ_aux_mem : ∀ n, γ_aux.coeff n ∈ R := by
+    intro n
+    by_cases hn_lt : n < k
+    · simpa [γ_aux, PowerSeries.coeff_trunc, if_pos hn_lt] using
+        image_of_incl_mem _ (h_ind n hn_lt)
+    simp [γ_aux, PowerSeries.coeff_trunc, if_neg hn_lt]
+  let γ' := γ_aux.toSubring _ coeff_γ_aux_mem
+  have eq_aux : ∀ n < k,  γ.coeff n = γ'.coeff n := by
+    intro n hn
+    simp [γ', γ_aux]
+    rw [PowerSeries.coeff_trunc, if_pos hn]
+  have coeff_eq : ∀ n, (hn_lt : n < k) →
+    γ'.coeff n = ⟨γ.coeff n, image_of_incl_mem _ (h_ind n hn_lt)⟩ := by
+    intro n hn_lt
+    simp [eq_aux _ hn_lt]
+  have coeff_eq' : ∀ n, ¬ n < k → γ'.coeff n = 0 := by
+    intro n hn
+    have eq_aux : γ'.coeff n = (0 : K) := by simp [γ', γ_aux, PowerSeries.coeff_trunc, if_neg hn]
+    norm_cast at eq_aux
+  have γ'_congr : γ' ≡ 0 [SMOD (I ^ r).MvPowerSeries] := by
+    refine SModEq.sub_mem.mpr ?_
+    intro n
+    have eq_aux : (γ' - 0) n = γ'.coeff (n ()) := by
+      rw [sub_zero, PowerSeries.coeff_def rfl, coeff_apply]
+    rw [sub_zero, ← coeff_apply γ', ← PowerSeries.coeff_def rfl]
+    by_cases hn : n () < k
+    · rw [coeff_eq _ hn]
+      obtain ⟨x, hx₁, hx₂⟩ := h_ind _ hn
+      simpa [← hx₂]
+    simp [coeff_eq' _ hn]
+  have constantCoeff_γ' : γ'.constantCoeff = 0 := by
+    have : γ'.constantCoeff = (0 : K) := by
+      by_cases hk : 0 < k
+      · rw [← PowerSeries.coeff_zero_eq_constantCoeff, ← eq_aux _ hk,
+          PowerSeries.coeff_zero_eq_constantCoeff, hγ]
+      rw [← PowerSeries.coeff_zero_eq_constantCoeff, coeff_eq' _ hk, ZeroMemClass.coe_zero R]
+    norm_cast at this
+  have coeff_eq_aux : ((γ ^ q ^ i) ^ j).coeff k = ((γ' ^ q ^ i) ^ j).coeff k := by
+    rw [← pow_mul, ← pow_mul]
+    have le_aux : 2 ≤ q ^ i * j :=
+      le_mul_of_le_of_one_le (two_le_q_pow ht hq i_ne) (Nat.one_le_iff_ne_zero.mpr hj)
+    exact coeff_pow_eq_ind le_aux hγ constantCoeff_γ'
+      eq_aux k (le_refl _)
+  simp only [Subring.subtype_apply, coeff_eq_aux, Set.mem_image, SetLike.mem_coe,
+    SetLike.coe_eq_coe, exists_eq_right]
+  rw [← pow_mul]
+  have neq : (q ^ i * j) ≠ 0 := mul_ne_zero (q_pow_neZero hq) hj
+  obtain h_congr := congr_pow_mod_add' ht hq hp_mem (q ^ i * j) hr γ'_congr
+  have le_aux : i + multiplicity q j ≤ multiplicity q (q ^ i * j) := by
+    refine (FiniteMultiplicity.pow_dvd_iff_le_multiplicity (Nat.finiteMultiplicity_iff.mpr
+      ⟨q_neOne ht hq, Nat.zero_lt_of_ne_zero neq⟩)).mp ?_
+    rw [pow_add]
+    exact Nat.mul_dvd_mul_left _ (pow_multiplicity_dvd q j)
+  rw [zero_pow neq] at h_congr
+  have le_aux' : multiplicity q j + (r + 1) ≤ (r + multiplicity q (q ^ i * j)) := by omega
+  obtain h_mem := SModEq.sub_mem.mp h_congr (Finsupp.single () k)
+  rw [sub_zero] at h_mem
+  have eq_aux : (PowerSeries.coeff k) (γ' ^ (q ^ i * j)) =
+    (γ' ^ (q ^ i * j)) (Finsupp.single () k) := by
+    rw [PowerSeries.coeff]
+    rfl
+  rw [eq_aux]
+  exact Ideal.pow_le_pow_right le_aux' h_mem
 
 lemma PowerSeries.subst_expand_pow {α β : PowerSeries K} (hβ : β.constantCoeff = 0)
     (i : ℕ) :
@@ -2045,9 +2192,9 @@ lemma PowerSeries.subst_expand_pow {α β : PowerSeries K} (hβ : β.constantCoe
     rw [expand_apply, subst_comp_subst_apply (HasSubst.X_pow (q_pow_neZero hq)) h,
       subst_pow h, subst_X h]
 
-include hs₁ hs₂ in
+include hp_mem hs₁ hs₂ in
 theorem congr_equiv_backward_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
-    (hs₀ : s 0 = 0) {α : PowerSeries K} (hα : α.constantCoeff = 0) (r : ℕ) :
+    (hs₀ : s 0 = 0) {α : PowerSeries K} (hα : α.constantCoeff = 0) {r : ℕ} (hr : 1 ≤ r) :
     let f_inv := inv_RecurFun ht hq σ s hg hg_unit
     (∀ n, α.coeff n ∈ R.subtype '' ↑(I ^ r)) →
       ∀ n, PowerSeries.coeff n (f_inv.subst α)
@@ -2121,7 +2268,7 @@ theorem congr_equiv_backward_aux [UniformSpace K] [T2Space K] [DiscreteUniformit
           exact ⟨0, by simp⟩
         rw [if_neg hi₁, sub_zero]
         have h_le : 2 ≤ i := by omega
-        obtain ⟨x, hx₁, hx₂⟩ := coeff_pow_mem_ind k i r h_le ih
+        obtain ⟨x, hx₁, hx₂⟩ := coeff_pow_mem_ind k i r h_le constantCoeff_γ ih
         use g.coeff i * x
         refine ⟨Ideal.mul_mem_left _ _ hx₁, ?_⟩
         rw [map_mul, hx₂, smul_eq_mul, PowerSeries.coeff_map]
@@ -2146,7 +2293,7 @@ theorem congr_equiv_backward_aux [UniformSpace K] [T2Space K] [DiscreteUniformit
         rw [PowerSeries.coeff_smul, smul_eq_mul, PowerSeries.coeff_map]
         have mem_aux : (PowerSeries.coeff k) ((γ ^ q ^ i) ^ j)
           ∈ R.subtype '' ↑(I ^ (multiplicity q j + (r + 1))) := by
-          exact coeff_pow_mem_ind₁ k i r j hi₀ ih
+          exact coeff_pow_mem_ind₁ ht hq hp_mem constantCoeff_γ k i r j hj₀ hi₀ hr ih
           /- here use the same strategy as in the first part of this lemma. -/
         have mem_aux' : ⟨_, image_of_incl_mem _ mem_aux⟩ ∈ (I ^ ( multiplicity q j + (r + 1))) := by
           obtain ⟨a, ha₁, ha₂⟩ := mem_aux
@@ -2195,7 +2342,7 @@ lemma PowerSeries.coeff_pow_mem {f : PowerSeries K} (h : ∀ i, f.coeff i ∈ R)
     ∀ i, (f ^ n).coeff i ∈ R :=
   fun _ => (coeff_pow _ _ f) ▸  Subring.sum_mem _ fun l _ => Subring.prod_mem R fun c _ ↦ h (l c)
 
-include hs hp_mem hs₁ hs₂ hg_unit in
+include hs a_congr hp_mem hs₁ hs₂ hg_unit in
 theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ : s 0 = 0)
     {α : PowerSeries R} {β : PowerSeries K} (hα : α.constantCoeff = 0) (hβ : β.constantCoeff = 0)
     {r : ℕ} (hr : 1 ≤ r) :
@@ -2211,7 +2358,7 @@ theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ :
   let δ := f_inv.subst (f.subst β - f.subst (α.map R.subtype))
   /- δ (X) ≡ 0 [SMOD I ^ r] -/
   have δ_coeff_mem : ∀ n, PowerSeries.coeff n δ ∈ R.subtype '' ↑(I ^ r) := by
-    refine congr_equiv_backward_aux ht hq σ s hs₁ hs₂ hg hg_unit hs₀ ?_ r ?_
+    refine congr_equiv_backward_aux ht hq σ hp_mem s hs₁ hs₂ hg hg_unit hs₀ ?_ hr ?_
     · rw [map_sub, PowerSeries.constantCoeff, PowerSeries.constantCoeff_subst_zero hβ
       (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_zero (by simp [hα])
         (constantCoeff_RecurFun ..), sub_zero]
@@ -2282,7 +2429,7 @@ theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ :
     intro c hc
     rw [smul_eq_mul]
     refine Subring.mul_mem _ ?_ ?_
-    exact coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀ c
+    exact coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀ c
     simp only [Finsupp.prod, Nat.succ_eq_add_one, Nat.reduceAdd, PowerSeries.coeff_coe]
     rw [PowerSeries.coeff_prod]
     refine Subring.sum_mem _ ?_
@@ -2293,7 +2440,7 @@ theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ :
     · simpa using PowerSeries.coeff_pow_mem δ_coeff_mem_R  _
     · simpa using PowerSeries.coeff_pow_mem (by simp) _
   let β' := β.toSubring _ β_coeff_mem_R
-  let F' := F.toSubring _ (coeff_inv_add_mem_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀)
+  let F' := F.toSubring _ (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀)
   have coeff_δ_eq : ∀ d, PowerSeries.coeff d δ = δ'.coeff d := by simp [δ']
   have coeff_β_eq : ∀ d, β.coeff d = β'.coeff d := by simp [β']
   have eq_aux' : β' = F'.subst ![δ', α] := by
@@ -2307,7 +2454,7 @@ theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ :
     simp [F', δ', PowerSeries.coeff_mul]
     congr! 2 with l hl
     all_goals simp [PowerSeries.coeff_pow]
-  obtain ⟨G, hG⟩ := decomp_InvAdd_RecurFun_Subring ht hq σ hs hp_mem s hs₁ hs₂ hg hg_unit hs₀
+  obtain ⟨G, hG⟩ := decomp_InvAdd_RecurFun_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀
   rw [coeff_β_eq]
   have mem_ideal_MvPowerSeries_aux : (δ' * subst ![δ', α] G) ∈ (I ^ r).PowerSeries := by
     refine Ideal.IsTwoSided.mul_mem_of_left _ ?_
