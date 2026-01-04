@@ -181,7 +181,18 @@ lemma refinement_hs: ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
 
 include a_congr in
 lemma refinement_a_congr (l : ℕ) :  ∀ a : R, ⟨(σ ^ l) a, refinement_hs σ hs _ _⟩ ≡
-    (a ^ q ^ l) [SMOD I] := sorry
+    (a ^ q ^ l) [SMOD I] := by
+  induction l with
+  | zero =>
+    simp only [pow_zero, RingHom.coe_one, id_eq, Subtype.coe_eta, pow_one]
+    exact fun _ => rfl
+  | succ k ih =>
+    intro a
+    have : (σ ^ (k + 1)) ↑a = σ ((σ ^ k) ↑a) := by
+      rw [Nat.add_comm, pow_add, pow_one, RingHom.coe_mul, Function.comp_apply]
+    have eq_aux : (σ ^ k) a = (⟨(σ ^ k) ↑a, refinement_hs σ hs k a⟩: R) := rfl
+    simp_rw [this, pow_succ, pow_mul]
+    exact .trans (a_congr (⟨(σ ^ k) ↑a, refinement_hs σ hs k a⟩ : R)) (SModEq.pow q (ih a))
 
 include hs₁ in
 lemma refinement_hs₁ : ∀ i r, ∀ b, b ∈ (I ^ (r + 1)) →
@@ -226,10 +237,88 @@ lemma refinement_hs₂ : ∀ (i r : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑
 
 include hs₂ in
 /-- for all natural number `i` and `r`, for all element `b ∈ K`, then
-`I ^ r * b ⊆ I` implies `I ^ r * (σ ^ i) (b) ⊆ I`. -/
+`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
+lemma refinement_hs₂'_aux : ∀ (i j r : ℕ), ∀ (b : K), (∀ a, a ∈ (I^(r + j))
+    → b * a ∈ R.subtype '' ↑(I ^ j)) → (∀ a, a ∈ (I^(r + j))
+    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^j)) := by
+  intro i j
+  induction j with
+  | zero =>
+    intro r b h
+    rw [add_zero]
+
+    sorry
+  | succ k ih =>
+
+    sorry
+
+
+
+include hs₂ in
+/-- for all natural number `i` and `r`, for all element `b ∈ K`, then
+`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
 lemma refinement_hs₂' : ∀ (i r j : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^(r + j)))
     → b * a ∈ R.subtype '' ↑(I ^ j)) → (∀ a, a ∈ R.subtype '' ↑(I^(r + j))
-    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^j)) := sorry
+    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^j)) := by
+  intro i r j b h a ha
+  obtain h' := h _ ha
+
+  induction j with
+  | zero =>
+    simp
+
+    sorry
+  | succ k ih => sorry
+
+include hs₂ in
+/-- for all natural number `i` and `r`, for all element `b ∈ K`, then
+`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
+lemma refinement_hs₂_aux : ∀ (i r j : ℕ), ∀ b, (∀ a, (a ∈ R.subtype '' ↑(I^(r + j)))
+    → b * a ∈ R.subtype '' ↑(I ^ (j + 1))) → (∀ a, a ∈ R.subtype '' ↑(I^(r + j))
+    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^(j + 1))) := by
+  intro i r j b h
+  -- a ha
+  -- obtain h' := h _ ha
+
+  induction j with
+  | zero =>
+    simp_rw [zero_add, add_zero, pow_one] at h ⊢
+    obtain h1 := refinement_hs₂ σ hs₂ i r b
+    exact h1 h
+  | succ k ih =>
+
+    sorry
+
+include hs₂ in
+/-- for all natural number `i` and `r`, for all element `b ∈ K`, then
+`I ^ (r + j) * b ⊆ I ^ j` implies `I ^ (r + j) * (σ ^ i) (b) ⊆ I ^ j`. -/
+lemma refinement_hs₂_aux' : ∀ (i r j : ℕ), ∀ (b : K), (∀ a, (a ∈(I^(r + j)))
+    → b * a ∈ R.subtype '' ↑(I ^ (j + 1))) → (∀ a, a ∈ (I^(r + j))
+    → ((σ ^ i) b) * a ∈ R.subtype '' ↑(I^(j + 1))) := by
+  intro i r j b h
+  -- a ha
+  -- obtain h' := h _ ha
+
+  induction j with
+  | zero =>
+    simp_rw [zero_add, add_zero, pow_one] at h ⊢
+    obtain h1 := refinement_hs₂ σ hs₂ i r b
+    sorry
+    -- refine h1 ?_
+  | succ k ih =>
+    intro a ha
+    simp_rw [← add_assoc r k 1] at ha
+    refine Submodule.mul_induction_on ha ?_ ?_
+    · intro m hm n hn
+      rw [← Subring.subtype_apply, map_mul, ← mul_assoc]
+      obtain ih' := ih
+      sorry
+    · intro x y hx hy
+      obtain ⟨n, hn₁, hn₂⟩ := hx
+      obtain ⟨m, hm₁, hm₂⟩ := hy
+      refine ⟨n + m, Submodule.add_mem _ hn₁ hm₁, by simp [map_add, hm₂, hn₂, mul_add]⟩
+
+
     -- fun i r b h => by
   -- induction i with
   -- | zero => exact h
