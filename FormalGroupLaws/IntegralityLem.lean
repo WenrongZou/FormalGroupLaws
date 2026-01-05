@@ -659,20 +659,20 @@ lemma constantCoeff_inv_RecurFun :
   simp [inv_RecurFun, PowerSeries.subst_inv, PowerSeries.invFun_aux]
 
 /-- f⁻¹ (f (X)) = X. -/
-lemma inv_RecurFun_comp_RecurFun :
-    let f := RecurFun ht hq σ s hg
-    let f_inv := inv_RecurFun ht hq σ s hg hg_unit
-    f_inv.subst f = PowerSeries.X := by
-
-  sorry
-
-/-- f⁻¹ (f (X)) = X. -/
 lemma RecurFun_comp_inv_RecurFun :
     let f := RecurFun ht hq σ s hg
     let f_inv := inv_RecurFun ht hq σ s hg hg_unit
     f.subst f_inv = PowerSeries.X :=
+  PowerSeries.subst_inv_eq _ (coeff_RecurFun_unit ht hq σ s hg hg_unit)
+    (constantCoeff_RecurFun ..)
 
-  sorry
+/-- f⁻¹ (f (X)) = X. -/
+lemma inv_RecurFun_comp_RecurFun :
+    let f := RecurFun ht hq σ s hg
+    let f_inv := inv_RecurFun ht hq σ s hg hg_unit
+    f_inv.subst f = PowerSeries.X := by
+  refine PowerSeries.exist_subst_inv_aux _ ?_ (constantCoeff_inv_RecurFun ..) (RecurFun_comp_inv_RecurFun ..)
+  simp [inv_RecurFun, PowerSeries.subst_inv, PowerSeries.invFun_aux]
 
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, and we will prove this to be
 a formal group law over coefficient ring `R`. Now we denote `F(X,Y) = f_g⁻¹(f_g(X) + f_g(Y))`
@@ -1394,10 +1394,73 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
     rw [map_add, PowerSeries.toMvPowerSeries]
     simp_rw [PowerSeries.constantCoeff_subst_zero (constantCoeff_X _) (constantCoeff_RecurFun ..),
       zero_add]
-  lin_coeff_X := sorry
-  lin_coeff_Y := sorry
-  assoc := sorry
-  comm := sorry
+  lin_coeff_X := coeff_X_inv_add_RecurFun ht hq σ s hg hg_unit
+  lin_coeff_Y := coeff_Y_inv_add_RecurFun ht hq σ s hg hg_unit
+  assoc := by
+    let f := RecurFun ht hq σ s hg
+    let f_inv := inv_RecurFun ht hq σ s hg hg_unit
+    let F := inv_add_RecurFun ht hq σ s hg hg_unit
+    have f_def : f = RecurFun ht hq σ s hg := rfl
+    have f_inv_def : f_inv = inv_RecurFun ht hq σ s hg hg_unit := rfl
+    have F_def : F = inv_add_RecurFun ht hq σ s hg hg_unit := rfl
+    have f_comp_F : f.subst F = f.toMvPowerSeries 0 + f.toMvPowerSeries 1 :=
+      f_F_eq_f_add ht hq σ s hg hg_unit
+    rw [PowerSeries.subst] at f_comp_F
+
+    have eq_aux {α β : MvPowerSeries (Fin 3) K} {γ : PowerSeries K} (h : HasSubst ![α, β]) :
+      subst ![α, β] (γ.toMvPowerSeries 0 + γ.toMvPowerSeries 1) =
+        γ.subst α + γ.subst β := by
+      simp [subst_add h, PowerSeries.toMvPowerSeries, PowerSeries.subst,
+        subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) h,
+        subst_X h]
+    have has_subst₁ : HasSubst ![subst ![Y₀ (R := K), Y₁] F, Y₂] :=
+      has_subst_aux₁ (constantCoeff_inv_add_RecurFun ..)
+    have has_subst₂ : HasSubst ![Y₀, subst ![Y₁ (R := K), Y₂] F] :=
+      has_subst_aux₂ (constantCoeff_inv_add_RecurFun ..)
+    have has_subst₃ : PowerSeries.HasSubst ((RecurFun ht hq σ s hg).toMvPowerSeries (0 : Fin 2) +
+      (RecurFun ht hq σ s hg).toMvPowerSeries 1) := by
+      refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
+      rw [map_add, PowerSeries.constantCoeff_subst_zero (constantCoeff_X _)
+        (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_zero (constantCoeff_X _)
+          (constantCoeff_RecurFun ..), add_zero]
+    nth_rw 2 4 [inv_add_RecurFun]
+    rw [PowerSeries.subst, subst_comp_subst_apply (PowerSeries.HasSubst.const has_subst₃)
+      has_subst₁, subst_comp_subst_apply (PowerSeries.HasSubst.const has_subst₃) has_subst₂,
+        subst_congr]
+    funext i
+    have eq_aux₁ : subst ![subst ![Y₀, Y₁] F, Y₂] (f.toMvPowerSeries 0) =
+      f.toMvPowerSeries 0 + f.toMvPowerSeries 1 := by
+      rw [PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
+        (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) has_subst₁, subst_X has_subst₁,
+        Matrix.cons_val_zero, ← subst_comp_subst_apply (PowerSeries.HasSubst.const
+        (HasSubst.inv_add_RecurFun ..)) has_subst_XY, f_comp_F, eq_aux has_subst_XY]
+    have eq_aux₂ : subst ![Y₀, subst ![Y₁, Y₂] F] ((RecurFun ht hq σ s hg).toMvPowerSeries 1)
+      = f.toMvPowerSeries 1 + f.toMvPowerSeries 2 := by
+      rw [PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_one,
+        Matrix.cons_val_zero, PowerSeries.subst, ← subst_comp_subst_apply
+        (PowerSeries.HasSubst.const (HasSubst.inv_add_RecurFun ..)) has_subst_YZ,
+          f_comp_F, eq_aux has_subst_YZ]
+    rw [subst_add has_subst₁, eq_aux₁, PowerSeries.toMvPowerSeries_val _ has_subst₁,
+      Matrix.cons_val_one, Matrix.cons_val_zero, subst_add has_subst₂,
+      PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_zero, eq_aux₂]
+    exact add_assoc _ _ _
+  comm := by
+    rw [inv_add_RecurFun, PowerSeries.subst, subst_comp_subst_apply _ has_subst_swap, subst_congr]
+    funext i
+    conv_rhs =>
+      rw [add_comm ((RecurFun ht hq σ s hg).toMvPowerSeries 0), subst_add has_subst_swap]
+    congr
+    · simp_rw [PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
+        (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) has_subst_swap,
+          subst_X has_subst_swap, Matrix.cons_val_one, Matrix.cons_val_fin_one]
+    · simp_rw [PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
+        (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) has_subst_swap,
+          subst_X has_subst_swap, Matrix.cons_val_zero]
+    · refine PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero ?_
+      rw [map_add, PowerSeries.constantCoeff_subst_zero (constantCoeff_X _)
+        (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_zero (constantCoeff_X _)
+          (constantCoeff_RecurFun ..), add_zero]
+
 
 def CommFormalGroup.InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) : CommFormalGroup R :=
@@ -1430,7 +1493,11 @@ include hs a_congr hp_mem hs₁ hs₂ in
 theorem decomp_InvAdd_RecurFun_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) : ∃ (G : MvPowerSeries (Fin 2) R),
     (inv_add_RecurFun ht hq σ s hg hg_unit).toSubring _
-      (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀) = X₁ + X₀ * G := sorry
+      (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀)
+        = X₁ + X₀ * G :=
+  decomp_Y_add (CommFormalGroup.InvAdd_RecurFun ht hq σ hs a_congr
+    hp_mem s hs₁ hs₂ hg hg_unit hs₀: FormalGroup R)
+
 
 end PartI
 

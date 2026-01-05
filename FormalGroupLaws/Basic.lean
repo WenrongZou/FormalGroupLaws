@@ -167,6 +167,11 @@ lemma has_subst_toMvPowerSeries [Finite σ] {f : PowerSeries R}
   · simp [hd₀, hf]
   · simp [zero_pow hd₀]
 
+lemma PowerSeries.toMvPowerSeries_val {f : PowerSeries R} {a : σ → MvPowerSeries τ R} (i : σ)
+    (ha : MvPowerSeries.HasSubst a) : (f.toMvPowerSeries i).subst a = f.subst (a i) := by
+  simp [toMvPowerSeries,  subst, MvPowerSeries.subst_comp_subst_apply
+    (HasSubst.const (HasSubst.X i)) ha, MvPowerSeries.subst_X ha]
+
 /-- This is a map from `Fin 2` to `ℕ` mapping `0` to `i` and `1` to `j`, which can be used
   to compute degree of `X^i*X^j`.  -/
 abbrev coeff_two (i j : ℕ) : Fin 2 →₀ ℕ :=
