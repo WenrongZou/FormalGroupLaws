@@ -26,14 +26,21 @@ theorem MvPowerSeries.constantCoeff_expand :
 theorem MvPowerSeries.order_expand : (φ.expand p hp).order = p • φ.order := by
   by_cases! hφ : φ = 0
   · simpa [hφ] using (ENat.mul_top (by norm_cast)).symm
-  · refine ENat.eq_of_forall_natCast_le_iff ?_
-    intro a
-    constructor
-    · intro h
-
-
-      sorry
-    · sorry
+  · apply eq_of_le_of_ge
+    · obtain ⟨d, hd₁, hd₂⟩ := exists_coeff_ne_zero_and_order (ne_zero_iff_order_finite.mp hφ)
+      have : p • φ.order = (p • d).degree := by simp [← hd₂]
+      rw [this]
+      exact order_le <| (coeff_expand_smul p hp φ _) ▸ hd₁
+    · refine MvPowerSeries.le_order fun d hd => by
+        by_cases! h : ∀ i, p ∣ d i
+        · obtain ⟨m, hm⟩ : ∃ m, d = p • m :=
+            ⟨Finsupp.equivFunOnFinite.symm fun i => d i / p,
+              by ext i; simp [(Nat.mul_div_cancel' (h i))]⟩
+          rw [hm, coeff_expand_smul, coeff_of_lt_order]
+          simp only [hm, map_nsmul, smul_eq_mul, Nat.cast_mul, nsmul_eq_mul] at hd
+          exact lt_of_mul_lt_mul_left' hd
+        · obtain ⟨i, hi⟩ := h
+          exact coeff_expand_of_not_dvd p hp φ hi
 
 omit [Finite σ] in
 theorem MvPowerSeries.expand_subst {f : σ → MvPowerSeries τ R} (hf : HasSubst f)
@@ -61,13 +68,30 @@ variable {p : ℕ} (hp : p ≠ 0) (φ : PowerSeries R)
 lemma PowerSeries.one_le_order {f : PowerSeries R} (hf : f.constantCoeff = 0) : 1 ≤ f.order :=
   ENat.one_le_iff_ne_zero.mpr <| order_ne_zero_iff_constCoeff_eq_zero.mpr hf
 
+theorem PowerSeries.coeff_expand {f : PowerSeries R} {n : ℕ} :
+    (f.expand p hp).coeff n = if p ∣ n then f.coeff (n / p) else 0 := by
+  split_ifs with h
+  · obtain ⟨q, hq⟩ := h
+    rw [hq, coeff_expand_mul, Nat.mul_div_cancel_left _ (p.pos_of_ne_zero hp)]
+  exact coeff_expand_of_not_dvd p hp f h
+
 theorem PowerSeries.order_expand : (φ.expand p hp).order = p • φ.order := by
   by_cases! hφ : φ = 0
   · simp [hφ]
     exact(ENat.mul_top (by norm_cast)).symm
-  ·
-
-    sorry
+  · apply eq_of_le_of_ge
+    · have : p • φ.order = (p * φ.order.toNat : ℕ) := by
+        rw [nsmul_eq_mul, Nat.cast_mul, coe_toNat_order hφ]
+      rw [this]
+      exact order_le _ <| (coeff_expand_mul p hp φ _) ▸ coeff_order hφ
+    · refine PowerSeries.le_order _ _ fun i hi => by
+        rw [coeff_expand]
+        split_ifs with h
+        · obtain ⟨q, hq⟩ := h
+          rw [hq, Nat.mul_div_cancel_left _ (p.pos_of_ne_zero hp)]
+          simp only [hq, Nat.cast_mul, nsmul_eq_mul] at hi
+          exact coeff_of_lt_order q (lt_of_mul_lt_mul_left' hi)
+        rfl
 
 theorem PowerSeries.constantCoeff_expand : (φ.expand p hp).constantCoeff = φ.constantCoeff := by
   conv_lhs => rw [← coeff_zero_eq_constantCoeff, ← mul_zero p, coeff_expand_mul]
@@ -114,15 +138,6 @@ theorem PowerSeries.expand_eq_expand :
 
 lemma PowerSeries.expand_smul (a : R):
     expand p hp (a • φ) = a • φ.expand p hp := AlgHom.map_smul_of_tower _ _ _
-
-theorem PowerSeries.coeff_expand {f : PowerSeries R} {n : ℕ} :
-    (f.expand p hp).coeff n = if p ∣ n then f.coeff (n / p) else 0 := by
-
-  split_ifs with h
-  obtain ⟨q, hq⟩ := h
-  sorry
-
-  sorry
 
 lemma PowerSeries.expand_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
     {x : ℕ → PowerSeries R} (hx : Summable x):
