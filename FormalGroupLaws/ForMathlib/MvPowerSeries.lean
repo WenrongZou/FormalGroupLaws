@@ -2,6 +2,7 @@ import Mathlib.RingTheory.MvPowerSeries.Expand
 import Mathlib.RingTheory.PowerSeries.Expand
 import Mathlib.RingTheory.PowerSeries.PiTopology
 import Mathlib.Algebra.Order.Monoid.Unbundled.Pow
+import FormalGroupLaws.MvPowerSeries
 
 variable {R S : Type*} [CommRing R] [CommRing S] {σ τ: Type*} [Finite σ] [Finite τ]
 
@@ -12,8 +13,10 @@ open scoped WithPiTopology
 
 variable {p : ℕ} (hp : p ≠ 0) (φ : MvPowerSeries σ R)
 
+omit [Finite σ] in
 lemma MvPowerSeries.one_le_order {F : MvPowerSeries σ R} (hF : F.constantCoeff = 0) :
-    1 ≤ F.order := sorry
+    1 ≤ F.order :=
+  ENat.one_le_iff_ne_zero.mpr <| order_ne_zero_iff_constCoeff_eq_zero.mpr hF
 
 theorem MvPowerSeries.constantCoeff_expand :
     (φ.expand p hp).constantCoeff = φ.constantCoeff := by
@@ -22,9 +25,15 @@ theorem MvPowerSeries.constantCoeff_expand :
 
 theorem MvPowerSeries.order_expand : (φ.expand p hp).order = p • φ.order := by
   by_cases! hφ : φ = 0
-  · simp [hφ]
-    exact(ENat.mul_top (by norm_cast)).symm
-  · sorry
+  · simpa [hφ] using (ENat.mul_top (by norm_cast)).symm
+  · refine ENat.eq_of_forall_natCast_le_iff ?_
+    intro a
+    constructor
+    · intro h
+
+
+      sorry
+    · sorry
 
 omit [Finite σ] in
 theorem MvPowerSeries.expand_subst {f : σ → MvPowerSeries τ R} (hf : HasSubst f)
@@ -32,13 +41,13 @@ theorem MvPowerSeries.expand_subst {f : σ → MvPowerSeries τ R} (hf : HasSubs
     expand p hp (subst f φ) = subst (fun i ↦ (f i).expand p hp) φ := by
   rw [← substAlgHom_apply hf, expand_substAlgHom, substAlgHom_apply]
 
-theorem MvPowerSeries.constantCoeff_pow_zero (hφ : φ.constantCoeff = 0) {n : ℕ} (hn : n ≠ 0) :
-    (φ ^ n).constantCoeff = 0 := by
-  rw [map_pow]
-  sorry
-
+omit [Finite σ] in
 theorem MvPowerSeries.le_order_pow_n (hφ : φ.constantCoeff = 0) {n : ℕ} :
-    n ≤ (φ ^ n).order := sorry
+    n ≤ (φ ^ n).order := by
+  refine .trans ?_ (MvPowerSeries.le_order_pow n)
+  rw [nsmul_eq_mul]
+  refine ENat.self_le_mul_right _ <| order_ne_zero_iff_constCoeff_eq_zero.mpr hφ
+
 
 end
 
@@ -49,14 +58,16 @@ open scoped WithPiTopology
 
 variable {p : ℕ} (hp : p ≠ 0) (φ : PowerSeries R)
 
-lemma PowerSeries.one_le_order {f : PowerSeries R} (hf : f.constantCoeff = 0) : 1 ≤ f.order := by
-  sorry
+lemma PowerSeries.one_le_order {f : PowerSeries R} (hf : f.constantCoeff = 0) : 1 ≤ f.order :=
+  ENat.one_le_iff_ne_zero.mpr <| order_ne_zero_iff_constCoeff_eq_zero.mpr hf
 
 theorem PowerSeries.order_expand : (φ.expand p hp).order = p • φ.order := by
   by_cases! hφ : φ = 0
   · simp [hφ]
     exact(ENat.mul_top (by norm_cast)).symm
-  · sorry
+  ·
+
+    sorry
 
 theorem PowerSeries.constantCoeff_expand : (φ.expand p hp).constantCoeff = φ.constantCoeff := by
   conv_lhs => rw [← coeff_zero_eq_constantCoeff, ← mul_zero p, coeff_expand_mul]
@@ -76,33 +87,48 @@ theorem PowerSeries.le_order_pow_n (hφ : φ.constantCoeff = 0) {n : ℕ} :
   simp
   exact le_mul_of_one_le_right' h
 
+omit [Finite σ]
 lemma PowerSeries.le_order_subst_left {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0) :
-    φ.order ≤ (φ.subst f).order  := sorry
+    φ.order ≤ (φ.subst f).order  :=
+  .trans (ENat.self_le_mul_left φ.order (f.order_ne_zero_iff_constCoeff_eq_zero.mpr hf))
+    (PowerSeries.le_order_subst f (HasSubst.of_constantCoeff_zero hf) _)
 
 lemma PowerSeries.le_order_subst_right {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0)
-    (hφ : φ.constantCoeff = 0) :
-    f.order ≤ (φ.subst f).order  := sorry
+    (hφ : φ.constantCoeff = 0) : f.order ≤ (φ.subst f).order  :=
+  .trans (ENat.self_le_mul_right _ (order_ne_zero_iff_constCoeff_eq_zero.mpr hφ))
+    (PowerSeries.le_order_subst f (HasSubst.of_constantCoeff_zero hf) _)
 
 lemma PowerSeries.le_order_subst_left' {f : PowerSeries R} (hf : f.constantCoeff = 0) :
-    φ.order ≤ PowerSeries.order (φ.subst f) := sorry
+    φ.order ≤ PowerSeries.order (φ.subst f) := by
+  conv_rhs => rw [order_eq_order]
+  exact le_order_subst_left _ hf
 
-lemma PowerSeries.le_order_subst_right' {f : PowerSeries R} (hφ : f.constantCoeff = 0)
-    (hf : φ.constantCoeff = 0) :
-    f.order ≤ PowerSeries.order (φ.subst f) := sorry
-
+lemma PowerSeries.le_order_subst_right' {f : PowerSeries R} (hf : f.constantCoeff = 0)
+    (hφ : φ.constantCoeff = 0) :
+    f.order ≤ PowerSeries.order (φ.subst f) := by
+  simp_rw [order_eq_order]
+  exact le_order_subst_right φ hf hφ
 
 theorem PowerSeries.expand_eq_expand :
-    MvPowerSeries.expand p hp φ = PowerSeries.expand p hp φ := sorry
+    MvPowerSeries.expand p hp φ = PowerSeries.expand p hp φ := rfl
 
 lemma PowerSeries.expand_smul (a : R):
-    expand p hp (a • φ) = a • φ.expand p hp := by sorry
+    expand p hp (a • φ) = a • φ.expand p hp := AlgHom.map_smul_of_tower _ _ _
 
 theorem PowerSeries.coeff_expand {f : PowerSeries R} {n : ℕ} :
-    (f.expand p hp).coeff n = if p ∣ n then f.coeff (n / p) else 0 := sorry
+    (f.expand p hp).coeff n = if p ∣ n then f.coeff (n / p) else 0 := by
+
+  split_ifs with h
+  obtain ⟨q, hq⟩ := h
+  sorry
+
+  sorry
 
 lemma PowerSeries.expand_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
     {x : ℕ → PowerSeries R} (hx : Summable x):
-    expand p hp (∑' i, x i) = ∑' i, (x i).expand p hp := by sorry
+    expand p hp (∑' i, x i) = ∑' i, (x i).expand p hp := by
+  simp_rw [expand_apply]
+  rw [tsum_subst hx (HasSubst.X_pow hp)]
 
 omit [Finite σ] in
 theorem PowerSeries.subst_sub {a : MvPowerSeries σ R} (ha : HasSubst a) (f g : PowerSeries R) :

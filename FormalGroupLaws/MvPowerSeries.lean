@@ -127,7 +127,20 @@ def FormalGroup.toSubring (F : FormalGroup R) (hF : ∀ n, F.toFun n ∈ T) : Fo
         simp [coeff_pow]
 
 lemma CommFormalGroup.toSubring_comm (F : CommFormalGroup R) (hF : ∀ n, F.toFun n ∈ T) :
-    F.toFun.toSubring _ hF = (F.toFun.toSubring _ hF).subst ![X₁, X₀] := sorry
+    F.toFun.toSubring _ hF = (F.toFun.toSubring _ hF).subst ![X₁, X₀] := by
+  ext d
+  simp only [coeff_toSubring, Nat.succ_eq_add_one, Nat.reduceAdd]
+  conv_lhs => rw [F.comm]
+  have h₁ := coeff_subst_finite (has_subst_swap (R := T)) (F.toFun.toSubring T hF) d
+
+  rw [coeff_subst has_subst_swap, coeff_subst has_subst_swap, ← Subring.subtype_apply,
+    RingHom.eq_toAddMonoidHom, AddMonoidHom.map_finsum (T.subtype.toAddMonoidHom) h₁, finsum_congr]
+  intro n
+  simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue,
+    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one, smul_eq_mul,
+    RingHom.toAddMonoidHom_eq_coe, AddMonoidHom.coe_coe, Subring.subtype_apply, Subring.coe_mul,
+    coeff_toSubring, X_pow_eq, monomial_mul_monomial, coeff_monomial]
+  split_ifs <;> simp
 
 def CommFormalGroup.toSubring (F : CommFormalGroup R) (hF : ∀ n, F.toFun n ∈ T) :
     CommFormalGroup T where
@@ -229,19 +242,6 @@ lemma PowerSeries.Summable.increase_order {x : ℕ → PowerSeries R}
     [TopologicalSpace R] (hx : ∀ n, n ≤ (x n).order) : Summable x :=
   ⟨(.mk fun n => ∑ i ∈ Finset.range (n + 1), (((x i).coeff n))), HasSum.increase_order hx⟩
 
-
-section
-
-variable (w : τ → ℕ) {a : σ → MvPowerSeries τ R}
-
-open MvPowerSeries
-
--- lemma MvPowerSeries.subst_C (ha : HasSubst a) (r : R) : subst a (C r) = C r := by
---   conv_lhs => rw [← mul_one (C r), ← smul_eq_C_mul, subst_smul ha, ← substAlgHom_apply ha,
---     map_one, smul_eq_C_mul, mul_one]
-
-end
-
 section
 
 omit [Algebra R S]
@@ -303,11 +303,6 @@ lemma PowerSeries.HasSubst.pow {f : MvPowerSeries σ R} (hf : HasSubst f) {n : �
     rw [pow_add, pow_one]
     exact HasSubst.mul_left ih
 
--- lemma Rchar_p {p : ℕ} {I : Ideal R} (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)] :
---     ringChar (R ⧸ I) = p := by
-
---   sorry
-
 lemma Rchar_p {p : ℕ} {I : Ideal R} (hI_neTop : I ≠ ⊤) (hI : ↑p ∈ I) [hp : Fact (Nat.Prime p)] :
     ExpChar (R ⧸ I) p := by
   haveI : Nontrivial (R ⧸ I) := Submodule.Quotient.nontrivial_iff.mpr hI_neTop
@@ -320,27 +315,10 @@ lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUn
     {G : MvPowerSeries σ R} (f : PowerSeries R)
     (hG : HasSubst G) :
     f.subst G = ∑' i, (f.coeff i) • G ^ i := by
-
-  sorry
-
-theorem map_iterateFrobenius_expand (f : MvPowerSeries σ R) [Finite σ] (p n : ℕ) [ExpChar R p]
-    (hp : p ≠ 0) :
-    map (iterateFrobenius R p n) (expand (p ^ n) (pow_ne_zero n hp) f) = f ^ p ^ n := by
-  sorry
-  -- induction n with
-  -- | zero => simp [map_id]
-  -- | succ k n_ih =>
-  --   symm
-  --   conv_lhs => rw [pow_succ, pow_mul, ← n_ih]
-  --   simp_rw [← map_frobenius_expand p hp, pow_succ', add_comm k, iterateFrobenius_add,
-  --     ← map_map, ← map_expand, ← expand_mul, iterateFrobenius_one]
-
-
--- lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R]
---     {G : MvPowerSeries σ R} (f : PowerSeries R)
---     (hG : HasSubst G) :
---     expand p hp ∑' i, (f.coeff i) • G ^ i := by
-
+  conv_lhs => rw [f.as_tsum]
+  rw [tsum_subst ⟨_, hasSum_of_monomials_self f⟩ hG, tsum_congr]
+  intro i
+  rw [monomial_eq_C_mul_X_pow, ← smul_eq_C_mul, subst_smul hG, subst_pow hG, subst_X hG]
 
 section
 

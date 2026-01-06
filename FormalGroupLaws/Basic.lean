@@ -63,35 +63,36 @@ abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 lemma RingHom.eq_toAddMonoidHom {S T : Type*} [Semiring S] [Semiring T] (f : S →+* T) {x : S} :
   f x = f.toAddMonoidHom x := rfl
 
-omit [Algebra R S] in
-open AddMonoidHom in
-lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries τ R} {h : R →+* S}
-    {f : MvPowerSeries σ R}
-    (ha : HasSubst a) : (f.map h).subst (fun i => (a i).map h) = (f.subst a).map h := by
-  ext n
-  have ha' : HasSubst (fun i => (a i).map h) := hasSubst_of_constantCoeff_nilpotent fun s => by
-    rw [constantCoeff_map]
-    exact IsNilpotent.map (ha.const_coeff s) h
-  rw [coeff_subst ha', coeff_map, coeff_subst ha, h.eq_toAddMonoidHom,
-    map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
-  intro d
-  simp only [coeff_map, smul_eq_mul, RingHom.toAddMonoidHom_eq_coe, coe_coe, map_mul]
-  simp_rw [←coeff_map, Finsupp.prod]
-  simp
+#check MvPowerSeries.map_subst
+-- omit [Algebra R S] in
+-- open AddMonoidHom in
+-- lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries τ R} {h : R →+* S}
+--     {f : MvPowerSeries σ R}
+--     (ha : HasSubst a) : (f.map h).subst (fun i => (a i).map h) = (f.subst a).map h := by
+--   ext n
+--   have ha' : HasSubst (fun i => (a i).map h) := hasSubst_of_constantCoeff_nilpotent fun s => by
+--     rw [constantCoeff_map]
+--     exact IsNilpotent.map (ha.const_coeff s) h
+--   rw [coeff_subst ha', coeff_map, coeff_subst ha, h.eq_toAddMonoidHom,
+--     map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
+--   intro d
+--   simp only [coeff_map, smul_eq_mul, RingHom.toAddMonoidHom_eq_coe, coe_coe, map_mul]
+--   simp_rw [←coeff_map, Finsupp.prod]
+--   simp
 
-omit [Algebra R S] in
-open AddMonoidHom in
-lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* S} {f : PowerSeries R}
-    (ha : HasSubst a): (f.map h).subst (a.map h) =(f.subst a).map h := by
-  ext n
-  simp
-  have ha' : HasSubst (a.map h) := by
-    rw [HasSubst, constantCoeff_map]
-    exact IsNilpotent.map ha h
-  rw [coeff_subst ha, coeff_subst ha', h.eq_toAddMonoidHom,
-    map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
-  intro d
-  simp [←map_pow]
+-- omit [Algebra R S] in
+-- open AddMonoidHom in
+-- lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* S} {f : PowerSeries R}
+--     (ha : HasSubst a): (f.map h).subst (a.map h) =(f.subst a).map h := by
+--   ext n
+--   simp
+--   have ha' : HasSubst (a.map h) := by
+--     rw [HasSubst, constantCoeff_map]
+--     exact IsNilpotent.map ha h
+--   rw [coeff_subst ha, coeff_subst ha', h.eq_toAddMonoidHom,
+--     map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
+--   intro d
+--   simp [←map_pow]
 
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
     (hg : constantCoeff g = 0) : HasSubst ![f, g] :=
@@ -622,9 +623,9 @@ lemma self_comp_aux :
 /-- By the associativity of Formal Group Law,
   `F (0, F(0, X)) = F (0, X)`. -/
 lemma self_comp_aux' :
-  (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) ∘
-  (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) =
-  (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun : PowerSeries R) (R := R)) := by
+  (PowerSeries.subst (subst ![0, PowerSeries.X (R := R)] F.toFun)) ∘
+  (PowerSeries.subst (subst ![0, PowerSeries.X (R := R)] F.toFun)) =
+  (PowerSeries.subst (subst ![0, PowerSeries.X] F.toFun) (R := R)) := by
   obtain assoc_eq := F.assoc
   have has_subst_aux : PowerSeries.HasSubst (subst ![0, PowerSeries.X] F.toFun (S := R)) :=
     PowerSeries.HasSubst.of_constantCoeff_zero <| by
@@ -712,13 +713,13 @@ theorem subst_X_eq_X  :
     simp [coeff_of_X₀_of_subst_X₀]
   obtain ⟨g, hg₁, hg₂, hg₃⟩ := PowerSeries.exist_subst_inv _  h₀ (constantCoeff_of_subst_X₀ F)
   have eq_aux :
-    (PowerSeries.subst g) ∘ (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) ∘
-    (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) =
+    (PowerSeries.subst g) ∘ (PowerSeries.subst (subst ![PowerSeries.X (R := R), 0] F.toFun) (R := R)) ∘
+    (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun) (R := R)) =
     (PowerSeries.subst g) ∘
     (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) := by
     rw [self_comp_aux]
   simp [←Function.comp_assoc, hg₂] at eq_aux
-  exact (PowerSeries.subst_eq_id_iff_eq_X (subst ![PowerSeries.X, 0] F.toFun)
+  exact (PowerSeries.subst_eq_id_iff_eq_X _
     (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₀ F))).mp eq_aux
 
 
