@@ -74,9 +74,10 @@ theorem truncTotalDeg_powerSeries (n : ℕ) (ϕ : PowerSeries R) :
     truncTotalDeg n ϕ = (MvPolynomial.pUnitAlgEquiv _).symm (ϕ.trunc n) := by
   rw [(MvPolynomial.pUnitAlgEquiv _).eq_symm_apply, truncTotalDeg]
   ext d
-  simp_rw [truncTotalDegEq_powerSeries, map_sum,
-    (MvPolynomial.pUnitAlgEquiv _).apply_symm_apply, PowerSeries.trunc,
+  simp_rw [PowerSeries.trunc_apply, truncTotalDegEq_powerSeries, map_sum,
+    (MvPolynomial.pUnitAlgEquiv _).apply_symm_apply,
     Finset.range_eq_Ico]
+
 
 lemma MvPowerSeries.truncTotalDeg_map_add (f g : MvPowerSeries σ R) (n : ℕ) :
   truncTotalDeg n (f + g) = truncTotalDeg n f + truncTotalDeg n g := by

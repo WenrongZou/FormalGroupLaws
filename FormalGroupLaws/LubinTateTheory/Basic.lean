@@ -159,9 +159,10 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           have has_subst : (constantCoeff F_f) = 0 := by
             rw [←eq_aux] at hf₁
             simp [constantCoeff_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
-          rw [subst_add (has_subst_aux₁ _ has_subst), subst_X (has_subst_aux₁ _ has_subst),
-            subst_X (has_subst_aux₁ _ has_subst)]
+          rw [subst_add (has_subst_aux₁ h_Ff), subst_X (has_subst_aux₁ h_Ff),
+            subst_X (has_subst_aux₁ h_Ff)]
           simp
+
         rw [eq_aux]
         simp
         unfold φ
@@ -192,7 +193,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           = subst ![subst ![Y₀, Y₁] F_f, Y₂ (R := 𝒪[K])] (PowerSeries.subst F_f f.toFun) := by
           simp [PowerSeries.subst]
           rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
-            (has_subst_aux₁ F_f constantF_f)]
+            (has_subst_aux₁ h_Ff)]
         rw [eq_aux₁, hf₂]
         let map_aux : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
         | ⟨0, _⟩ => PowerSeries.subst (subst ![Y₀, Y₁] F_f) f.toFun
@@ -205,18 +206,18 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           fin_cases s
           · simp [map_aux, PowerSeries.toMvPowerSeries, PowerSeries.subst]
             rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 0))
-              (has_subst_aux₁ F_f constantF_f)]
+              (has_subst_aux₁ h_Ff)]
             apply subst_congr
             funext t
-            simp [subst_X (has_subst_aux₁ F_f constantF_f)]
+            simp [subst_X (has_subst_aux₁ h_Ff)]
           · simp [map_aux, PowerSeries.toMvPowerSeries, PowerSeries.subst]
             rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X 1))
-              (has_subst_aux₁ F_f constantF_f)]
+              (has_subst_aux₁ h_Ff)]
             apply subst_congr
             funext t
-            simp [subst_X (has_subst_aux₁ F_f constantF_f)]
+            simp [subst_X (has_subst_aux₁ h_Ff)]
           exact (has_subst_toMvPowerSeries hf_constant)
-          exact (has_subst_aux₁ F_f constantF_f)
+          exact (has_subst_aux₁ h_Ff)
         rw [eq_aux₂]
         unfold map_aux
         let map_aux' : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
@@ -246,7 +247,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
             apply subst_congr
             funext t
             simp [subst_X has_subst_XY]
-        rw [eq_aux₃, subst_comp_subst_apply (has_subst_aux₁ F_f constantF_f) (has_subst_toMvPowerSeries hf_constant)]
+        rw [eq_aux₃, subst_comp_subst_apply (has_subst_aux₁ h_Ff) (has_subst_toMvPowerSeries hf_constant)]
         apply subst_congr
         funext x t
         fin_cases x
@@ -275,7 +276,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           have has_subst : (constantCoeff F_f) = 0 := by
             rw [←eq_aux] at hf₁
             simp [constantCoeff_of_truncTotalDeg_ge_one F_f (by linarith) (d := 2), hf₁, phi_eq]
-          simp [subst_add (has_subst_aux₂ _ has_subst), subst_X (has_subst_aux₂ _ has_subst)]
+          simp [subst_add (has_subst_aux₂ h_Ff), subst_X (has_subst_aux₂ h_Ff)]
         rw [eq_aux]
         simp
         unfold φ
@@ -307,10 +308,10 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           = subst ![Y₀, subst ![Y₁, Y₂ (R := 𝒪[K])] F_f] (PowerSeries.subst F_f f.toFun) := by
           simp [PowerSeries.subst]
           rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
-            (has_subst_aux₂ F_f constantF_f)]
-        rw [eq_aux₁, hf₂, subst_comp_subst_apply (has_subst_aux₂ F_f constantF_f)
+            (has_subst_aux₂ h_Ff)]
+        rw [eq_aux₁, hf₂, subst_comp_subst_apply (has_subst_aux₂ h_Ff)
           (has_subst_toMvPowerSeries hf_constant), subst_comp_subst_apply
-          (has_subst_toMvPowerSeries hf_constant) (has_subst_aux₂ F_f constantF_f)]
+          (has_subst_toMvPowerSeries hf_constant) (has_subst_aux₂ h_Ff)]
         apply subst_congr
         funext x
         fin_cases x
@@ -318,17 +319,17 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           simp [Y₀]
           rw [subst_X (has_subst_toMvPowerSeries hf_constant), PowerSeries.toMvPowerSeries,
             PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
-            (hasSubst_of_constantCoeff_zero (by simp)) (has_subst_aux₂ F_f constantF_f),
+            (hasSubst_of_constantCoeff_zero (by simp)) (has_subst_aux₂ h_Ff),
             PowerSeries.subst]
           apply subst_congr
           funext t
-          simp [subst_X (has_subst_aux₂ F_f constantF_f)]
+          simp [subst_X (has_subst_aux₂ h_Ff)]
         · -- the case `x = 1`
           simp
           unfold PowerSeries.toMvPowerSeries PowerSeries.subst
           rw [subst_comp_subst_apply (hasSubst_of_constantCoeff_zero
-            (fun s ↦ constantCoeff_X 1)) (has_subst_aux₂ F_f constantF_f),
-            subst_X (has_subst_aux₂ F_f constantF_f)]
+            (fun s ↦ constantCoeff_X 1)) (has_subst_aux₂ constantF_f),
+            subst_X (has_subst_aux₂ h_Ff)]
           have eq_aux : subst ![Y₁, Y₂] (PowerSeries.subst F_f f.toFun) =
             subst ![Y₁, Y₂ ] (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K])  := by
             rw [hf₂]
@@ -714,7 +715,6 @@ theorem ScalarHom.subst_eq (f g : LubinTateF π) (a : 𝒪[K]) :
   obtain ⟨h₁, h₂⟩ := h₁
   obtain ⟨htrunc, hsubst⟩ := h₁
   rw [ScalarHom]
-  simp [hsubst]
   sorry
 
 -- how to define notation here `--------------------------------`
