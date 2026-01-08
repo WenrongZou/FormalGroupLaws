@@ -384,22 +384,6 @@ lemma coeff_RecurFun_mul_mem_i (n i: ℕ) :
     use (x₁ + y₁)
     simp [← hx₂, ← hy₂, (Submodule.add_mem_iff_right (I ^ i) hx₁).mpr hy₁]
 
--- include hq hp_mem in
--- lemma p_pow_mod_p (G : MvPowerSeries (Fin 2) K) {l : ℕ} (l_pos : 0 < l) :
---     ∀ d, ((G ^ (q ^ l)) - ((G.expand (q ^ l) (q_pow_neZero hq)).map (σ^l))).coeff d
---       ∈ R.subtype '' I := by
---   intro d
---   have mem_aux : (G ^ (q ^ l) -
---     ((G.expand (q ^l) (q_pow_neZero hq)).map (σ^l))).coeff d ∈ R := by
---     /- this is by my theorem expand_char. -/
---     sorry
---   have pdvd : (p : R) ∣ ⟨_, mem_aux⟩ := by
---     sorry
---   obtain ⟨pk, hpk⟩ := pdvd
---   use ⟨_, mem_aux⟩
---   nth_rw 1 [hpk]
---   exact ⟨Ideal.IsTwoSided.mul_mem_of_left pk hp_mem, (by simp)⟩
-
 include hs in
 lemma refine_hs : ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
   induction j with
@@ -413,11 +397,6 @@ lemma refine_hs : ∀ (j : ℕ), ∀ (a : R), (σ ^ j) a ∈ R := fun j => by
 include hs in
 lemma coeff_aux_mem {G : MvPowerSeries τ R} : ∀ (j : ℕ), ∀ (n : τ →₀ ℕ),
   (G.map ((σ ^ j).comp R.subtype)).coeff n ∈ R := fun j n => refine_hs σ hs j (G n)
-
--- include hp hI hp_mem in
--- lemma sigma_pow_eq_iterateFrobenuis (G: MvPowerSeries τ (R ⧸ I)) {l : ℕ} (l_pos : 0 < l)  :
---     haveI : ExpChar (R ⧸ I) p := Rchar_p hI hp_mem
---     ∀ n, coeff n (G.map (iterateFrobenius _ p (t * l))) = coeff n (G.map ((σ ^ l).comp ))
 
 include ht hq hp_mem in
 lemma congr_pow_mod_add {r i : ℕ} {F G : MvPowerSeries τ R} (hr : 1 ≤ r)

@@ -63,48 +63,15 @@ abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 lemma RingHom.eq_toAddMonoidHom {S T : Type*} [Semiring S] [Semiring T] (f : S →+* T) {x : S} :
   f x = f.toAddMonoidHom x := rfl
 
-#check MvPowerSeries.map_subst
--- omit [Algebra R S] in
--- open AddMonoidHom in
--- lemma MvPowerSeries.subst_map [Finite σ] [Finite τ] {a : σ → MvPowerSeries τ R} {h : R →+* S}
---     {f : MvPowerSeries σ R}
---     (ha : HasSubst a) : (f.map h).subst (fun i => (a i).map h) = (f.subst a).map h := by
---   ext n
---   have ha' : HasSubst (fun i => (a i).map h) := hasSubst_of_constantCoeff_nilpotent fun s => by
---     rw [constantCoeff_map]
---     exact IsNilpotent.map (ha.const_coeff s) h
---   rw [coeff_subst ha', coeff_map, coeff_subst ha, h.eq_toAddMonoidHom,
---     map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
---   intro d
---   simp only [coeff_map, smul_eq_mul, RingHom.toAddMonoidHom_eq_coe, coe_coe, map_mul]
---   simp_rw [←coeff_map, Finsupp.prod]
---   simp
-
--- omit [Algebra R S] in
--- open AddMonoidHom in
--- lemma PowerSeries.subst_map {a : MvPowerSeries τ R} {h : R →+* S} {f : PowerSeries R}
---     (ha : HasSubst a): (f.map h).subst (a.map h) =(f.subst a).map h := by
---   ext n
---   simp
---   have ha' : HasSubst (a.map h) := by
---     rw [HasSubst, constantCoeff_map]
---     exact IsNilpotent.map ha h
---   rw [coeff_subst ha, coeff_subst ha', h.eq_toAddMonoidHom,
---     map_finsum _ (coeff_subst_finite ha _ _), finsum_congr]
---   intro d
---   simp [←map_pow]
-
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
     (hg : constantCoeff g = 0) : HasSubst ![f, g] :=
   hasSubst_of_constantCoeff_zero (by simp [hf, hg])
 
+lemma MvPowerSeries.HasSubst.X_two {i j : σ} : HasSubst ![X i, X j (R := R)] := hasSubst_of_constantCoeff_zero (by simp)
 
-lemma has_subst_XY : HasSubst (![Y₀, Y₁]) (S := R) :=
-  HasSubst.FinPairing (constantCoeff_X _) (constantCoeff_X _)
+lemma has_subst_XY : HasSubst (![Y₀, Y₁]) (S := R) := HasSubst.X_two
 
-
-lemma has_subst_YZ : HasSubst (![Y₁, Y₂]) (S := R) :=
-  HasSubst.FinPairing (constantCoeff_X _) (constantCoeff_X _)
+lemma has_subst_YZ : HasSubst (![Y₁, Y₂]) (S := R) := HasSubst.X_two
 
 lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSeries σ R}
   [Fintype σ] (hf : ∀ x : σ, constantCoeff (f x) = 0) (hg : constantCoeff g = 0):
@@ -221,17 +188,14 @@ lemma subst_congr {τ : Type*} {f' : MvPowerSeries σ R} {g h : σ → MvPowerSe
 lemma PowerSeries.subst_congr {f' : PowerSeries R} {f₁ f₂ : MvPowerSeries σ R}
     (H : f₁ = f₂): PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f' :=  H ▸ rfl
 
-
 /-- addition of two multi variate power series under the formal group `F` sense, namely
   `f₀ + [F] f₁ := F (f₀, f₁)` -/
 abbrev add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries σ R :=
   subst ![f₀, f₁] F.toFun
 
-
-/-- `f₀ +[F] f₁` means `FormalGroup.add F f₀ f₁`. -/
+/-- `f₀ +[F] f₁` means `F (f₀, f₁)`. -/
 scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 =>
   add F f₀ f₁
-
 
 lemma PowerSeries.constantCoeff_subst_zero {f : MvPowerSeries τ S} {g : PowerSeries R}
     (hf : f.constantCoeff = 0) (hg : g.constantCoeff = 0):
@@ -241,8 +205,6 @@ lemma PowerSeries.constantCoeff_subst_zero {f : MvPowerSeries τ S} {g : PowerSe
   intro d
   if hd : d = 0 then simp [hd, hg]
   else simp [hf, zero_pow hd]
-
-
 
 /-- The addition under the sense of formal group `F` is associative. -/
 theorem add_assoc {F : FormalGroup R} {Z₀ Z₁ Z₂ : MvPowerSeries σ R}
@@ -283,9 +245,6 @@ theorem add_assoc {F : FormalGroup R} {Z₀ Z₁ Z₂ : MvPowerSeries σ R}
         apply subst_congr
         funext t; fin_cases t <;> simp [subst_X has_subst_aux]
 
-
-
-
 theorem add_comm {F : FormalGroup R} (hF : F.comm) {Z₀ Z₁ : MvPowerSeries σ R}
   (hZ₀ : constantCoeff Z₀ = 0) (hZ₁ : constantCoeff Z₁ = 0):
   Z₀ +[F] Z₁ = Z₁ +[F] Z₀ := by
@@ -298,13 +257,10 @@ theorem add_comm {F : FormalGroup R} (hF : F.comm) {Z₀ Z₁ : MvPowerSeries σ
       apply subst_congr
       funext s; fin_cases s <;> simp [subst_X has_subst_aux]
 
-
-
 /-- The addition under the sense of formal group `F` is associative. -/
 theorem add_assoc' (F : FormalGroup R) :
   Y₀ +[F] Y₁ +[F] Y₂ = Y₀ +[F] (Y₁ +[F] Y₂) := by
   rw [add, F.assoc]
-
 
 /-- Additive formal group law `Gₐ(X,Y) = X + Y`-/
 def Gₐ : CommFormalGroup R where
@@ -335,8 +291,6 @@ def Gₐ : CommFormalGroup R where
   comm := by
     simp [subst_add has_subst_swap, subst_X has_subst_swap]
     ring
-
-
 
 /-- Multiplicative formal group law `Gₘ(X,Y) = X + Y + XY`-/
 def Gₘ : CommFormalGroup R where
@@ -454,8 +408,6 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R):
         simp
       rw [aux₁, aux₂, F.assoc]
 
-
-
 variable (F : FormalGroup R) {f : PowerSeries R}
 
 @[simp]
@@ -471,7 +423,6 @@ lemma has_subst_X₀ : HasSubst ![PowerSeries.X (R := R), 0] :=
 
 lemma has_subst_X₁ : HasSubst ![0, PowerSeries.X (R := R)] :=
   hasSubst_of_constantCoeff_zero (by simp)
-
 
 /-- The first coefficient of `F(X, 0)` is `1`. -/
 lemma coeff_of_X₀_of_subst_X₀ :
@@ -501,7 +452,6 @@ lemma coeff_of_X₀_of_subst_X₀ :
       simp [zero_pow hd]
   simp [finsum_eq_single _ _ eq_aux, lin_coeff_X,  PowerSeries.coeff_X]
 
-
 /-- The first coefficient of `F(0, X)` is `1`. -/
 lemma coeff_of_X₁_of_subst_X₁ :
   PowerSeries.coeff 1 (subst ![0, PowerSeries.X (R := R)] F.toFun) (R := R) = 1 := by
@@ -528,7 +478,6 @@ lemma coeff_of_X₁_of_subst_X₁ :
     · -- the case `d 0 ≠ 0`
       simp [zero_pow hd]
   simp [finsum_eq_single _ _ eq_aux, lin_coeff_Y, PowerSeries.coeff_X]
-
 
 /-- The constant coefficient of `F(X, 0)` is `0`. -/
 lemma constantCoeff_of_subst_X₀ :
@@ -619,7 +568,6 @@ lemma self_comp_aux :
     ←assoc_eq, left_eq]
   simp [PowerSeries.subst_X has_subst_aux, PowerSeries.subst_comp_subst_apply has_subst_aux has_subst_aux]
 
-
 /-- By the associativity of Formal Group Law,
   `F (0, F(0, X)) = F (0, X)`. -/
 lemma self_comp_aux' :
@@ -690,8 +638,6 @@ lemma self_comp_aux' :
   rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.X') has_subst_aux, ←right_eq,
     assoc_eq, left_eq]
   simp [PowerSeries.subst_X has_subst_aux, PowerSeries.subst_comp_subst_apply has_subst_aux has_subst_aux]
-
-
 
 /-- Given a power series `f`, if substition `f` into any power series is identity, then `f = X`-/
 lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : PowerSeries.HasSubst f) :
@@ -863,9 +809,7 @@ structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   toFun : PowerSeries R
   zero_constantCoeff : PowerSeries.constantCoeff toFun = 0
   hom : PowerSeries.subst (G₁.toFun) toFun = subst (R := R) toFun.toMvPowerSeries G₂.toFun
-
 section FormalGroupIso
-
 
 -- create a section
 
