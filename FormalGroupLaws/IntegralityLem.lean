@@ -64,7 +64,7 @@ def RecurFunAux (hg : g.constantCoeff = 0) : ℕ → K
   | 0 => 0
   | k + 1 =>
     g.coeff (k + 1) + ∑ j ∈ (Icc 1 (multiplicity q (k + 1))).attach,
-      have aux : ((k + 1) / (q ^ (j : ℕ))) < k + 1 :=
+      have : ((k + 1) / (q ^ (j : ℕ))) < k + 1 :=
         Nat.div_lt_self (by linarith) <| Nat.one_lt_pow
           (by nlinarith [List.left_le_of_mem_range' j.property])
             <| hq ▸ Nat.one_lt_pow ht (Nat.Prime.one_lt' p).out
@@ -148,7 +148,7 @@ open PowerSeries in
 /-- this is the function equation that `f_g` satisfies, namely
   $f_g(X) = g(X) + ∑' s_i * σ^i f(X^{q^i})$-/
 theorem FunEq_of_RecurFun [TopologicalSpace K] [T2Space K] (hs₀ : s 0 = 0) :
-    let f := (RecurFun ht hq σ s hg)
+    let f := RecurFun ht hq σ s hg
     f = g.map R.subtype + ∑' (i : ℕ), s i • (f.expand (q ^ i) (q_pow_neZero hq)).map (σ^i) := by
   intro _
   rw [HasSum.tsum_eq <| hasSum_aux ht hq σ s hg hs₀]
@@ -436,7 +436,7 @@ lemma congr_pow_mod_add {r i : ℕ} {F G : MvPowerSeries τ R} (hr : 1 ≤ r)
           simp only [Ideal.MvPowerSeries, Submodule.mem_mk, AddSubmonoid.mem_mk,
             AddSubsemigroup.mem_mk, Set.mem_setOf_eq]
           intro n
-          have : (p : MvPowerSeries τ R) n = coeff n (C (p : R)) := rfl
+          have : coeff n (p : MvPowerSeries τ R) = coeff n (C (p : R)) := rfl
           rw [this, coeff_C]
           by_cases hn : n = 0
           · simp [if_pos hn, hp_mem]
@@ -468,8 +468,6 @@ lemma p_pow_mod_p [Finite τ] {G : MvPowerSeries τ R} {l : ℕ} :
   apply SModEq.sub_mem.mpr
   simp [Ideal.MvPowerSeries]
   intro n
-  have aux {f g : MvPowerSeries τ R} {n : τ →₀ ℕ} : (f - g) n = coeff n f - coeff n g := by rfl
-  rw [aux]
   simp_rw [hq, ← pow_mul]
   have pneq : p ≠ 0 := (NeZero.ne' p).symm
   let φ := Ideal.Quotient.mk I
@@ -544,22 +542,10 @@ theorem pow_ModEq (G : MvPowerSeries τ R) [Finite τ] {n r m : ℕ} (l : ℕ) (
   obtain h₁ := pow_ModEq_aux ht hq σ hs a_congr hp_mem G l hn
   intro d
   obtain h₂ := SModEq.sub_mem.mp h₁ d
-  have eq_aux : (((MvPowerSeries.map ((σ ^ l).comp R.subtype))
-    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l)).coeff d -
-    (G ^ (q ^ l * n)).coeff d =
-    ((((MvPowerSeries.map ((σ ^ l).comp R.subtype))
-    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l) -
-    G ^ (q ^ l * n)) d)
-    := rfl
   use ((((MvPowerSeries.map ((σ ^ l).comp R.subtype))
-    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l) - G ^ (q ^ l * n)) d)
-  simp only [SetLike.mem_coe, h₂, Subring.subtype_apply, map_pow, map_expand, map_sub, true_and]
-  rw [← eq_aux, ← Subring.subtype_apply, map_sub]
-  congr
-  · simp only [Subring.subtype_apply, coeff_toSubring, map_pow, map_expand]
-    rfl
-  · simp [← coeff_map]
-
+    ((expand (q ^ l) (q_pow_neZero hq)) G ^ n)).toSubring R (coeff_aux_mem σ hs l) -
+    G ^ (q ^ l * n)).coeff d)
+  exact ⟨h₂, by simp [← map_pow, coeff_map]⟩
 
 end technical_lemma
 
@@ -2078,7 +2064,7 @@ theorem congr_equiv_forward₀ [UniformSpace K] [T2Space K] [DiscreteUniformity 
     intro d
     simp [← coeff_β'_apply] at h_congr
     obtain ⟨x, hx₁⟩ := h_congr (d ())
-    have eq_aux : (α - β') d = α.coeff (d ()) - β'.coeff (d ()) := by
+    have eq_aux : (coeff d) (α - β') = α.coeff (d ()) - β'.coeff (d ()) := by
       rw [PowerSeries.coeff_def rfl]
       rfl
     rw [eq_aux]
@@ -2214,9 +2200,9 @@ lemma coeff_pow_mem_ind₁ {γ : PowerSeries K} (hγ : γ.constantCoeff = 0) (k 
   have γ'_congr : γ' ≡ 0 [SMOD (I ^ r).MvPowerSeries] := by
     refine SModEq.sub_mem.mpr ?_
     intro n
-    have eq_aux : (γ' - 0) n = γ'.coeff (n ()) := by
+    have eq_aux : (coeff n) (γ' - 0) = γ'.coeff (n ()) := by
       rw [sub_zero, PowerSeries.coeff_def rfl, coeff_apply]
-    rw [sub_zero, ← coeff_apply γ', ← PowerSeries.coeff_def rfl]
+    rw [sub_zero, ← PowerSeries.coeff_def rfl]
     by_cases hn : n () < k
     · rw [coeff_eq _ hn]
       obtain ⟨x, hx₁, hx₂⟩ := h_ind _ hn

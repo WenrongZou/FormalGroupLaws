@@ -18,7 +18,7 @@ open scoped WithPiTopology
 /- Given a ideal `I` of commutative ring `R`, then multivariate power series with coefficient in
 `I`, forms a ideal of ring of multivariate power series over `R`. -/
 def Ideal.MvPowerSeries : Ideal (MvPowerSeries σ R) where
-  carrier := {p | ∀ n, p n ∈ I}
+  carrier := {p | ∀ n, p.coeff n ∈ I}
   add_mem' := fun ha hb n => add_mem (ha n) (hb n)
   zero_mem' := fun _ => (Submodule.Quotient.mk_eq_zero I).mp rfl
   smul_mem' := fun c {_} hx _ ↦
@@ -321,6 +321,5 @@ lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUn
   rw [monomial_eq_C_mul_X_pow, ← smul_eq_C_mul, subst_smul hG, subst_pow hG, subst_X hG]
 
 section
-
 
 end
