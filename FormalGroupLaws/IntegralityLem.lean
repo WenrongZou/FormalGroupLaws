@@ -535,8 +535,7 @@ include ht hq a_congr hp_mem hs in
 /- this is more general version for second technical lemma. -/
 /- Second Technical lemma: Forall `n, l ∈ ℕ` and `G(X,Y) ∈ R⟦X,Y⟧`  with assumption that $n=q^r m$,
 we have that $G^{q^r m q^l} ≡ (σ^l G(X^{q^l},Y^{q^l}))^n$. -/
-theorem pow_ModEq (G : MvPowerSeries τ R) [Finite τ] {n r m : ℕ} (l : ℕ) (hn : n = q ^ r * m)
-     :
+theorem pow_ModEq (G : MvPowerSeries τ R) [Finite τ] {n r m : ℕ} (l : ℕ) (hn : n = q ^ r * m) :
     ∀ d, ((((G.map (R.subtype)).expand (q ^ l) (q_pow_neZero hq))^n).map (σ^l) -
       (G ^ (q ^ l * n)).map (R.subtype)).coeff d ∈ R.subtype '' ↑(I^(r + 1)) := by
   obtain h₁ := pow_ModEq_aux ht hq σ hs a_congr hp_mem G l hn

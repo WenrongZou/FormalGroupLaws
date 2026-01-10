@@ -110,7 +110,7 @@ lemma preCommutator_ne_of_nonComm (h : ¬ F.comm) :
           rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
         rw [add_assoc coeff_aux constantCoeff_addInvF_X₀ (constantCoeff_X 0),
           add_addInv_eq_zero' _ <| constantCoeff_X _,
-          zero_add_eq_self' coeff_aux, add, aux, subst_self]
+          zero_add_eq_self' _ coeff_aux, add, aux, subst_self]
         rfl
       _ = _ := by
         rw [hc]
@@ -182,7 +182,7 @@ lemma subst_X₀_preCommutator : subst ![0, X₁] (preCommutator F X₀ X₁) = 
         constantCoeff_addInvF_X₀
     · refine HasSubst.FinPairing rfl <| constantCoeff_X _
   _ = _ := by
-    rw [zero_add_eq_self <| constantCoeff_X 1, zero_add_eq_self' <| constantCoeff_X 1]
+    rw [zero_add_eq_self _ <| constantCoeff_X 1, zero_add_eq_self' _ <| constantCoeff_X 1]
 
 
 /- here we need to prove `H(Y₀ +[F] Y₁, Y₂) = H(Y₀, H(Y₁, Y₂))` using the associativity condition of
@@ -313,7 +313,7 @@ lemma comm_iff_commutator_eq_zero :
         · exact constantCoeff_addInvF_X₁
         · simp
       _ = X₁ +[F] X₀ := by
-        rw [h, zero_add_eq_self <| constantCoeff_X 1]
+        rw [h, zero_add_eq_self _ <| constantCoeff_X 1]
 
 
 -- variable (G G' : FormalGroup R) {α : FormalGroupHom G G'} in
@@ -364,7 +364,7 @@ lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' :
     ←hom_add (constantCoeff_X 0) constantCoeff_addInvF_X₀,
     add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add
     (constantCoeff_X 1) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add rfl rfl,
-    zero_add_eq_self rfl]
+    zero_add_eq_self _ rfl]
   ext d
   simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
   apply finsum_eq_zero_of_forall_eq_zero
@@ -390,7 +390,7 @@ lemma le_order_pow {n : ℕ} {f : MvPowerSeries σ R}:
       _ = k * f.order + f.order := by
         simp [add_mul]
       _ ≤ (f ^ k).order + f.order := by
-        exact add_le_add_right ih f.order
+        exact add_le_add_left ih f.order
       _ ≤ _ := by
         simp [pow_add]
         apply le_order_mul
@@ -430,7 +430,7 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
     have eq_aux : m.toNat - d 0 = d 1 := by
       subst m; rw [←hd₂, degree_eq_sum]; exact Eq.symm (Nat.eq_sub_of_add_eq' rfl)
     have d_eq : (equivFunOnFinite.invFun ![d 0, d 1]) = d :=
-        Finsupp.ext <| fun i => by fin_cases i <;> apply equivFunOnFinite_symm_apply_toFun
+        Finsupp.ext <| fun i => by fin_cases i <;> rfl
     rw [←d_eq, ←eq_aux] at hd₁
     have exist_aux : ∃ (n : ℕ), (coeff (equivFunOnFinite.invFun ![n, m.toNat - n]))
       F.commutator ≠ 0 := by use d 0
@@ -453,8 +453,7 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
     have m_decomp_aux : m.toNat = n + (m.toNat - n) := by omega
     have d_degree_eq : d'.degree = r.toNat * m.toNat := by
       subst d'
-      simp_rw [degree_eq_sum, equivFunOnFinite_symm_apply_toFun,
-        Fin.sum_univ_two]
+      simp_rw [degree_eq_sum, Fin.sum_univ_two]
       simp
       conv => rhs; rw [m_decomp_aux, mul_add]
       ring
