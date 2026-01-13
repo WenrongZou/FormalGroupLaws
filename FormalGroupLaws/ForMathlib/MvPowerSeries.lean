@@ -99,17 +99,14 @@ theorem PowerSeries.constantCoeff_expand : (φ.expand p hp).constantCoeff = φ.c
 
 theorem PowerSeries.expand_subst {f : MvPowerSeries τ S} (hf : HasSubst f) (φ : PowerSeries S) :
     (subst f φ).expand p hp = subst (f.expand p hp) φ := by
-  have : MvPowerSeries.HasSubst (fun (x : Unit) ↦ f) := by
-    exact HasSubst.const hf
-  rw [PowerSeries.subst, MvPowerSeries.expand_subst hp this (φ := φ)]
+  rw [PowerSeries.subst, MvPowerSeries.expand_subst hp (HasSubst.const hf) (φ := φ)]
   rfl
 
 theorem PowerSeries.le_order_pow_n (hφ : φ.constantCoeff = 0) {n : ℕ} :
     n ≤ PowerSeries.order (φ ^ n) := by
   refine .trans ?_ (le_order_pow _ n)
   obtain h := one_le_order hφ
-  simp
-  exact le_mul_of_one_le_right' h
+  simpa using le_mul_of_one_le_right' h
 
 omit [Finite σ]
 lemma PowerSeries.le_order_subst_left {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0) :

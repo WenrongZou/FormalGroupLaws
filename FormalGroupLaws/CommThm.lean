@@ -94,7 +94,7 @@ theorem comm_of_char_zero_and_no_torsion_nilpotent (h : IsAddTorsionFree R) :
   sorry
 
 /-- Given `f, g` be two MvPowerSeries, preCommutator define to be
-  `f +[F] g +[F] (addInv F f)`. -/
+`f +[F] g +[F] (addInv F f)`. -/
 abbrev preCommutator (f g : MvPowerSeries σ R) := f +[F] g +[F] (addInv F f)
 
 /-- If the formal group `F` is not commutative, then `preCommutator F X₀ X₁ ≠ X₁`. -/
@@ -118,7 +118,7 @@ lemma preCommutator_ne_of_nonComm (h : ¬ F.comm) :
 
 /-- here -/
 lemma coeff_preCommutator_zero {n : ℕ} :
-  coeff (single 0 0 + single 1 n) (preCommutator F X₀ X₁) = 0 := by
+    coeff (single 0 0 + single 1 n) (preCommutator F X₀ X₁) = 0 := by
 
   sorry
 

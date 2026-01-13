@@ -80,7 +80,7 @@ lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSerie
   apply finsum_eq_zero_of_forall_eq_zero <| fun x => by
     by_cases hx : x = 0
     · simp [hx, hg]
-    · simp
+    · simp only [prod_pow, map_prod, map_pow]
       have zero_aux : ∏ x_1, constantCoeff (f x_1) ^ x x_1 = 0 := by
         have exist_aux : ∃ i : σ, x i ≠ 0 := by
           by_contra hc
