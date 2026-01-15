@@ -111,7 +111,6 @@ lemma has_subst_aux₂ (hF : constantCoeff F = 0) : HasSubst ![Y₀, subst ![Y�
     Matrix.cons_val_fin_one]
     exact constantCoeff_subst_zero (by simp) hF
 
-
 lemma has_subst_swap : HasSubst ![X₁, X₀ (R := R)]  :=
   hasSubst_of_constantCoeff_zero (by simp [constantCoeff_X])
 
@@ -149,7 +148,6 @@ abbrev coeff_two (i j : ℕ) : Fin 2 →₀ ℕ :=
   to compute degree of `X^i*Y^j*Z^k`.  -/
 abbrev coeff_three (i j k : ℕ) : Fin 3 →₀ ℕ :=
   Finsupp.single 0 i + Finsupp.single 1 j + Finsupp.single 2 k
-
 
 variable (R) in
 /-- A structure for a 1-dimensional formal group law over `R`-/
@@ -505,7 +503,6 @@ lemma self_comp_aux :
   have eq_aux₁ : subst ![PowerSeries.X (R := R), 0, 0] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
     subst ![PowerSeries.X (R := R), 0, 0] (subst ![Y₀, subst ![Y₁, Y₂] F.toFun (S := R)] F.toFun) := by
     rw [assoc_eq]
-
   have left_eq : subst ![PowerSeries.X (R := R), 0, 0] (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun (S := R)) =
     ((PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R)) ∘
     (PowerSeries.subst (subst ![PowerSeries.X, 0] F.toFun : PowerSeries R) (R := R))) PowerSeries.X := by
@@ -650,9 +647,7 @@ lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : PowerSeries.Has
     funext g
     simp [←PowerSeries.map_algebraMap_eq_subst_X]
 
-/--
-  Given a formal group law `F`, `F(X,0) = X`.
- -/
+/-- Given a formal group law `F`, `F(X,0) = X`. -/
 theorem subst_X_eq_X  :
   subst ![PowerSeries.X, 0] F.toFun = PowerSeries.X (R := R) := by
   have h₀ : IsUnit (PowerSeries.coeff 1 (subst ![PowerSeries.X, 0] F.toFun) (R := R)) := by
@@ -667,7 +662,6 @@ theorem subst_X_eq_X  :
   simp [←Function.comp_assoc, hg₂] at eq_aux
   exact (PowerSeries.subst_eq_id_iff_eq_X _
     (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_of_subst_X₀ F))).mp eq_aux
-
 
 /-- Given a formal group law `F`, `F(0, X) = X`. -/
 theorem subst_X₁_eq_X₁ :
@@ -811,8 +805,6 @@ structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   hom : PowerSeries.subst (G₁.toFun) toFun = subst (R := R) toFun.toMvPowerSeries G₂.toFun
 section FormalGroupIso
 
--- create a section
-
 /-- The homomorphism `α(X) : F (X, Y) → G (X, Y)` is an isomorphism if there exists a
   homomorphism `β(X) : G (X, Y) → F (X, Y)` such that `α ∘ β = id,  β ∘ α = id`. -/
 @[ext]
@@ -829,18 +821,15 @@ structure FormalGroupStrictIso (G₁ G₂ : FormalGroup R) extends FormalGroupIs
   one_coeff_one : PowerSeries.coeff 1 toHom.toFun = 1
 
 theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
-  α = β ↔  α.toHom = β.toHom := by
-  constructor
-  · intro h
-    rw [h]
-  · intro h
-    refine FormalGroupStrictIso.ext h ?_
-    have eq_aux₁ := α.left_inv
-    rw [h] at eq_aux₁
-    have eq_aux₂ := β.left_inv
-    have eq_aux₃ : α.invHom.toFun = β.invHom.toFun := by
-      obtain ⟨g, h₁, h₂⟩ := PowerSeries.exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
-        β.toHom.zero_constantCoeff
-      simp at h₂
-      rw [h₂ _ eq_aux₁ α.invHom.zero_constantCoeff, h₂ _ eq_aux₂ β.invHom.zero_constantCoeff]
-    exact FormalGroupHom.ext eq_aux₃
+    α = β ↔  α.toHom = β.toHom := by
+  refine ⟨fun h => by rw [h], fun h => FormalGroupStrictIso.ext h ?_⟩
+  have eq_aux₁ := α.left_inv
+  rw [h] at eq_aux₁
+  have : α.invHom.toFun = β.invHom.toFun := by
+    obtain ⟨g, h₁, h₂⟩ := PowerSeries.exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
+      β.toHom.zero_constantCoeff
+    simp only [and_imp] at h₂
+    rw [h₂ _ eq_aux₁ α.invHom.zero_constantCoeff, h₂ _ β.left_inv β.invHom.zero_constantCoeff]
+  exact FormalGroupHom.ext this
+
+end FormalGroupIso
