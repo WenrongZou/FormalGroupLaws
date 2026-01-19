@@ -60,6 +60,24 @@ abbrev Y₁ : MvPowerSeries (Fin 3) R := X (1 : Fin 3)
 
 abbrev Y₂ : MvPowerSeries (Fin 3) R := X (2 : Fin 3)
 
+/-- Given a MvPowerSeries `f'` and two map `g h : σ → MvPowerSeries τ R`, if `g = h`,
+  then `subst g f' = subst h f'`-/
+lemma MvPowerSeries.subst_congr {τ : Type*} {f' : MvPowerSeries σ R} {g h : σ → MvPowerSeries τ R} (H : g = h) :
+    subst g f' = subst h f' := H ▸ rfl
+
+/-- Given a PowerSeries `f'` and two MvPowerSeries `f₁, f₂`, if `f₁ = f₂`,
+  then `PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f'`. -/
+lemma PowerSeries.subst_congr {f' : PowerSeries R} {f₁ f₂ : MvPowerSeries σ R}
+    (H : f₁ = f₂): PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f' :=  H ▸ rfl
+
+@[simp]
+lemma PowerSeries.coeff_coe {f : PowerSeries R} (n : ℕ) : MvPowerSeries.coeff (Finsupp.single () n) f
+  = PowerSeries.coeff n f := rfl
+
+@[simp]
+lemma PowerSeries.constantCoeff_coe {f : PowerSeries R} : MvPowerSeries.constantCoeff f =
+  PowerSeries.constantCoeff f := rfl
+
 lemma RingHom.eq_toAddMonoidHom {S T : Type*} [Semiring S] [Semiring T] (f : S →+* T) {x : S} :
   f x = f.toAddMonoidHom x := rfl
 
@@ -176,16 +194,6 @@ def comm (F : FormalGroup R) : Prop :=
 /-- A commutative formal group law is a formal group law.-/
 instance : Coe (CommFormalGroup R) (FormalGroup R) where
   coe := CommFormalGroup.toFormalGroup
-
-/-- Given a MvPowerSeries `f'` and two map `g h : σ → MvPowerSeries τ R`, if `g = h`,
-  then `subst g f' = subst h f'`-/
-lemma subst_congr {τ : Type*} {f' : MvPowerSeries σ R} {g h : σ → MvPowerSeries τ R} (H : g = h) :
-    subst g f' = subst h f' := H ▸ rfl
-
-/-- Given a PowerSeries `f'` and two MvPowerSeries `f₁, f₂`, if `f₁ = f₂`,
-  then `PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f'`. -/
-lemma PowerSeries.subst_congr {f' : PowerSeries R} {f₁ f₂ : MvPowerSeries σ R}
-    (H : f₁ = f₂): PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f' :=  H ▸ rfl
 
 /-- addition of two multi variate power series under the formal group `F` sense, namely
   `f₀ + [F] f₁ := F (f₀, f₁)` -/
@@ -340,15 +348,7 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R) : Formal
         (has_subst_aux₁ F.zero_constantCoeff), F.assoc, ← map_subst has_subst_YZ, this,
           ← map_subst (has_subst_aux₂ F.zero_constantCoeff)]
 
-variable (F : FormalGroup R) {f : PowerSeries R}
-
-@[simp]
-lemma PowerSeries.coeff_coe  (n : ℕ) : MvPowerSeries.coeff (Finsupp.single () n) f
-  = PowerSeries.coeff n f := rfl
-
-@[simp]
-lemma PowerSeries.constantCoeff_coe : MvPowerSeries.constantCoeff f =
-  PowerSeries.constantCoeff f := rfl
+variable (F : FormalGroup R)
 
 lemma has_subst_X₀ : HasSubst ![PowerSeries.X (R := R), 0] :=
   hasSubst_of_constantCoeff_zero (by simp)

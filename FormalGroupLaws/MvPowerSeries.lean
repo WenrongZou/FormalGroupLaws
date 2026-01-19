@@ -244,22 +244,22 @@ lemma PowerSeries.Summable.increase_order {x : ℕ → PowerSeries R}
 
 section
 
-omit [Algebra R S]
-theorem PowerSeries.le_order_map (f : R →+* S) {φ : PowerSeries R} :
-    φ.order ≤ (φ.map f).order :=
-  le_order _ _ fun i hi => by simp [coeff_of_lt_order i hi]
+-- omit [Algebra R S]
+-- theorem PowerSeries.le_order_map (f : R →+* S) {φ : PowerSeries R} :
+--     φ.order ≤ (φ.map f).order :=
+--   le_order _ _ fun i hi => by simp [coeff_of_lt_order i hi]
 
-omit [Algebra R S]
-theorem MvPowerSeries.le_order_map (f : R →+* S) {φ : MvPowerSeries σ R} :
-    φ.order ≤ (φ.map f).order :=
-  le_order  fun i hi => by simp [coeff_of_lt_order hi]
+-- omit [Algebra R S]
+-- theorem MvPowerSeries.le_order_map (f : R →+* S) {φ : MvPowerSeries σ R} :
+--     φ.order ≤ (φ.map f).order :=
+--   le_order  fun i hi => by simp [coeff_of_lt_order hi]
 
-theorem PowerSeries.le_order_smul {φ : PowerSeries R} {a : R} :
-    φ.order ≤ (a • φ).order :=
-  le_order _ φ.order fun i hi => by simp [coeff_of_lt_order i hi]
+-- theorem PowerSeries.le_order_smul {φ : PowerSeries R} {a : R} :
+--     φ.order ≤ (a • φ).order :=
+--   le_order _ φ.order fun i hi => by simp [coeff_of_lt_order i hi]
 
-theorem MvPowerSeries.le_order_smul {φ : MvPowerSeries σ R} {a : R} :
-    φ.order ≤ (a • φ).order := le_order fun i hi => by simp [coeff_of_lt_order hi]
+-- theorem MvPowerSeries.le_order_smul {φ : MvPowerSeries σ R} {a : R} :
+--     φ.order ≤ (a • φ).order := le_order fun i hi => by simp [coeff_of_lt_order hi]
 
 end
 
