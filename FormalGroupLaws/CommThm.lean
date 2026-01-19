@@ -110,7 +110,7 @@ lemma preCommutator_ne_of_nonComm (h : ¬ F.comm) :
           rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
         rw [add_assoc coeff_aux constantCoeff_addInvF_X₀ (constantCoeff_X 0),
           add_addInv_eq_zero' _ <| constantCoeff_X _,
-          zero_add_eq_self' _ coeff_aux, add, aux, subst_self]
+          add_zero _ coeff_aux, add, aux, subst_self]
         rfl
       _ = _ := by
         rw [hc]
@@ -182,7 +182,7 @@ lemma subst_X₀_preCommutator : subst ![0, X₁] (preCommutator F X₀ X₁) = 
         constantCoeff_addInvF_X₀
     · refine HasSubst.FinPairing rfl <| constantCoeff_X _
   _ = _ := by
-    rw [zero_add_eq_self _ <| constantCoeff_X 1, zero_add_eq_self' _ <| constantCoeff_X 1]
+    rw [zero_add _ <| constantCoeff_X 1, add_zero _ <| constantCoeff_X 1]
 
 
 /- here we need to prove `H(Y₀ +[F] Y₁, Y₂) = H(Y₀, H(Y₁, Y₂))` using the associativity condition of
@@ -279,14 +279,14 @@ lemma comm_iff_commutator_eq_zero :
       rw [commutator, add_assoc (Z₀ := X₀) (by simp) (by simp) constantCoeff_addInvF_X₀, add_comm hF (Z₀ := X₁)
         (by simp) constantCoeff_addInvF_X₀, ←add_assoc (Z₀ := X₀) (by simp) constantCoeff_addInvF_X₀ (by simp),
         add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc (by simp) (by simp) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1),
-        zero_add_eq_self]
+        zero_add]
   · intro h
     rw [commutator] at h
     unfold comm
     calc
       _ = X₀ +[F] X₁ +[F] addInv F X₀ +[F] addInv F X₁ +[F] X₁ +[F] X₀ := by
-        rw [add_assoc (Z₀ := X₀ +[F] X₁ +[F] addInv F X₀), add_addInv_eq_zero', zero_add_eq_self',
-          add_assoc (Z₀ := X₀ +[F] X₁), add_addInv_eq_zero', zero_add_eq_self']
+        rw [add_assoc (Z₀ := X₀ +[F] X₁ +[F] addInv F X₀), add_addInv_eq_zero', add_zero,
+          add_assoc (Z₀ := X₀ +[F] X₁), add_addInv_eq_zero', add_zero]
         have aux : ![X₀, X₁] = (X : Fin 2 → MvPowerSeries (Fin 2) R) := by
           simp [@funext_iff]
         simp [add, aux, ←map_algebraMap_eq_subst_X]
@@ -313,7 +313,7 @@ lemma comm_iff_commutator_eq_zero :
         · exact constantCoeff_addInvF_X₁
         · simp
       _ = X₁ +[F] X₀ := by
-        rw [h, zero_add_eq_self _ <| constantCoeff_X 1]
+        rw [h, zero_add _ <| constantCoeff_X 1]
 
 
 -- variable (G G' : FormalGroup R) {α : FormalGroupHom G G'} in
@@ -364,7 +364,7 @@ lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' :
     ←hom_add (constantCoeff_X 0) constantCoeff_addInvF_X₀,
     add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add
     (constantCoeff_X 1) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add rfl rfl,
-    zero_add_eq_self _ rfl]
+    zero_add _ rfl]
   ext d
   simp [PowerSeries.coeff_subst PowerSeries.HasSubst.zero]
   apply finsum_eq_zero_of_forall_eq_zero
