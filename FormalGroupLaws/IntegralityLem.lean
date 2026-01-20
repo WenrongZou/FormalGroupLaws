@@ -1284,9 +1284,8 @@ lemma F_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
 include hs a_congr hp_mem hs₁ hs₂ in
 /-- `inv_add_aux` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, the coeff of this multi variate
   power series are all in `R`.-/
-lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
-    (hs0 : s 0 = 0):
-    ∀ n, (inv_add_RecurFun ht hq σ s hg hg_unit).coeff n ∈ R := by
+theorem coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity K]
+    (hs₀ : s 0 = 0) : ∀ n, (inv_add_RecurFun ht hq σ s hg hg_unit).coeff n ∈ R := by
   intro n
   generalize h : n.degree = d
   induction d using Nat.strongRecOn generalizing n with
@@ -1297,7 +1296,7 @@ lemma coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformity
     rw [eq_aux, mul_assoc]
     exact Subring.mul_mem R (SetLike.coe_mem _) <| by
       simpa using (Subring.add_mem _ (F_coeff_mem_ind ht hq σ s hg hg_unit h hk)
-        (RModEq_aux₂ ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs0 h hk))
+        (RModEq_aux₂ ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀ h hk))
 
 def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
   toFun := inv_add_RecurFun ht hq σ s hg hg_unit
@@ -1319,7 +1318,6 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
     have f_comp_F : f.subst F = f.toMvPowerSeries 0 + f.toMvPowerSeries 1 :=
       f_F_eq_f_add ht hq σ s hg hg_unit
     rw [PowerSeries.subst] at f_comp_F
-
     have eq_aux {α β : MvPowerSeries (Fin 3) K} {γ : PowerSeries K} (h : HasSubst ![α, β]) :
       subst ![α, β] (γ.toMvPowerSeries 0 + γ.toMvPowerSeries 1) =
         γ.subst α + γ.subst β := by
@@ -1374,11 +1372,10 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
         (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
           (constantCoeff_RecurFun ..), add_zero]
 
-
 def CommFormalGroup.InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     (hs₀ : s 0 = 0) : CommFormalGroup R :=
-    (CommFormalGroup.InvAdd_RecurFun_Aux ht hq σ s hg hg_unit).toSubring _
-      (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀)
+  (CommFormalGroup.InvAdd_RecurFun_Aux ht hq σ s hg hg_unit).toSubring _
+    (coeff_inv_add_mem_Subring ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀)
 
 include hs a_congr hp_mem hs₁ hs₂ in
 theorem decomp_InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]

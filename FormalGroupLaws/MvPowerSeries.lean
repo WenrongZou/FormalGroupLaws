@@ -33,10 +33,10 @@ def Ideal.PowerSeries : Ideal (PowerSeries R) where
     refine I.sum_mem fun d hd => mul_mem_left I ((PowerSeries.coeff d.1 f)) (hx d.2)
 
 omit [DecidableEq σ] in
-lemma MvPowerSeries.mul_mem_mul {a b : MvPowerSeries σ R} {J : Ideal R}
+theorem MvPowerSeries.mul_mem_mul {a b : MvPowerSeries σ R} {J : Ideal R}
     (ha : a ∈ I.MvPowerSeries) (hb : b ∈ J.MvPowerSeries) :
     a * b ∈ (I * J).MvPowerSeries :=
-  fun _ ↦ (I * J).sum_mem  <| fun d _ => Submodule.mul_mem_mul (ha d.1) (hb d.2)
+  fun _ ↦ (I * J).sum_mem fun d _ => Submodule.mul_mem_mul (ha d.1) (hb d.2)
 
 section ToSubring
 
