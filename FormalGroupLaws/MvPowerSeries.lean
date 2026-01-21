@@ -51,8 +51,7 @@ def FormalGroup.toSubring (F : FormalGroup R) (hF : ∀ n, F.toFun n ∈ T) : Fo
   zero_constantCoeff := by
     rw [← @coeff_zero_eq_constantCoeff_apply]
     have aux : (coeff 0) (F.toFun.toSubring T hF) = (0 : R) := by
-      rw [@coeff_toSubring]
-      simp [F.zero_constantCoeff]
+      rw [coeff_toSubring, coeff_zero_eq_constantCoeff, F.zero_constantCoeff]
     norm_cast at aux
   lin_coeff_X := by
     have aux : (coeff (Finsupp.single 0 1)) (F.toFun.toSubring T hF) = (1 : R) := by

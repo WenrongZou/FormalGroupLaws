@@ -271,19 +271,9 @@ theorem add_assoc' (F : FormalGroup R) :
 /-- Additive formal group law `Gₐ(X,Y) = X + Y`-/
 def Gₐ : CommFormalGroup R where
   toFun := X₀ + X₁
-  zero_constantCoeff := by simp only [map_add, constantCoeff_X, add_zero]
-  lin_coeff_X := by
-    simp [coeff_X]
-    intro h
-    have aux : Finsupp.single (0 : Fin 2) 1 0 = Finsupp.single (1 : Fin 2) 1 0 := by
-      simp [h]
-    simp at aux
-  lin_coeff_Y := by
-    simp [coeff_X]
-    intro h
-    have aux : Finsupp.single (0 : Fin 2) 1 0 = Finsupp.single (1 : Fin 2) 1 0 := by
-      simp [h]
-    simp at aux
+  zero_constantCoeff := by simp
+  lin_coeff_X := by simp [coeff_index_single_X]
+  lin_coeff_Y := by simp [coeff_index_single_X]
   assoc := by
     rw [subst_add (has_subst_aux₁ (by simp [constantCoeff_X])),
       subst_X (has_subst_aux₁ (by simp [constantCoeff_X])),
@@ -301,52 +291,41 @@ def Gₐ : CommFormalGroup R where
 /-- Multiplicative formal group law `Gₘ(X,Y) = X + Y + XY`-/
 def Gₘ : CommFormalGroup R where
   toFun := X₀ + X₁ + X₀ * X₁
-  zero_constantCoeff := by
-    simp only [map_add, constantCoeff_X, add_zero, map_mul, mul_zero]
+  zero_constantCoeff := by simp
   lin_coeff_X := by
-    simp [coeff_X]
-    rw [if_neg]
-    simp
-    simp [X, monomial_mul_monomial]
-    rw [coeff_monomial, if_neg]
-    simp
-    refine Finsupp.ne_iff.mpr (by use 0; simp)
+    simp [ X, monomial_mul_monomial, coeff_monomial, single_left_inj (one_ne_zero : (1 : ℕ) ≠ 0)]
   lin_coeff_Y := by
-    simp [coeff_X]
-    rw [if_neg]
-    simp
-    simp [X, monomial_mul_monomial]
-    rw [coeff_monomial, if_neg]
-    simp
-    refine Finsupp.ne_iff.mpr (by use 0; simp)
+    simp [ X, monomial_mul_monomial, coeff_monomial, single_left_inj (one_ne_zero : (1 : ℕ) ≠ 0)]
   assoc := by
     obtain has_subst₁ := has_subst_aux₁ (F := X₀ + X₁ + X₀ * X₁ (R := R)) (by simp)
     obtain has_subst₂ := has_subst_aux₂ (F := X₀ + X₁ + X₀ * X₁ (R := R)) (by simp)
     simp_rw [subst_add has_subst₁,  subst_mul has_subst₁, subst_X has_subst₁,
-      subst_add has_subst_XY, subst_mul has_subst_XY, subst_X has_subst_XY,
       subst_add has_subst₂, subst_mul has_subst₂, subst_X has_subst₂,
-      subst_add has_subst_YZ, subst_mul has_subst_YZ, subst_X has_subst_YZ]
-    simp
+      subst_add HasSubst.X_two, subst_mul HasSubst.X_two, subst_X HasSubst.X_two]
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Matrix.cons_val_zero,
+      Matrix.cons_val_one, Matrix.cons_val_fin_one]
     ring
   comm := by
-    simp [subst_add has_subst_swap, subst_mul has_subst_swap,
-      subst_X has_subst_swap]; ring
+    simp only [Nat.succ_eq_add_one, Nat.reduceAdd, subst_add has_subst_swap, subst_X has_subst_swap,
+      Fin.isValue, Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one,
+      subst_mul has_subst_swap]
+    ring
 
 /-- Given a algebra map `f : R →+* R'` and a formal group law `F` over `R`, then `f_* F` is a
   formal group law formal group law over `R'`. This is constructed by applying `f` to all coefficients
   of the underlying power series.
   -/
 def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R) : FormalGroup R' where
-    toFun := F.toFun.map f
-    zero_constantCoeff := by simp [constantCoeff_map, F.zero_constantCoeff, map_zero]
-    lin_coeff_X := by simp [F.lin_coeff_X]
-    lin_coeff_Y := by simp [F.lin_coeff_Y]
-    assoc := by
-      have (g₁ g₂ : MvPowerSeries (Fin 3) R) : ![g₁.map f, g₂.map f] =
-        fun i => (![g₁, g₂] i).map f := by ext1 i; fin_cases i <;> simp
-      simp_rw [(map_X f _).symm, this, ← map_subst has_subst_XY, this, ← map_subst
-        (has_subst_aux₁ F.zero_constantCoeff), F.assoc, ← map_subst has_subst_YZ, this,
-          ← map_subst (has_subst_aux₂ F.zero_constantCoeff)]
+  toFun := F.toFun.map f
+  zero_constantCoeff := by simp [constantCoeff_map, F.zero_constantCoeff, map_zero]
+  lin_coeff_X := by simp [F.lin_coeff_X]
+  lin_coeff_Y := by simp [F.lin_coeff_Y]
+  assoc := by
+    have (g₁ g₂ : MvPowerSeries (Fin 3) R) : ![g₁.map f, g₂.map f] =
+      fun i => (![g₁, g₂] i).map f := by ext1 i; fin_cases i <;> simp
+    simp_rw [(map_X f _).symm, this, ← map_subst has_subst_XY, this, ← map_subst
+      (has_subst_aux₁ F.zero_constantCoeff), F.assoc, ← map_subst has_subst_YZ, this,
+        ← map_subst (has_subst_aux₂ F.zero_constantCoeff)]
 
 variable (F : FormalGroup R)
 
