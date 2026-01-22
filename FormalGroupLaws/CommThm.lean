@@ -241,8 +241,8 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
       hom := by
         rw [Gₐ]
         simp
-        simp_rw [subst_add <| has_subst_toMvPowerSeries (constant_zero m),
-          subst_X <| has_subst_toMvPowerSeries (constant_zero m)]
+        simp_rw [subst_add <| HasSubst.toMvPowerSeries (constant_zero m),
+          subst_X <| HasSubst.toMvPowerSeries (constant_zero m)]
         /- here need some truncation result-/
         sorry
       }
@@ -331,7 +331,7 @@ lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} {f g :
         (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero
         G₁.zero_constantCoeff) (HasSubst.FinPairing hf hg)]
     _ = _ := by
-      rw [α.hom, subst_comp_subst_apply (has_subst_toMvPowerSeries α.zero_constantCoeff)
+      rw [α.hom, subst_comp_subst_apply (HasSubst.toMvPowerSeries α.zero_constantCoeff)
         (HasSubst.FinPairing hf hg)]
       apply subst_congr
       funext s; fin_cases s

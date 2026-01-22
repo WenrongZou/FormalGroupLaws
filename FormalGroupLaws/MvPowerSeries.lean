@@ -77,6 +77,22 @@ def FormalGroup.toSubring (F : FormalGroup R) (hF : ∀ n, F.toFun n ∈ T) : Fo
     have has_subst_aux' : HasSubst ![(X 1).toSubring T (coeff_mem_aux 1), Y₂] :=
       HasSubst.FinPairing ((Subring.coe_eq_zero_iff T).mp <| by simp) (constantCoeff_X _)
     ext n
+    /- TODO: could clean up using the follow-/
+    -- calc
+    --   _ = (coeff n) (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun) := by
+    --     obtain h₁ := coeff_subst_finite has_subst_aux₀ (F.toFun.toSubring T hF) n
+    --     rw [coeff_subst (has_subst_aux₁ F.zero_constantCoeff), coeff_subst has_subst_aux₀,
+    --       ← Algebra.algebraMap_ofSubsemiring_apply, RingHom.eq_toAddMonoidHom,
+    --       AddMonoidHom.map_finsum (algebraMap T R).toAddMonoidHom h₁, finsum_congr]
+    --     intro d
+    --     simp only [RingHom.toAddMonoidHom_eq_coe, Nat.succ_eq_add_one, Nat.reduceAdd,
+    --       Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue, Matrix.cons_val_zero,
+    --       Matrix.cons_val_one, Matrix.cons_val_fin_one, smul_eq_mul, AddMonoidHom.coe_coe,
+    --       Algebra.algebraMap_ofSubsemiring_apply, Subring.coe_mul, coeff_toSubring]
+
+    --     sorry
+    --   _ = _ := sorry
+
     calc
       _ = (coeff n) (subst ![subst ![Y₀, Y₁] F.toFun, Y₂] F.toFun) := by
         rw [coeff_subst <| has_subst_aux₁ F.zero_constantCoeff, coeff_subst has_subst_aux₀]
@@ -149,7 +165,6 @@ def CommFormalGroup.toSubring (F : CommFormalGroup R) (hF : ∀ n, F.toFun n ∈
   lin_coeff_Y := ((F : FormalGroup R).toSubring _ hF).lin_coeff_Y
   assoc := ((F : FormalGroup R).toSubring _ hF).assoc
   comm := F.toSubring_comm _ hF
--- def CommFormalGroup.toSubring
 
 end ToSubring
 

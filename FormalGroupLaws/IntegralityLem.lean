@@ -596,15 +596,16 @@ def inv_add_RecurFun :=
 /-- constant coefficient of $f_g(X)+f_g(Y)$ is zero-/
 lemma constantCoeff_add_RecurFun : constantCoeff ((RecurFun ht hq σ s hg).toMvPowerSeries
     (0 : Fin 2) + (RecurFun ht hq σ s hg).toMvPowerSeries 1) = 0 := by
-  rw [RingHom.map_add, PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun ..,
-    PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun .., add_zero]
+  rw [RingHom.map_add, PowerSeries.toMvPowerSeries_apply,  PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun ..,
+    PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun .., add_zero]
 
 lemma coeff_X_inv_add_RecurFun :
     (inv_add_RecurFun ht hq σ s hg hg_unit).coeff (Finsupp.single 0 1) = 1 := by
   rw [inv_add_RecurFun, PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero
     <| constantCoeff_add_RecurFun .., finsum_eq_single _ 1]
   simp
-  rw [PowerSeries.coeff_subst_X_s, PowerSeries.coeff_subst_X_s' (one_ne_zero)]
+  rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.coeff_subst_X_s,
+    PowerSeries.toMvPowerSeries_apply, PowerSeries.coeff_subst_X_s' (one_ne_zero)]
   have eq_aux : ↑↑hg_unit.unit⁻¹ * (((PowerSeries.coeff 1) g : R) : K) = 1 := by
     exact_mod_cast IsUnit.val_inv_mul hg_unit
   simp [coeff_one_inv_RecurFun, coeff_one_RecurFun, eq_aux]
@@ -613,7 +614,7 @@ lemma coeff_X_inv_add_RecurFun :
   · simp [hx₀, constantCoeff_inv_RecurFun]
   rw [coeff_pow, Finset.sum_eq_zero _, smul_zero]
   intro d hd
-  unfold PowerSeries.toMvPowerSeries
+
   simp only [Fin.isValue, mem_finsuppAntidiag] at hd
   have exist_aux : ∃ i ∈ range x, d i = 0 := by
     have xge : x ≥ 2 := by omega
@@ -631,7 +632,7 @@ lemma coeff_X_inv_add_RecurFun :
     linarith
   obtain ⟨i, hi, hi'⟩ := exist_aux
   refine Finset.prod_eq_zero hi ?_
-  simp [hi']
+  simp [hi', PowerSeries.toMvPowerSeries_apply]
   rw [PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun ..,
     PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun .., add_zero]
 
@@ -640,7 +641,7 @@ lemma coeff_Y_inv_add_RecurFun :
   /- the proof of this should be similar as above `coeff_inv_add_aux_X`-/
   rw [inv_add_RecurFun, PowerSeries.coeff_subst <| PowerSeries.HasSubst.of_constantCoeff_zero
     <| constantCoeff_add_RecurFun .., finsum_eq_single _ 1]
-  simp
+  simp [PowerSeries.toMvPowerSeries_apply]
   rw [PowerSeries.coeff_subst_X_s, PowerSeries.coeff_subst_X_s' (one_ne_zero).symm]
   have eq_aux : ↑↑hg_unit.unit⁻¹ * (((PowerSeries.coeff 1) g : R) : K) = 1 := by
     exact_mod_cast IsUnit.val_inv_mul hg_unit
@@ -667,7 +668,7 @@ lemma coeff_Y_inv_add_RecurFun :
     linarith
   obtain ⟨i, hi, hi'⟩ := exist_aux
   refine Finset.prod_eq_zero hi ?_
-  simp [hi']
+  simp [hi', PowerSeries.toMvPowerSeries_apply]
   rw [PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun ..,
     PowerSeries.constantCoeff_subst_X <| constantCoeff_RecurFun .., add_zero]
 
@@ -678,7 +679,8 @@ lemma f_F_eq_f_add :
     (RecurFun ht hq σ s hg).subst X₀ + (RecurFun ht hq σ s hg).subst X₁ := by
   rw [inv_add_RecurFun, ← subst_comp_subst_apply (of_constantCoeff_zero' rfl)
     <| of_constantCoeff_zero <| constantCoeff_add_RecurFun .., inv_RecurFun,
-    subst_inv_eq, subst_X <| .of_constantCoeff_zero <| constantCoeff_add_RecurFun ..]
+    subst_inv_eq, subst_X <| .of_constantCoeff_zero <| constantCoeff_add_RecurFun ..,
+    PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply]
 
 open PowerSeries in
 /- constant coefficient of `F` is zero. -/
@@ -1303,9 +1305,9 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
   zero_constantCoeff := by
     rw [inv_add_RecurFun, PowerSeries.constantCoeff_subst_eq_zero _ _
       (constantCoeff_inv_RecurFun ..)]
-    · rw [map_add, PowerSeries.toMvPowerSeries]
-      simp_rw [PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
-        (constantCoeff_RecurFun ..), zero_add]
+    · rw [map_add]
+      simp_rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero
+        (constantCoeff_X _) _ (constantCoeff_RecurFun ..), zero_add]
   lin_coeff_X := coeff_X_inv_add_RecurFun ht hq σ s hg hg_unit
   lin_coeff_Y := coeff_Y_inv_add_RecurFun ht hq σ s hg hg_unit
   assoc := by
@@ -1315,13 +1317,14 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
     have f_def : f = RecurFun ht hq σ s hg := rfl
     have f_inv_def : f_inv = inv_RecurFun ht hq σ s hg hg_unit := rfl
     have F_def : F = inv_add_RecurFun ht hq σ s hg hg_unit := rfl
-    have f_comp_F : f.subst F = f.toMvPowerSeries 0 + f.toMvPowerSeries 1 :=
-      f_F_eq_f_add ht hq σ s hg hg_unit
+    have f_comp_F : f.subst F = f.toMvPowerSeries 0 + f.toMvPowerSeries 1 := by
+      rw [(f_F_eq_f_add ht hq σ s hg hg_unit), PowerSeries.toMvPowerSeries_apply,
+        PowerSeries.toMvPowerSeries_apply]
     rw [PowerSeries.subst] at f_comp_F
     have eq_aux {α β : MvPowerSeries (Fin 3) K} {γ : PowerSeries K} (h : HasSubst ![α, β]) :
       subst ![α, β] (γ.toMvPowerSeries 0 + γ.toMvPowerSeries 1) =
         γ.subst α + γ.subst β := by
-      simp [subst_add h, PowerSeries.toMvPowerSeries, PowerSeries.subst,
+      simp [subst_add h, PowerSeries.toMvPowerSeries_apply, PowerSeries.subst,
         subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) h,
         subst_X h]
     have has_subst₁ : HasSubst ![subst ![Y₀ (R := K), Y₁] F, Y₂] :=
@@ -1331,7 +1334,8 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
     have has_subst₃ : PowerSeries.HasSubst ((RecurFun ht hq σ s hg).toMvPowerSeries (0 : Fin 2) +
       (RecurFun ht hq σ s hg).toMvPowerSeries 1) := by
       refine PowerSeries.HasSubst.of_constantCoeff_zero ?_
-      rw [map_add, PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
+      rw [map_add, PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply,
+        PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
         (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
           (constantCoeff_RecurFun ..), add_zero]
     nth_rw 2 4 [inv_add_RecurFun]
@@ -1341,19 +1345,23 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
     funext i
     have eq_aux₁ : subst ![subst ![Y₀, Y₁] F, Y₂] (f.toMvPowerSeries 0) =
       f.toMvPowerSeries 0 + f.toMvPowerSeries 1 := by
-      rw [PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
+      rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.subst, subst_comp_subst_apply
         (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) has_subst₁, subst_X has_subst₁,
         Matrix.cons_val_zero, ← subst_comp_subst_apply (PowerSeries.HasSubst.const
-        (HasSubst.inv_add_RecurFun ..)) has_subst_XY, f_comp_F, eq_aux has_subst_XY]
+        (HasSubst.inv_add_RecurFun ..)) has_subst_XY, f_comp_F, eq_aux has_subst_XY,
+        PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply]
     have eq_aux₂ : subst ![Y₀, subst ![Y₁, Y₂] F] ((RecurFun ht hq σ s hg).toMvPowerSeries 1)
       = f.toMvPowerSeries 1 + f.toMvPowerSeries 2 := by
       rw [PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_one,
         Matrix.cons_val_zero, PowerSeries.subst, ← subst_comp_subst_apply
         (PowerSeries.HasSubst.const (HasSubst.inv_add_RecurFun ..)) has_subst_YZ,
-          f_comp_F, eq_aux has_subst_YZ]
+          f_comp_F, eq_aux has_subst_YZ, PowerSeries.toMvPowerSeries_apply,
+          PowerSeries.toMvPowerSeries_apply]
     rw [subst_add has_subst₁, eq_aux₁, PowerSeries.toMvPowerSeries_val _ has_subst₁,
       Matrix.cons_val_one, Matrix.cons_val_zero, subst_add has_subst₂,
-      PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_zero, eq_aux₂]
+      PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_zero, eq_aux₂,
+      PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply,
+      PowerSeries.toMvPowerSeries_apply]
     exact add_assoc _ _ _
   comm := by
     rw [inv_add_RecurFun, PowerSeries.subst, subst_comp_subst_apply _ has_subst_swap, subst_congr]
@@ -1361,15 +1369,15 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
     conv_rhs =>
       rw [add_comm ((RecurFun ht hq σ s hg).toMvPowerSeries 0), subst_add has_subst_swap]
     congr
-    · simp_rw [PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
+    · simp_rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.subst, subst_comp_subst_apply
         (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) has_subst_swap,
           subst_X has_subst_swap, Matrix.cons_val_one, Matrix.cons_val_fin_one]
-    · simp_rw [PowerSeries.toMvPowerSeries, PowerSeries.subst, subst_comp_subst_apply
+    · simp_rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.subst, subst_comp_subst_apply
         (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X _)) has_subst_swap,
           subst_X has_subst_swap, Matrix.cons_val_zero]
     · refine PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero ?_
-      rw [map_add, PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
-        (constantCoeff_RecurFun ..), PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
+      rw [map_add, PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
+        (constantCoeff_RecurFun ..), PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _
           (constantCoeff_RecurFun ..), add_zero]
 
 def CommFormalGroup.InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity K]
@@ -2468,13 +2476,16 @@ theorem congr_equiv [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs₀ :
         simp_rw [PowerSeries.subst]
         rw [subst_comp_subst_apply _ has_subst_aux, subst_congr]
         funext i
-        rw [subst_add has_subst_aux, subst_comp_subst_apply has_subst_const has_subst_aux,
+        rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply, subst_add has_subst_aux,
+          PowerSeries.subst, subst_comp_subst_apply has_subst_const has_subst_aux, PowerSeries.subst,
           subst_comp_subst_apply has_subst_const
           has_subst_aux, subst_X has_subst_aux, subst_X has_subst_aux,
           _root_.add_comm]
         rfl
         · refine PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero ?_
-          rw [map_add, constantCoeff_subst_zero, constantCoeff_subst_zero, add_zero]
+          rw [map_add, PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply,
+            PowerSeries.constantCoeff_subst_eq_zero, PowerSeries.constantCoeff_subst_eq_zero,
+              add_zero]
           all_goals simp [constantCoeff_RecurFun ht hq σ s hg]
   have β_coeff_mem_R : ∀ d, PowerSeries.coeff d β ∈ R := by
     rw [eq_aux]
