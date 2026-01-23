@@ -10,9 +10,8 @@ open MvPowerSeries Classical FormalGroup
 
 variable {R : Type*} [CommRing R] {σ : Type*}
 
-theorem PowerSeries.constantCoeff_def (f : PowerSeries R) : PowerSeries.constantCoeff f =
-  MvPowerSeries.constantCoeff f := by
-  simp [PowerSeries.constantCoeff]
+theorem PowerSeries.constantCoeff_def (f : PowerSeries R) :
+    PowerSeries.constantCoeff f = MvPowerSeries.constantCoeff f := rfl
 
 lemma subst_self (f : MvPowerSeries (Fin 2) R):
   f =

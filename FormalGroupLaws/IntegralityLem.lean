@@ -130,6 +130,7 @@ lemma hasSum_aux [TopologicalSpace K] (hs₀ : s 0 = 0) :
   rw [eq_aux]
   apply PowerSeries.HasSum.increase_order
   intro n
+
   refine .trans (.trans ?_ (PowerSeries.le_order_map _)) (PowerSeries.le_order_smul)
   rw [PowerSeries.order_expand]
   refine .trans ?_ (nsmul_le_nsmul_right (PowerSeries.one_le_order (constantCoeff_RecurFun ..)) _)
@@ -1359,10 +1360,8 @@ def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
           PowerSeries.toMvPowerSeries_apply]
     rw [subst_add has_subst₁, eq_aux₁, PowerSeries.toMvPowerSeries_val _ has_subst₁,
       Matrix.cons_val_one, Matrix.cons_val_zero, subst_add has_subst₂,
-      PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_zero, eq_aux₂,
-      PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply,
-      PowerSeries.toMvPowerSeries_apply]
-    exact add_assoc _ _ _
+      PowerSeries.toMvPowerSeries_val _ has_subst₂, Matrix.cons_val_zero, eq_aux₂]
+    simpa [PowerSeries.toMvPowerSeries_apply] using add_assoc _ _ _
   comm := by
     rw [inv_add_RecurFun, PowerSeries.subst, subst_comp_subst_apply _ has_subst_swap, subst_congr]
     funext i
