@@ -1415,7 +1415,6 @@ theorem decomp_InvAdd_RecurFun_Subring [UniformSpace K] [T2Space K] [DiscreteUni
   FormalGroup.decomp_Y_add (CommFormalGroup.InvAdd_RecurFun ht hq σ hs a_congr
     hp_mem s hs₁ hs₂ hg hg_unit hs₀: FormalGroup R)
 
-
 end PartI
 
 section PartII
