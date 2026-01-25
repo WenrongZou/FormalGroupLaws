@@ -105,10 +105,11 @@ variable [DecidableEq σ] [Fintype σ] [DecidableEq τ] [Fintype τ]
 lemma constructive_lemma_ind_hyp
     (n : ℕ) {ϕ₁ : MvPolynomial (Fin n) 𝒪[K]}
     (hϕ₁ : ∀ i ∈ ϕ₁.support, Finset.univ.sum i = 1)
-    {a : Fin n → 𝒪[K]} (f g : LubinTateF π) (r : ℕ) (hr : 2 ≤ r) : ∃! ϕr : MvPolynomial (Fin n) 𝒪[K], ϕr.totalDegree < r
+    {a : Fin n → 𝒪[K]} (f g : LubinTateF π) (r : ℕ) (hr : 2 ≤ r) :
+    ∃! ϕr : MvPolynomial (Fin n) 𝒪[K], ϕr.totalDegree < r
         ∧ truncTotalDegHom 2 ϕr = ϕ₁
           ∧ truncTotalDegHom r (f.toFun.subst ϕr.toMvPowerSeries)
-            = truncTotalDegHom r (ϕr.toMvPowerSeries.subst g.toFun.toMvPowerSeries) := by
+            = truncTotalDegHom r (ϕr.toMvPowerSeries.subst (g.toFun.toMvPowerSeries ·)) := by
   induction r, hr using Nat.le_induction with
   | base => sorry
   | succ d hd ih =>
@@ -147,11 +148,11 @@ lemma constructive_lemma_ind_hyp
       obtain ⟨u, hu⟩ := g.mod_pi
       use (PowerSeries.substAlgHom (PowerSeries.HasSubst.X i)) u
       convert congrArg (PowerSeries.substAlgHom (PowerSeries.HasSubst.X (S := 𝒪[K]) i)) hu
-      · rw [map_sub, map_pow, PowerSeries.substAlgHom_X, PowerSeries.toMvPowerSeries,
+      · rw [map_sub, map_pow, PowerSeries.substAlgHom_X, PowerSeries.toMvPowerSeries_apply,
           PowerSeries.subst, PowerSeries.substAlgHom, substAlgHom_apply]
       · rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
         rfl
-    have h_second_term : C π ∣ p.toMvPowerSeries.subst g.toFun.toMvPowerSeries - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
+    have h_second_term : C π ∣ p.toMvPowerSeries.subst (g.toFun.toMvPowerSeries · ) - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
       -- p is a polynomial so we may use MvPolynomial
       rw [subst_coe, subst_coe]
       -- this means we can write stuff like p.sum!
@@ -178,7 +179,7 @@ theorem constructive_lemma
     (f g : LubinTateF π) :
     ∃! ϕ : MvPowerSeries (Fin n) 𝒪[K],
       truncTotalDegHom 2 ϕ = ϕ₁
-        ∧ PowerSeries.subst ϕ f.toFun = subst g.toFun.toMvPowerSeries ϕ := by
+        ∧ PowerSeries.subst ϕ f.toFun = subst (g.toFun.toMvPowerSeries ·) ϕ := by
   sorry
 
 /-- This is constructive lemma in two variable. More specific, given two `f, g ∈ F_π`,
@@ -188,7 +189,7 @@ theorem constructive_lemma_two
     (f g : LubinTateF π) :
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) ∧
-    PowerSeries.subst ϕ g.toFun = subst f.toFun.toMvPowerSeries ϕ := by
+    PowerSeries.subst ϕ g.toFun = subst (f.toFun.toMvPowerSeries · ) ϕ := by
   let a := fun (x : Fin 2) => 1
 
   sorry
@@ -200,7 +201,7 @@ theorem constructive_lemma_two'
     (f g : LubinTateF π) (a : 𝒪[K]):
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.C a * MvPolynomial.X (0 : Fin 2) + MvPolynomial.C a * MvPolynomial.X (1 : Fin 2) ∧
-    PowerSeries.subst ϕ g.toFun = subst f.toFun.toMvPowerSeries ϕ := by
+    PowerSeries.subst ϕ g.toFun = subst (f.toFun.toMvPowerSeries · ) ϕ := by
   let a := fun (x : Fin 2) => 1
 
   sorry
