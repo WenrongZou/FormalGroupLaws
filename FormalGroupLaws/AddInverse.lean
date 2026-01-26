@@ -649,12 +649,12 @@ lemma left_addInv_eq_right_addInv : addInv_X_left F = addInv_X F := by
 
 /-- For any MvPowerSeries `f` with zero constant coefficient, then
   `f +[F] addInv F f = 0`. -/
-lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (h : MvPowerSeries.constantCoeff f = 0) :
+lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (h : f.constantCoeff = 0) :
   f +[F] addInv F f = 0 := calc
   _ = subst f (MvPowerSeries.subst ![ PowerSeries.X, addInv_X F] F.toFun) := by
     rw [subst, MvPowerSeries.subst_comp_subst_apply (HasSubst.addInv_aux F)
       (MvPowerSeries.hasSubst_of_constantCoeff_zero fun s ↦ h)]
-    apply subst_congr
+    congr! 1
     funext s; fin_cases s
     · simp; rw [← subst, subst_X
       <| HasSubst.of_constantCoeff_zero h]
@@ -665,12 +665,12 @@ lemma add_addInv_eq_zero {f : MvPowerSeries σ R} (h : MvPowerSeries.constantCoe
 
 /-- For any MvPowerSeries `f` with zero constant coefficient, then
   `addInv F f +[F] f = 0`. -/
-lemma add_addInv_eq_zero' {f : MvPowerSeries σ R} (h : MvPowerSeries.constantCoeff f = 0):
+lemma addInv_add_eq_zero {f : MvPowerSeries σ R} (h : f.constantCoeff = 0):
   addInv F f +[F] f = 0 := calc
   _ = PowerSeries.subst f (MvPowerSeries.subst ![(addInv_X_left F), PowerSeries.X] F.toFun) := by
     rw [subst, MvPowerSeries.subst_comp_subst_apply (HasSubst.addInv_aux' F)
       (MvPowerSeries.hasSubst_of_constantCoeff_zero fun s ↦ h)]
-    apply subst_congr
+    congr! 1
     funext s; fin_cases s
     · simp [left_addInv_eq_right_addInv]; rfl
     · simp; rw [← subst, subst_X
@@ -694,10 +694,10 @@ lemma uniqueness_of_addInv {f : MvPowerSeries σ R} (h : constantCoeff f = 0) :
       rw [addInv, PowerSeries.subst, constantCoeff_subst_zero (by simp [h]) rfl]
     calc
       _ = addInv F f := by
-        rw [←zero_add hy₂ (F := F), ←add_addInv_eq_zero' F h, FormalGroup.add_assoc
+        rw [←zero_add hy₂ (F := F), ←addInv_add_eq_zero F h, FormalGroup.add_assoc
           coeff_aux h hy₂, hy₁, add_zero _ coeff_aux]
       _ = _ := by
-        rw [←zero_add hz₂ (F := F), ←add_addInv_eq_zero' F h, FormalGroup.add_assoc
+        rw [←zero_add hz₂ (F := F), ←addInv_add_eq_zero F h, FormalGroup.add_assoc
           coeff_aux h hz₂, hz₁, add_zero _ coeff_aux]
 
 
@@ -716,7 +716,7 @@ lemma addInv_of_add_eq {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
     rw [addInv, PowerSeries.subst, constantCoeff_subst_zero (by simp [hg]) rfl]
   have coeff_aux₃ : constantCoeff (addInv F (f +[F] g) +[F] f) = 0 := by
     rw [constantCoeff_subst_zero (by simp [coeff_aux₁, hf]) F.zero_constantCoeff]
-  obtain eq_aux := add_addInv_eq_zero' F coeff_aux₀
+  obtain eq_aux := addInv_add_eq_zero F coeff_aux₀
   have eq_aux₁ : addInv F (f +[F] g) +[F] f = addInv F g := by
     rw [← add_zero _ coeff_aux₃, ← add_addInv_eq_zero F hg,
       ← FormalGroup.add_assoc coeff_aux₃ hg coeff_aux_g, FormalGroup.add_assoc coeff_aux₁ hf hg,

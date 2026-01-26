@@ -137,7 +137,6 @@ lemma has_subst_swap : HasSubst ![X₁, X₀ (R := R)]  :=
 Given a power series p(X) ∈ R⟦X⟧ and an index i, we may view it as a
 multivariate power series p(X_i) ∈ R⟦X_1, ..., X_n⟧.
 -/
-/- TODO: use the following definition. -/
 def PowerSeries.toMvPowerSeries (i : σ) : PowerSeries R →ₐ[R] MvPowerSeries σ R :=
   substAlgHom (HasSubst.X i)
 
@@ -145,13 +144,11 @@ theorem PowerSeries.toMvPowerSeries_apply (i : σ) (f : PowerSeries R) :
     f.toMvPowerSeries i = f.subst (MvPowerSeries.X i) := by
   rw [toMvPowerSeries, coe_substAlgHom]
 
-lemma HasSubst.toMvPowerSeries [Finite σ] {f : PowerSeries R}
-  (hf : f.constantCoeff = 0) :
-  HasSubst (fun (i : σ) => f.toMvPowerSeries i) (S := R) := by
-  refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
-  intro x
-  rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero
-    (constantCoeff_X _) _ hf]
+theorem HasSubst.toMvPowerSeries [Finite σ] {f : PowerSeries R} (hf : f.constantCoeff = 0) :
+    HasSubst (f.toMvPowerSeries · (σ := σ)) (S := R) := by
+  refine MvPowerSeries.hasSubst_of_constantCoeff_zero fun x => by
+    rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero
+      (constantCoeff_X _) _ hf]
 
 lemma PowerSeries.toMvPowerSeries_val {f : PowerSeries R} {a : σ → MvPowerSeries τ R} (i : σ)
     (ha : MvPowerSeries.HasSubst a) : (f.toMvPowerSeries i).subst a = f.subst (a i) := by
@@ -725,6 +722,7 @@ structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
   toFun : PowerSeries R
   zero_constantCoeff : toFun.constantCoeff = 0
   hom : toFun.subst (G₁.toFun) = G₂.toFun.subst (R := R) (toFun.toMvPowerSeries ·)
+
 section FormalGroupIso
 
 /-- The homomorphism `α(X) : F (X, Y) → G (X, Y)` is an isomorphism if there exists a

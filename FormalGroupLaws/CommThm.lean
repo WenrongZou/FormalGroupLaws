@@ -109,7 +109,7 @@ lemma preCommutator_ne_of_nonComm (h : ¬ F.comm) :
         have coeff_aux : constantCoeff (X₀ +[F] X₁) = 0 := by
           rw [constantCoeff_subst_zero (by simp) F.zero_constantCoeff]
         rw [add_assoc coeff_aux constantCoeff_addInvF_X₀ (constantCoeff_X 0),
-          add_addInv_eq_zero' _ <| constantCoeff_X _,
+          addInv_add_eq_zero _ <| constantCoeff_X _,
           add_zero _ coeff_aux, add, aux, subst_self]
         rfl
       _ = _ := by
@@ -285,8 +285,8 @@ lemma comm_iff_commutator_eq_zero :
     unfold comm
     calc
       _ = X₀ +[F] X₁ +[F] addInv F X₀ +[F] addInv F X₁ +[F] X₁ +[F] X₀ := by
-        rw [add_assoc (Z₀ := X₀ +[F] X₁ +[F] addInv F X₀), add_addInv_eq_zero', add_zero,
-          add_assoc (Z₀ := X₀ +[F] X₁), add_addInv_eq_zero', add_zero]
+        rw [add_assoc (Z₀ := X₀ +[F] X₁ +[F] addInv F X₀), addInv_add_eq_zero, add_zero,
+          add_assoc (Z₀ := X₀ +[F] X₁), addInv_add_eq_zero, add_zero]
         have aux : ![X₀, X₁] = (X : Fin 2 → MvPowerSeries (Fin 2) R) := by
           simp [@funext_iff]
         simp [add, aux, ←map_algebraMap_eq_subst_X]
