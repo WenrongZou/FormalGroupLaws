@@ -339,6 +339,17 @@ def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R) : Formal
       (has_subst_aux₁ F.zero_constantCoeff), F.assoc, ← map_subst has_subst_YZ, this,
         ← map_subst (has_subst_aux₂ F.zero_constantCoeff)]
 
+theorem map_id (F : FormalGroup R) : F.map (RingHom.id _) = F := by
+  simp [FormalGroup.map]
+
+variable {T : Type*} [CommRing T]
+
+omit [Algebra R S] in
+theorem map_comp (F : FormalGroup R) (f : R →+* S) (g : S →+* T) :
+    F.map (RingHom.comp g f) = (F.map f).map g := by
+  simp [FormalGroup.map ]
+
+
 variable (F : FormalGroup R)
 
 lemma has_subst_X₀ : HasSubst ![PowerSeries.X (R := R), 0] :=
