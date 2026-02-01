@@ -324,9 +324,8 @@ def Gₘ : CommFormalGroup R where
     ring
 
 /-- Given a algebra map `f : R →+* R'` and a formal group law `F` over `R`, then `f_* F` is a
-  formal group law formal group law over `R'`. This is constructed by applying `f` to all coefficients
-  of the underlying power series.
-  -/
+formal group law formal group law over `R'`. This is constructed by applying `f` to all coefficients
+of the underlying power series. -/
 def map {R' : Type*} [CommRing R'] (f : R →+* R') (F : FormalGroup R) : FormalGroup R' where
   toFun := F.toFun.map f
   zero_constantCoeff := by simp [constantCoeff_map, F.zero_constantCoeff, map_zero]
@@ -347,8 +346,7 @@ variable {T : Type*} [CommRing T]
 omit [Algebra R S] in
 theorem map_comp (F : FormalGroup R) (f : R →+* S) (g : S →+* T) :
     F.map (RingHom.comp g f) = (F.map f).map g := by
-  simp [FormalGroup.map ]
-
+  simp only [map, map_map]
 
 variable (F : FormalGroup R)
 
