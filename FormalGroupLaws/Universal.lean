@@ -16,10 +16,10 @@ def FGL : CommRingCat.{u} ⥤ Type u where
   map f := FormalGroup.map f.hom
   map_id R := by
     ext F : 1
-    simp [F.map_id]
+    simp [FormalGroup.map]
   map_comp f g := by
     ext F : 1
-    simp [F.map_comp]
+    simp [FormalGroup.map]
 
 def FormalGroup.IsUniversalOver : Prop :=
     ∀ (R : Type u) [CommRing R], ∀ F, ∃! (φ : L →+* R), U.map φ = F
@@ -40,7 +40,7 @@ structure CategoryTheory.Functor.IsCorepresentedBy
 end
 
 theorem FGL_representable (h : U.IsUniversalOver L) : FGL.IsCorepresentedBy U (X := of L) := by
-  refine { map_bijective := ?_ }
+  rw [CategoryTheory.Functor.isCorepresentedBy_iff]
   intro Y
   rw [Function.Bijective, Function.Injective, Function.Surjective]
   constructor
