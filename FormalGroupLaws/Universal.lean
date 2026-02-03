@@ -52,6 +52,4 @@ theorem FGL_representable (h : U.IsUniversalOver L) : FGL.IsCorepresentedBy U (X
   obtain ⟨f, hf₁, hf₂⟩ := h (of Y) F
   exact ⟨(ofHom f), hf₁⟩
 
-#check IsRepresentedBy
-
 end Universal
