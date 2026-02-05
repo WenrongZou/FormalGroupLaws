@@ -20,9 +20,9 @@ open Classical Finset
 open scoped MvPowerSeries.WithPiTopology
 
 /- The basic ingredients in this section are `R ⊆ K, σ : K → K, I ⊆ R, p, q, s₁, s₂ ⋯`,
-  where `R` is a subring of `K`, `σ` is a ring homomorphism of `K`, which stablize `A`,
-  `I` is an ideal of `A`, `p` is a prime number and `q` is a power of `p`, `s_i` are
-  elements of `K`. -/
+where `R` is a subring of `K`, `σ` is a ring homomorphism of `K`, which stablize `A`,
+`I` is an ideal of `A`, `p` is a prime number and `q` is a power of `p`, `s_i` are
+elements of `K`. -/
 
 variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} (hI : I ≠ ⊤) {τ : Type*}
   {p t q : ℕ} [hp : Fact (Nat.Prime p)] (ht : t ≠ 0) (hq : q = p ^ t)
@@ -720,8 +720,14 @@ lemma constantCoeff_frobnius_F_zero (i : ℕ):
     let F := (inv_add_RecurFun ht hq σ s hg hg_unit)
     constantCoeff (subst ![(X₀ (R := K)) ^ q ^ i, X₁ ^ q ^ i] F) = 0 := by
   simp only [Nat.succ_eq_add_one, Nat.reduceAdd]
-  rw [constantCoeff_subst_zero] <;> simp [zero_pow <| q_pow_neZero hq,
-    constantCoeff_inv_add_RecurFun]
+  rw [constantCoeff_subst_eq_zero] 
+  refine hasSubst_of_constantCoeff_zero ?_ 
+  · intro s 
+    fin_cases s 
+    · simp [zero_pow <| q_pow_neZero hq]
+    · simp [zero_pow <| q_pow_neZero hq]
+  simp [zero_pow <| q_pow_neZero hq]
+  exact constantCoeff_inv_add_RecurFun ..
 
 /-- $σ^i f (F(X^{q^i}, Y^{q^i})) = ∑'(n ∈ ℕ), σ^i (a_n) * F(X^{q^i}, Y^{q^i})^n. $-/
 lemma decomp_f (i : ℕ) [UniformSpace K] [T2Space K] [DiscreteUniformity K] :
