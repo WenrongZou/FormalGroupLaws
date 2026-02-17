@@ -20,11 +20,10 @@ open Classical Finset
 open scoped MvPowerSeries.WithPiTopology
 
 /- The basic ingredients in this section are `R ⊆ K, σ : K → K, I ⊆ R, p, q, s₁, s₂ ⋯`,
-where `R` is a subring of `K`, `σ` is a ring homomorphism of `K`, which stablize `A`,
-`I` is an ideal of `A`, `p` is a prime number and `q` is a power of `p`, `s_i` are
+where `R` is a subring of `K`, `σ` is a ring homomorphism of `K`, which stablize `R`,
+`I` is an ideal of `R`, `p` is a prime number and `q` is a power of `p`, `s_i` are
 elements of `K`. -/
-
-variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} (hI : I ≠ ⊤) {τ : Type*}
+variable {K : Type*} [CommRing K] {R : Subring K} {I : Ideal R} {τ : Type*}
   {p t q : ℕ} [hp : Fact (Nat.Prime p)] (ht : t ≠ 0) (hq : q = p ^ t)
   (σ : K →+* K)  (hs : ∀ (a : R), σ a ∈ R) (a_congr : ∀ a : R, ⟨σ a, hs a⟩ ≡  (a ^ q) [SMOD I])
   (hp_mem : (p : R) ∈ I) (s : ℕ → K) (hs₁ : ∀ i, ∀ a, a ∈ R.subtype '' I → s i * a ∈ R)
@@ -130,7 +129,6 @@ lemma hasSum_aux [TopologicalSpace K] (hs₀ : s 0 = 0) :
   rw [eq_aux]
   apply PowerSeries.HasSum.increase_order
   intro n
-
   refine .trans (.trans ?_ (PowerSeries.le_order_map _)) (PowerSeries.le_order_smul)
   rw [PowerSeries.order_expand]
   refine .trans ?_ (nsmul_le_nsmul_right (PowerSeries.one_le_order (constantCoeff_RecurFun ..)) _)
@@ -720,10 +718,10 @@ lemma constantCoeff_frobnius_F_zero (i : ℕ):
     let F := (inv_add_RecurFun ht hq σ s hg hg_unit)
     constantCoeff (subst ![(X₀ (R := K)) ^ q ^ i, X₁ ^ q ^ i] F) = 0 := by
   simp only [Nat.succ_eq_add_one, Nat.reduceAdd]
-  rw [constantCoeff_subst_eq_zero] 
-  refine hasSubst_of_constantCoeff_zero ?_ 
-  · intro s 
-    fin_cases s 
+  rw [constantCoeff_subst_eq_zero]
+  refine hasSubst_of_constantCoeff_zero ?_
+  · intro s
+    fin_cases s
     · simp [zero_pow <| q_pow_neZero hq]
     · simp [zero_pow <| q_pow_neZero hq]
   simp [zero_pow <| q_pow_neZero hq]
@@ -1694,8 +1692,7 @@ open PowerSeries in
 lemma HasSubst.G : HasSubst ((inv_RecurFun ht hq σ s hg hg_unit).subst (RecurFun ht hq σ s hg')) :=
   .of_constantCoeff_zero (constantCoeff_G ..)
 
-lemma G_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
-    {n: ℕ} :
+lemma G_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K] {n: ℕ} :
     let f_g' := (RecurFun ht hq σ s hg')
     let G := (inv_RecurFun ht hq σ s hg hg_unit).subst f_g'
     (h_ind : ∀ m < n, (PowerSeries.coeff m) G ∈ R) →
