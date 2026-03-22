@@ -71,8 +71,8 @@ lemma PowerSeries.subst_congr {f' : PowerSeries R} {f₁ f₂ : MvPowerSeries σ
     (H : f₁ = f₂): PowerSeries.subst f₁ f' = PowerSeries.subst f₂ f' :=  H ▸ rfl
 
 @[simp]
-lemma PowerSeries.coeff_coe {f : PowerSeries R} (n : ℕ) : MvPowerSeries.coeff (Finsupp.single () n) f
-  = PowerSeries.coeff n f := rfl
+lemma PowerSeries.coeff_coe {f : PowerSeries R} (n : ℕ) :
+    MvPowerSeries.coeff (Finsupp.single () n) f = f.coeff n := rfl
 
 @[simp]
 lemma PowerSeries.constantCoeff_coe {f : PowerSeries R} : MvPowerSeries.constantCoeff f =
@@ -203,7 +203,7 @@ namespace FormalGroup
 def comm (F : FormalGroup R) : Prop :=
   F.toFun = MvPowerSeries.subst ![X₁, X₀] F.toFun
 
-/-- A commutative formal group law is a formal group law.-/
+/-- A commutative formal group law is a formal group law. -/
 instance : Coe (CommFormalGroup R) (FormalGroup R) where
   coe := CommFormalGroup.toFormalGroup
 
