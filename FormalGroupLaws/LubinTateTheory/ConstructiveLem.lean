@@ -5,26 +5,71 @@ import Mathlib.RingTheory.PowerSeries.Trunc
 import FormalGroupLaws.Basic
 import FormalGroupLaws.Trunc
 import FormalGroupLaws.MvPowerSeries.TruncTotalDeg
-
+import Mathlib.RingTheory.Valuation.Discrete.Basic
+import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 open ValuativeRel MvPowerSeries Classical
 
 universe u
 
-variable {K : Type u} [Field K] [ValuativeRel K] [TopologicalSpace K]
-  [IsNonarchimedeanLocalField K]
-  (π : 𝒪[K]) {R : Type*} [CommRing R]
+variable {K : Type u} [Field K] [ValuativeRel K] [UniformSpace K] [IsUniformAddGroup K]
+  [IsValuativeTopology K] [IsNonarchimedeanLocalField K] (π : 𝒪[K])
+  -- (ϖ : ValuativeRel.unformizer)
+
+noncomputable
+def preuniformizer : (ValueGroupWithZero K)ˣ  where
+  val := uniformizer K
+  inv := (uniformizer K)⁻¹
+  val_inv := by simp
+  inv_val := by simp
+
+instance : (Valued.v (R := K) (Γ₀ := ValueGroupWithZero K)).IsRankOneDiscrete where
+  exists_generator_lt_one' := by
+    use preuniformizer
+    unfold preuniformizer
+    constructor
+    · refine Subgroup.ext ?_
+      intro x
+      constructor
+      · intro h
+        simp [Subgroup.zpowers] at h
+        obtain ⟨n, hn⟩ := h
+        obtain ⟨k,hk⟩ := ValuativeRel.valuation_surjective (ValuativeRel.uniformizer K)
+        refine MonoidWithZeroHom.mem_valueGroup Valued.v ?_
+        use (k ^ n)
+        simp only [map_zpow₀, ← hn, Units.val_zpow_eq_zpow_val]
+        congr
+      ·
+        intro h
+
+        -- obtain ⟨k, hk⟩ := h
+        sorry
+      -- have : MonoidWithZeroHom.valueGroup (Valued.v (R := K) (Γ₀ := ValueGroupWithZero K)) =
+      --   sorry := sorry
+
+
+      -- sorry
+    · exact ValuativeRel.uniformizer_lt_one
+  -- obtain ⟨k,hk⟩ := ValuativeRel.valuation_surjective (ValuativeRel.uniformizer K)
+
+
+#check (ValuativeRel.uniformizer K)
+#check (Valued.v (R := K) (Γ₀ := ValueGroupWithZero K))
+#check ((Valued.v (R := K) (Γ₀ := ValueGroupWithZero K)).IsUniformizer π)
 
 noncomputable section LubinTateF
 
-variable (π : 𝒪[K])
+instance : Fintype (IsLocalRing.ResidueField ↥𝒪[K]) :=
+  Fintype.ofFinite (IsLocalRing.ResidueField ↥𝒪[K])
 
-instance : Fintype (IsLocalRing.ResidueField ↥𝒪[K]) := by
-  exact Fintype.ofFinite (IsLocalRing.ResidueField ↥𝒪[K])
+structure LubinTate.ℱ where
+  toFun : PowerSeries 𝒪[K]
+  trunc_two : toFun.trunc 2 = Polynomial.C π * Polynomial.X
+  mod_pi : PowerSeries.C π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
 
 structure LubinTateF where
   toFun : PowerSeries 𝒪[K]
-  trunc_degree_two : PowerSeries.trunc 2 toFun = Polynomial.C π * Polynomial.X
+  trunc_degree_two : toFun.trunc 2 = Polynomial.C π * Polynomial.X
   mod_pi : PowerSeries.C π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
 
 namespace LubinTateF

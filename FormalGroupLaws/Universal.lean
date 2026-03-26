@@ -10,7 +10,7 @@ noncomputable section Universal
 
 open CategoryTheory Functor CommRingCat
 
-variable (R : Type u) [CommRing R] (U : FormalGroup R) {C : Type u} [Category.{v} C]
+variable {R : Type u} [CommRing R] (U : FormalGroup R) {C : Type u} [Category.{v} C]
   -- (FGL : CommRingCat → Type)
 
 def FGL : CommRingCat.{u} ⥤ Type u where
@@ -23,10 +23,10 @@ def FGL : CommRingCat.{u} ⥤ Type u where
     ext F : 1
     simp [FormalGroup.map]
 
-def IsUniversalOver : Prop :=
-    ∀ (T : Type u) [CommRing T], ∀ F, ∃! (φ : R →+* T), U.map φ = F
+def IsUniversal : Prop :=
+    ∀ {T : Type u} [CommRing T], ∀ F, ∃! (φ : R →+* T), U.map φ = F
 
--- def L := 
+-- def L :=
 
 section
 
@@ -43,17 +43,17 @@ structure _root_.CategoryTheory.Functor.IsCorepresentedBy
 
 end
 
--- theorem FGL_representable (h : U.IsUniversalOver L) : FGL.IsCorepresentedBy U (X := of L) := by
---   rw [CategoryTheory.Functor.isCorepresentedBy_iff]
---   intro Y
---   rw [Function.Bijective, Function.Injective, Function.Surjective]
---   constructor
---   · intro f g h_fg
---     obtain ⟨φ, hU_f, hU_f'⟩ := h Y (U.map f.hom)
---     refine hom_ext ?_
---     rw [hU_f' f.hom rfl, hU_f' g.hom h_fg.symm]
---   intro F
---   obtain ⟨f, hf₁, hf₂⟩ := h (of Y) F
---   exact ⟨(ofHom f), hf₁⟩
+theorem FGL_representable (h : U.IsUniversal) : FGL.IsCorepresentedBy U (X := of R) := by
+  rw [CategoryTheory.Functor.isCorepresentedBy_iff]
+  intro Y
+  rw [Function.Bijective, Function.Injective, Function.Surjective]
+  constructor
+  · intro f g h_fg
+    obtain ⟨φ, hU_f, hU_f'⟩ := h (U.map f.hom)
+    refine hom_ext ?_
+    rw [hU_f' f.hom rfl, hU_f' g.hom h_fg.symm]
+  intro F
+  obtain ⟨f, hf₁, hf₂⟩ := h F
+  exact ⟨(ofHom f), hf₁⟩
 
 end Universal

@@ -24,7 +24,8 @@ omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij = a_ji`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm :
-  F.comm ↔ ∀ (i j : ℕ), coeff (coeff_two i j) F.toFun = coeff (coeff_two j i) F.toFun := by
+  F.comm ↔ ∀ (i j : ℕ), coeff (single 0 i + single 1 j) F.toFun
+    = coeff (single 0 j + single 1 i) F.toFun := by
   constructor
   -- forward direction
   · intro h i j
@@ -83,8 +84,9 @@ theorem comm_iff_coeff_symm' :
   · intro h
     apply ((comm_iff_coeff_symm F).mpr)
     intro i j
-    conv => rhs; rw [←add_zero ((coeff (coeff_two j i)) F.toFun), ←h i j]
-    ring
+    sorry
+    -- conv => rhs; rw [← add_zero ((coeff (coeff_two j i)) F.toFun), ←h i j]
+    -- ring
 
 /--  Over a coefficient ring `R` of characteristic zero,
 if `R` contains no nonzero element that is both torsion and nilpotent,
@@ -197,8 +199,8 @@ lemma preCommutator_comp_preCommutator :
   there exist a nonzero formal group homomorphism from `F(X,Y)` to additive formal
   group law `Gₐ` or multiplicative formal group law `Gₘ`.-/
 theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
-  (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
-  (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
+    (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
+    (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
   let H := fun (a : MvPowerSeries (Fin 2) R) b => preCommutator F a b
   /- H (0, Y) = Y. -/
   -- have eq_aux₀ : subst ![0, X₁] H = X₁ (R := R) := sorry
@@ -336,16 +338,18 @@ lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} {f g :
       apply subst_congr
       funext s; fin_cases s
       · simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
-        rw [subst_comp_subst_apply (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _)
-          <| HasSubst.FinPairing hf hg]
-        apply subst_congr
-        funext s
-        simp [subst_X <| HasSubst.FinPairing hf hg]
+        sorry
+        -- rw [subst_comp_subst_apply (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _)
+        --   <| HasSubst.FinPairing hf hg]
+        -- apply subst_congr
+        -- funext s
+        -- simp [subst_X <| HasSubst.FinPairing hf hg]
       · simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
-        rw [subst_comp_subst_apply (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _)
-          <| HasSubst.FinPairing hf hg]
-        apply subst_congr
-        funext s; simp [subst_X <| HasSubst.FinPairing hf hg]
+        sorry
+        -- rw [subst_comp_subst_apply (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.X _)
+        --   <| HasSubst.FinPairing hf hg]
+        -- apply subst_congr
+        -- funext s; simp [subst_X <| HasSubst.FinPairing hf hg]
 
 
 

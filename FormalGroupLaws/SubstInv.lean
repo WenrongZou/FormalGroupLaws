@@ -27,7 +27,6 @@ theorem subst_comp_eq_id_iff {g : PowerSeries R} (hf : HasSubst f)
 -- Define the inverse function by induction.
 def invFun_aux
   (h : IsUnit (coeff 1 f)) (hc : constantCoeff f = 0):
-  -- b₁ := a₁⁻¹
   ℕ → R × (PowerSeries R)
   | 0 => (0, 0)
   | 1 => ( (h.unit⁻¹ : Units R), C ((h.unit⁻¹ : Units R) : R) * X (R := R))

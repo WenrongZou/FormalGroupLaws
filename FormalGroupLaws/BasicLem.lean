@@ -192,8 +192,8 @@ lemma isIso_iff_aux {A : Type*} [CommRing A] {G₁ G₂ : FormalGroup A}
 
 
 theorem isIso_of_isUnit_coeff_one {G₁ G₂ : FormalGroup R} (α : FormalGroupHom G₁ G₂)
-  (h : IsUnit (PowerSeries.coeff 1 α.toFun)) :
-  ∃ (α₁ : FormalGroupIso G₁ G₂), α₁.toHom = α := by
+    (h : IsUnit (PowerSeries.coeff 1 α.toFun)) :
+    ∃ (α₁ : FormalGroupIso G₁ G₂), α₁.toHom = α := by
   obtain ⟨g, hg1, hg2, hg3⟩ := PowerSeries.exist_subst_inv α.toFun h α.zero_constantCoeff
   have has_subst₁ : PowerSeries.HasSubst g := PowerSeries.HasSubst.of_constantCoeff_zero' hg3
   have has_subst₂ : PowerSeries.HasSubst α.toFun := PowerSeries.HasSubst.of_constantCoeff_zero' α.zero_constantCoeff
@@ -240,8 +240,6 @@ theorem isIso_of_isUnit_coeff_one {G₁ G₂ : FormalGroup R} (α : FormalGroupH
       exact hg2
   }
   use β
-
-
 
 
 
@@ -335,3 +333,7 @@ variable (f : PowerSeries R) (h : IsUnit (PowerSeries.coeff 1 f)) (hc : PowerSer
 def subst_invFun : PowerSeries R := choose (PowerSeries.exist_subst_inv f h hc)
 
 def subst_invSpec := choose_spec (PowerSeries.exist_subst_inv f h hc)
+
+#check Invertible
+variable (a : R) [Invertible a]
+#check ⅟a
