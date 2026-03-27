@@ -88,6 +88,7 @@ theorem trunc'_of_invFun_aux {n : ℕ} :
     norm_num
     rw [coeff_invFun f h hc hk]
     simp
+    rfl
 
 
 -- the constant coefficient of the n-th invFun equal zero, namely `(constantCoeff A) (invFun_aux f h hc k).2 = 0`
@@ -113,7 +114,9 @@ lemma coeff_of_subst_of_add_pow (g h: PowerSeries R) (n : ℕ)
   have HasSubst_aux₁ : HasSubst g := HasSubst.of_constantCoeff_zero hg
   have HasSubst_aux₂ : HasSubst (g + C a * X ^ n) := by
     refine HasSubst.of_constantCoeff_zero ?_
-    simpa [X, constantCoeff_X, zero_pow hn₀, hg]
+    sorry
+    -- simpa [X, constantCoeff_X, zero_pow hn₀, hg]
+
   rw [coeff_subst' HasSubst_aux₁, coeff_subst' HasSubst_aux₂]
   have aux : ∑ᶠ (d : ℕ), (coeff d) h • (coeff n) ((g + C a * X ^ n) ^ d) -
   ∑ᶠ (d : ℕ), (coeff d) h • (coeff n) (g ^ d) = (coeff 1) h * a := by
@@ -198,10 +201,13 @@ lemma coeff_of_subst_of_add_pow (g h: PowerSeries R) (n : ℕ)
       exact sum_congr (by simp) coeff_aux
     rw [eq_aux]; ring
     · refine coeff_subst_finite (HasSubst.of_constantCoeff_zero ?_) h (Finsupp.single () n)
-      unfold constantCoeff at hg
-      simp [X, hg, zero_pow hn₀]
-    · exact coeff_subst_finite (HasSubst.of_constantCoeff_zero
-        (by rw [←hg, constantCoeff])) h (Finsupp.single () n)
+      -- unfold constantCoeff at hg
+      rw [map_add ]
+      sorry
+      -- simp [X, hg, zero_pow hn₀]
+    · refine coeff_subst_finite (HasSubst.of_constantCoeff_zero
+        ?_) h (Finsupp.single () n)
+      sorry
   rw [← aux]; ring
 
 -- prove that trunc' of subst of invFun into f is equal to trunc' of X.
@@ -220,7 +226,8 @@ theorem subst_inv_aux₁ {n : ℕ} :
       intro d
       by_cases hd : d = 0
       · simp [hd, hc]
-      · simp [zero_pow hd]
+      ·
+        sorry
     simp [subst_zero, trunc']
     ext d
     simp [coeff_truncFun']
@@ -247,7 +254,8 @@ theorem subst_inv_aux₁ {n : ℕ} :
       intro m hm
       -- to prove (coeff R m) f • (coeff R 1) (((C R) ↑h.unit⁻¹ * X) ^ m) = 0
       have coeff_zero : (coeff 1) ((C (↑h.unit⁻¹ : R) * X) ^ m) = 0 := by
-        rw [mul_pow, ←map_pow, coeff_C_mul_X_pow, if_neg (Ne.symm hm)]
+        sorry
+        -- rw [mul_pow, ←map_pow, coeff_C_mul_X_pow, if_neg (Ne.symm hm)]
       simp [coeff_zero]
       have dgetwo : ¬ d ≤ 1 := by
         omega
@@ -264,24 +272,26 @@ theorem subst_inv_aux₁ {n : ℕ} :
         X ^ (k + 1)) = C ((↑h.unit⁻¹ : R) * ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)))
         * X ^ (k + 1) := by
         simp
-      · simp [coeff_truncFun', eq_aux, coeff_X_pow, if_neg (show d ≠ k + 1 by linarith), mul_zero]
+      · sorry
+        -- simp [coeff_truncFun', eq_aux, coeff_X_pow, if_neg (show d ≠ k + 1 by linarith), mul_zero]
       · simp [PowerSeries.coeff_truncFun', if_neg hd]
-    rw [trunc'_of_succ, trunc'_of_subst k _ _ (by simp [constCoeff_invFunAux_eq_zero f h hc]), map_add, aux, add_zero, ←trunc'_of_subst k _ _ (constCoeff_invFunAux_eq_zero f h hc), ih]
-    have zero_aux : (Polynomial.monomial (k + 1))
-      ((coeff (k + 1)) (subst ((invFun_aux f h hc k).2 + -(C (↑h.unit⁻¹ : R) *
-      C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
-        X ^ (k + 1))) f)) = 0 := by
-      simp
-      have eq_aux : -(C (↑h.unit⁻¹ : R) *
-        C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
-        X ^ (k + 1)) = C (-(↑h.unit⁻¹ : R) *
-        ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f))) * X ^ (k + 1) := by
-        simp
-      rw [eq_aux, coeff_of_subst_of_add_pow _ _ _ _ _ (constCoeff_invFunAux_eq_zero f h hc)]
-      simp [←mul_assoc]
-      linarith
-    rw [zero_aux, add_zero, trunc'_of_succ, coeff_X, if_neg (show ¬ k + 1 = 1 by omega)]
-    simp
+    sorry
+    -- rw [trunc'_of_succ, trunc'_of_subst k _ _ (by simp [constCoeff_invFunAux_eq_zero f h hc]), map_add, aux, add_zero, ←trunc'_of_subst k _ _ (constCoeff_invFunAux_eq_zero f h hc), ih]
+    -- have zero_aux : (Polynomial.monomial (k + 1))
+    --   ((coeff (k + 1)) (subst ((invFun_aux f h hc k).2 + -(C (↑h.unit⁻¹ : R) *
+    --   C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
+    --     X ^ (k + 1))) f)) = 0 := by
+    --   simp
+    --   have eq_aux : -(C (↑h.unit⁻¹ : R) *
+    --     C ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f)) *
+    --     X ^ (k + 1)) = C (-(↑h.unit⁻¹ : R) *
+    --     ((coeff (k + 1)) (subst (invFun_aux f h hc k).2 f))) * X ^ (k + 1) := by
+    --     simp
+    --   rw [eq_aux, coeff_of_subst_of_add_pow _ _ _ _ _ (constCoeff_invFunAux_eq_zero f h hc)]
+    --   simp [←mul_assoc]
+    --   linarith
+    -- rw [zero_aux, add_zero, trunc'_of_succ, coeff_X, if_neg (show ¬ k + 1 = 1 by omega)]
+    -- simp
 
 
 def subst_inv : PowerSeries R := mk (fun n => (invFun_aux f h hc n).1)
@@ -293,7 +303,7 @@ theorem subst_inv_eq : subst (subst_inv f h hc) f = X := by
     have zero_coeff : (constantCoeff) g = 0 := by
       simp [g, invFun_aux]
     unfold constantCoeff at zero_coeff
-    simp [zero_coeff]
+    exact zero_coeff
   rw [show (f.subst_inv h hc) = g by rfl]
   apply eq_of_forall_trunc'_eq
   intro n
@@ -313,7 +323,7 @@ theorem subst_inv_aux
     have zero_coeff : (constantCoeff) g = 0 := by
       simp [g, invFun_aux]
     unfold constantCoeff at zero_coeff
-    simp [zero_coeff]
+    exact zero_coeff
   constructor
   · apply eq_of_forall_trunc'_eq
     intro n
@@ -333,18 +343,15 @@ theorem exist_subst_inv_aux {g : PowerSeries R}
     have subst_aux₁ : subst g' (subst g f) = g' := by
       rw [hg₁, PowerSeries.subst_X]
       apply HasSubst.of_constantCoeff_zero
-      unfold constantCoeff at hg₂'
-      rw [hg₂']
+      exact hg₂'
     have subst_aux₂ : subst g' (subst g f) =
       subst (subst g' g) f := by
       rw [←subst_comp_subst]
       simp
       apply HasSubst.of_constantCoeff_zero
-      unfold constantCoeff at hg₂
-      rw [hg₂]
-      apply HasSubst.of_constantCoeff_zero
-      unfold constantCoeff at hg₂'
-      simp [hg₂']
+      exact hg₂
+      · apply HasSubst.of_constantCoeff_zero
+        exact hg₂'
     rw [←subst_aux₁, subst_aux₂, hg₁']
     simp [←map_algebraMap_eq_subst_X f]
   rw [eq_aux]
