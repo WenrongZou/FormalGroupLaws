@@ -84,7 +84,7 @@ noncomputable def trunc' : PowerSeries R →+ Polynomial R where
     intros x y
     ext m
     simp only [coeff_truncFun', Polynomial.coeff_add, ite_add_ite, ← map_add, add_zero]
-    rfl
+
 -- theorem coeff_trunc m (φ : PowerSeries A) :
 --     (trunc n φ).coeff m = if m < n then coeff A m φ else 0 := by
 --   classical simp [trunc, coeff_truncFun]

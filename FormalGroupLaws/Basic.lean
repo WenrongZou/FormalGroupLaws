@@ -207,8 +207,6 @@ def comm (F : FormalGroup R) : Prop :=
 instance : Coe (CommFormalGroup R) (FormalGroup R) where
   coe := CommFormalGroup.toFormalGroup
 
-
-
 /-- addition of two multi variate power series under the formal group `F` sense, namely
 `f₀ + [F] f₁ := F (f₀, f₁)` -/
 abbrev add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries σ R :=
