@@ -1,13 +1,7 @@
-import Mathlib.RingTheory.MvPowerSeries.Basic
-import Mathlib.RingTheory.MvPowerSeries.Substitution
 import FormalGroupLaws.Basic
-import Mathlib.RingTheory.PowerSeries.PiTopology
-import Mathlib.Topology.Instances.ENNReal.Lemmas
-import Mathlib.RingTheory.MvPowerSeries.Order
-import Mathlib.Data.Finsupp.Weight
-import Mathlib.Logic.Unique
-import Mathlib.RingTheory.MvPowerSeries.Expand
-import Mathlib.Algebra.CharP.Lemmas
+import Mathlib.Algebra.CharP.Basic
+import Mathlib.Data.Int.ConditionallyCompleteOrder
+import Mathlib.GroupTheory.GroupAction.Ring
 
 variable {R S: Type*} [CommRing R] [CommRing S] {σ τ: Type*} (I : Ideal R) [DecidableEq σ] {n : ℕ}
   [DecidableEq τ] [Algebra R S]
@@ -337,3 +331,5 @@ lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUn
 section
 
 end
+
+#min_imports
