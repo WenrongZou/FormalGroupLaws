@@ -1,5 +1,3 @@
-import Mathlib.RingTheory.MvPowerSeries.Substitution
-import Mathlib.RingTheory.PowerSeries.Substitution
 import FormalGroupLaws.Trunc
 
 namespace PowerSeries

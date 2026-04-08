@@ -4,19 +4,7 @@ Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Wenrong Zou
 -/
 
-
-import Mathlib.RingTheory.MvPowerSeries.Substitution
-import Mathlib.RingTheory.PowerSeries.Substitution
-import Mathlib.LinearAlgebra.TensorProduct.Basic
-import Mathlib.Data.Nat.Factors
-import Mathlib.RingTheory.DiscreteValuationRing.Basic
-import Mathlib.RingTheory.LocalRing.ResidueField.Defs
-import Mathlib.RingTheory.Ideal.Basic
-import Mathlib.Logic.Function.Iterate
-import Mathlib.Data.Nat.PartENat
 import FormalGroupLaws.SubstInv
-import Mathlib.Algebra.BigOperators.Finprod
-
 
 /-!
 
@@ -203,6 +191,9 @@ namespace FormalGroup
 def comm (F : FormalGroup R) : Prop :=
   F.toFun = MvPowerSeries.subst ![X₁, X₀] F.toFun
 
+class IsComm (F : FormalGroup R) : Prop where
+  comm : F.toFun = F.toFun.subst ![X₁, X₀]
+
 /-- A commutative formal group law is a formal group law. -/
 instance : Coe (CommFormalGroup R) (FormalGroup R) where
   coe := CommFormalGroup.toFormalGroup
@@ -211,6 +202,8 @@ instance : Coe (CommFormalGroup R) (FormalGroup R) where
 `f₀ + [F] f₁ := F (f₀, f₁)` -/
 abbrev add (F : FormalGroup R) (f₀ f₁ : MvPowerSeries σ R) : MvPowerSeries σ R :=
   subst ![f₀, f₁] F.toFun
+
+-- instance : Add (MvPowerSeries σ R) := sorry
 
 /-- `f₀ +[F] f₁` means `F (f₀, f₁)`. -/
 scoped[FormalGroup] notation:65 f₀:65 " +[" F:0 "] " f₁:66 => add F f₀ f₁

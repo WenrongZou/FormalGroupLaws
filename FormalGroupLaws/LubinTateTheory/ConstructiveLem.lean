@@ -1,12 +1,7 @@
-import Mathlib.NumberTheory.LocalField.Basic
-import Mathlib.Topology.Algebra.Valued.LocallyCompact
-import Mathlib.RingTheory.PowerSeries.Substitution
-import Mathlib.RingTheory.PowerSeries.Trunc
 import FormalGroupLaws.Basic
-import FormalGroupLaws.Trunc
 import FormalGroupLaws.MvPowerSeries.TruncTotalDeg
+import Mathlib.NumberTheory.LocalField.Basic
 import Mathlib.RingTheory.Valuation.Discrete.Basic
-import Mathlib.RingTheory.Valuation.ValuativeRel.Basic
 
 open ValuativeRel MvPowerSeries Classical
 
