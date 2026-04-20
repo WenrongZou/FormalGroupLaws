@@ -2,6 +2,7 @@ import FormalGroupLaws.Basic
 import FormalGroupLaws.MvPowerSeries.TruncTotalDeg
 import Mathlib.NumberTheory.LocalField.Basic
 import Mathlib.RingTheory.Valuation.Discrete.Basic
+import Mathlib.RingTheory.MvPowerSeries.Trunc
 
 open ValuativeRel MvPowerSeries Classical
 
@@ -9,73 +10,35 @@ universe u
 
 variable {K : Type u} [Field K] [ValuativeRel K] [UniformSpace K] [IsUniformAddGroup K]
   [IsValuativeTopology K] [IsNonarchimedeanLocalField K] (π : 𝒪[K])
-  -- (ϖ : ValuativeRel.unformizer)
 
-noncomputable
-def preuniformizer : (ValueGroupWithZero K)ˣ  where
-  val := uniformizer K
-  inv := (uniformizer K)⁻¹
-  val_inv := by simp
-  inv_val := by simp
+instance : IsCyclic (ValueGroupWithZero K)ˣ :=
+  (Units.mapEquiv
+    (IsNonarchimedeanLocalField.valueGroupWithZeroIsoInt K).toMulEquiv).isCyclic.mpr
+    inferInstance
 
-instance : (Valued.v (R := K) (Γ₀ := ValueGroupWithZero K)).IsRankOneDiscrete where
-  exists_generator_lt_one' := by
-    use preuniformizer
-    unfold preuniformizer
-    constructor
-    · refine Subgroup.ext ?_
-      intro x
-      constructor
-      · intro h
-        simp [Subgroup.zpowers] at h
-        obtain ⟨n, hn⟩ := h
-        obtain ⟨k,hk⟩ := ValuativeRel.valuation_surjective (ValuativeRel.uniformizer K)
-        refine MonoidWithZeroHom.mem_valueGroup Valued.v ?_
-        use (k ^ n)
-        simp only [map_zpow₀, ← hn, Units.val_zpow_eq_zpow_val]
-        congr
-      ·
-        intro h
+instance : Nontrivial (ValueGroupWithZero K)ˣ :=
+  ValuativeRel.isNontrivial_iff_nontrivial_units.mp inferInstance
 
-        -- obtain ⟨k, hk⟩ := h
-        sorry
-      -- have : MonoidWithZeroHom.valueGroup (Valued.v (R := K) (Γ₀ := ValueGroupWithZero K)) =
-      --   sorry := sorry
-
-
-      -- sorry
-    · exact ValuativeRel.uniformizer_lt_one
-  -- obtain ⟨k,hk⟩ := ValuativeRel.valuation_surjective (ValuativeRel.uniformizer K)
-
-
-#check (ValuativeRel.uniformizer K)
-#check (Valued.v (R := K) (Γ₀ := ValueGroupWithZero K))
-#check ((Valued.v (R := K) (Γ₀ := ValueGroupWithZero K)).IsUniformizer π)
+variable (hπ : (Valued.v (R := K)).IsUniformizer π)
 
 noncomputable section LubinTateF
 
-instance : Fintype (IsLocalRing.ResidueField ↥𝒪[K]) :=
-  Fintype.ofFinite (IsLocalRing.ResidueField ↥𝒪[K])
-
-structure LubinTate.ℱ where
-  toFun : PowerSeries 𝒪[K]
-  trunc_two : toFun.trunc 2 = Polynomial.C π * Polynomial.X
-  mod_pi : PowerSeries.C π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
+instance : Fintype 𝓀[K] := Fintype.ofFinite 𝓀[K]
 
 structure LubinTateF where
   toFun : PowerSeries 𝒪[K]
   trunc_degree_two : toFun.trunc 2 = Polynomial.C π * Polynomial.X
   mod_pi : PowerSeries.C π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
-
 namespace LubinTateF
 
 variable (F : LubinTateF π)
 
 lemma toMvPowerSeries_trunc_degree_two :
-    (F.toFun : MvPowerSeries Unit 𝒪[K]).truncTotalDeg 2
+    (F.toFun : MvPowerSeries Unit 𝒪[K]).truncTotal _ 2
       = MvPolynomial.C π * MvPolynomial.X default := by
-  rw [truncTotalDeg_powerSeries, (MvPolynomial.pUnitAlgEquiv _).symm_apply_eq]
-  simpa using F.trunc_degree_two
+  sorry
+  -- rw [truncTotalDeg_powerSeries, (MvPolynomial.pUnitAlgEquiv _).symm_apply_eq]
+  -- simpa using F.trunc_degree_two
 
 lemma toMvPowerSeries_mod_pi :
     MvPowerSeries.C  π ∣ F.toFun - MvPowerSeries.X default ^ Fintype.card 𝓀[K] :=
@@ -147,9 +110,9 @@ lemma constructive_lemma_ind_hyp
     (hϕ₁ : ∀ i ∈ ϕ₁.support, Finset.univ.sum i = 1)
     {a : Fin n → 𝒪[K]} (f g : LubinTateF π) (r : ℕ) (hr : 2 ≤ r) :
     ∃! ϕr : MvPolynomial (Fin n) 𝒪[K], ϕr.totalDegree < r
-        ∧ truncTotalDegHom 2 ϕr = ϕ₁
-          ∧ truncTotalDegHom r (f.toFun.subst ϕr.toMvPowerSeries)
-            = truncTotalDegHom r (ϕr.toMvPowerSeries.subst (g.toFun.toMvPowerSeries ·)) := by
+        ∧ truncTotal _ 2 ϕr = ϕ₁
+          ∧ truncTotal _ r (f.toFun.subst ϕr.toMvPowerSeries)
+            = truncTotal _ r (ϕr.toMvPowerSeries.subst (g.toFun.toMvPowerSeries ·)) := by
   induction r, hr using Nat.le_induction with
   | base => sorry
   | succ d hd ih =>
@@ -161,56 +124,57 @@ lemma constructive_lemma_ind_hyp
     -- f(X) = πX + ...
     -- have h₂ := f.trunc_degree_two
     -- wts: f ∘ p = p(x1, ..., xn)^q mod π
-    have hϕ₁_constantCoeff : ϕ₁.constantCoeff = 0 := by
-      contrapose! hϕ₁
-      use 0, ?_, by simp
-      simpa using hϕ₁
-    have hp_constantCoeff : p.constantCoeff = 0 := by
-      apply_fun MvPolynomial.coeff 0 at hp_trunc
-      rw [truncTotalDegHom_apply, coeff_truncTotalDeg_of_totalDeg_lt _ _ (by simp)] at hp_trunc
-      convert hp_trunc
-      exact hϕ₁_constantCoeff.symm
-    have hp_hasSubst : PowerSeries.HasSubst p.toMvPowerSeries := by
-      simpa using hp_constantCoeff
-    -- construction: (f ∘ p - p ∘ g) / (π^r - 1)π
-    have h_first_term : C π ∣ ((PowerSeries.substAlgHom hp_hasSubst) f.toFun - p.toMvPowerSeries ^ Fintype.card 𝓀[K]) := by
-      -- f(X) - X^q = π * u(X)
-      -- show f(p(x1, ..., xn)) - p(x1, ..., xn)^q = π * u(p(x1, ..., xn))
-      obtain ⟨u, hu⟩ := f.mod_pi
-      use (PowerSeries.substAlgHom hp_hasSubst) u
-      convert congrArg (PowerSeries.substAlgHom hp_hasSubst) hu
-      · rw [map_sub, map_pow, PowerSeries.substAlgHom_X]
-      · -- TODO: Add this (subst_C) to mathlib
-        rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
-        rfl
-    -- show p(g(x)) = p(x1^q, ..., xn^q) mod π
-    have h_second_term_inner {d : ℕ} (i : Fin d) : C π ∣ g.toFun.toMvPowerSeries i - X i ^ Fintype.card 𝓀[K] := by
-      obtain ⟨u, hu⟩ := g.mod_pi
-      use (PowerSeries.substAlgHom (PowerSeries.HasSubst.X i)) u
-      convert congrArg (PowerSeries.substAlgHom (PowerSeries.HasSubst.X (S := 𝒪[K]) i)) hu
-      · rw [map_sub, map_pow, PowerSeries.substAlgHom_X, PowerSeries.toMvPowerSeries_apply,
-          PowerSeries.subst, PowerSeries.substAlgHom, substAlgHom_apply]
-      · rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
-        rfl
-    have h_second_term : C π ∣ p.toMvPowerSeries.subst (g.toFun.toMvPowerSeries · ) - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
-      -- p is a polynomial so we may use MvPolynomial
-      rw [subst_coe, subst_coe]
-      -- this means we can write stuff like p.sum!
-      -- In fact, p(g1(x),g2(x),...)-p(h1(x),h2(x),...) = sum(p_I (g(x)^I-h(x)^I))
-      rw [MvPolynomial.aeval_def, MvPolynomial.eval₂_eq, MvPolynomial.aeval_def,
-        MvPolynomial.eval₂_eq, ← Finset.sum_sub_distrib]
-      apply Finset.dvd_sum fun i hi ↦ ?_
-      simp_rw [← mul_sub]
-      apply dvd_mul_of_dvd_right
-      apply dvd_prod_pow_sub_prod_pow_of_dvd_sub h_second_term_inner
-    have h_diff_terms : C π ∣ p.toMvPowerSeries ^ Fintype.card 𝓀[K] - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
-      sorry
     sorry
+    -- have hϕ₁_constantCoeff : ϕ₁.constantCoeff = 0 := by
+    --   contrapose! hϕ₁
+    --   use 0, ?_, by simp
+    --   simpa using hϕ₁
+    -- have hp_constantCoeff : p.constantCoeff = 0 := by
+    --   apply_fun MvPolynomial.coeff 0 at hp_trunc
+    --   rw [truncTotalDegHom_apply, coeff_truncTotalDeg_of_totalDeg_lt _ _ (by simp)] at hp_trunc
+    --   convert hp_trunc
+    --   exact hϕ₁_constantCoeff.symm
+    -- have hp_hasSubst : PowerSeries.HasSubst p.toMvPowerSeries := by
+    --   simpa using hp_constantCoeff
+    -- -- construction: (f ∘ p - p ∘ g) / (π^r - 1)π
+    -- have h_first_term : C π ∣ ((PowerSeries.substAlgHom hp_hasSubst) f.toFun - p.toMvPowerSeries ^ Fintype.card 𝓀[K]) := by
+    --   -- f(X) - X^q = π * u(X)
+    --   -- show f(p(x1, ..., xn)) - p(x1, ..., xn)^q = π * u(p(x1, ..., xn))
+    --   obtain ⟨u, hu⟩ := f.mod_pi
+    --   use (PowerSeries.substAlgHom hp_hasSubst) u
+    --   convert congrArg (PowerSeries.substAlgHom hp_hasSubst) hu
+    --   · rw [map_sub, map_pow, PowerSeries.substAlgHom_X]
+    --   · -- TODO: Add this (subst_C) to mathlib
+    --     rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
+    --     rfl
+    -- -- show p(g(x)) = p(x1^q, ..., xn^q) mod π
+    -- have h_second_term_inner {d : ℕ} (i : Fin d) : C π ∣ g.toFun.toMvPowerSeries i - X i ^ Fintype.card 𝓀[K] := by
+    --   obtain ⟨u, hu⟩ := g.mod_pi
+    --   use (PowerSeries.substAlgHom (PowerSeries.HasSubst.X i)) u
+    --   convert congrArg (PowerSeries.substAlgHom (PowerSeries.HasSubst.X (S := 𝒪[K]) i)) hu
+    --   · rw [map_sub, map_pow, PowerSeries.substAlgHom_X, PowerSeries.toMvPowerSeries_apply,
+    --       PowerSeries.subst, PowerSeries.substAlgHom, substAlgHom_apply]
+    --   · rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
+    --     rfl
+    -- have h_second_term : C π ∣ p.toMvPowerSeries.subst (g.toFun.toMvPowerSeries · ) - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
+    --   -- p is a polynomial so we may use MvPolynomial
+    --   rw [subst_coe, subst_coe]
+    --   -- this means we can write stuff like p.sum!
+    --   -- In fact, p(g1(x),g2(x),...)-p(h1(x),h2(x),...) = sum(p_I (g(x)^I-h(x)^I))
+    --   rw [MvPolynomial.aeval_def, MvPolynomial.eval₂_eq, MvPolynomial.aeval_def,
+    --     MvPolynomial.eval₂_eq, ← Finset.sum_sub_distrib]
+    --   apply Finset.dvd_sum fun i hi ↦ ?_
+    --   simp_rw [← mul_sub]
+    --   apply dvd_mul_of_dvd_right
+    --   apply dvd_prod_pow_sub_prod_pow_of_dvd_sub h_second_term_inner
+    -- have h_diff_terms : C π ∣ p.toMvPowerSeries ^ Fintype.card 𝓀[K] - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
     --   sorry
-    -- hav_mv : (C _ _) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries ^ residue_size K := by
-    --   sorry
+    -- sorry
+    -- --   sorry
+    -- -- hav_mv : (C _ _) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries ^ residue_size K := by
+    -- --   sorry
 
-    -- have h₁ : (sMvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toFun.toMvPowerSeries
+    -- -- have h₁ : (sMvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toFun.toMvPowerSeries
 
 -- Proposition 2.11
 theorem constructive_lemma
@@ -218,7 +182,7 @@ theorem constructive_lemma
     (h_ϕ₁ : ∀ i ∈ ϕ₁.support, Finset.univ.sum i = 1)
     (f g : LubinTateF π) :
     ∃! ϕ : MvPowerSeries (Fin n) 𝒪[K],
-      truncTotalDegHom 2 ϕ = ϕ₁
+      truncTotal _ 2 ϕ = ϕ₁
         ∧ PowerSeries.subst ϕ f.toFun = subst (g.toFun.toMvPowerSeries ·) ϕ := by
   sorry
 

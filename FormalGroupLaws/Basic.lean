@@ -474,7 +474,7 @@ lemma self_comp_aux :
   rw [left_eq, right_eq] at eq_aux₁
   funext g
   have eq_aux₂ : g = PowerSeries.subst PowerSeries.X g := by
-    simp [←PowerSeries.map_algebraMap_eq_subst_X]
+    simp only [PowerSeries.X_subst]
   nth_rw 2 [eq_aux₂]
   rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.X') has_subst_aux, ←right_eq,
     ←assoc_eq, left_eq]
@@ -545,13 +545,13 @@ lemma self_comp_aux' :
       simp [subst_X has_subst_map_aux]
   funext g
   have eq_aux₂ : g = PowerSeries.subst PowerSeries.X g := by
-    simp [←PowerSeries.map_algebraMap_eq_subst_X]
+    simp
   nth_rw 2 [eq_aux₂]
   rw [PowerSeries.subst_comp_subst_apply (PowerSeries.HasSubst.X') has_subst_aux, ←right_eq,
     assoc_eq, left_eq]
   simp [PowerSeries.subst_X has_subst_aux, PowerSeries.subst_comp_subst_apply has_subst_aux has_subst_aux]
 
-/-- Given a power series `f`, if substition `f` into any power series is identity, then `f = X`-/
+/-- Given a power series `f`, if substition `f` into any power series is identity, then `f = X`. -/
 lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : PowerSeries.HasSubst f) :
   PowerSeries.subst f = id ↔ f = PowerSeries.X := by
   constructor
@@ -560,7 +560,7 @@ lemma PowerSeries.subst_eq_id_iff_eq_X (f : PowerSeries R) (hf : PowerSeries.Has
   · intro h
     rw [h]
     funext g
-    simp [←PowerSeries.map_algebraMap_eq_subst_X]
+    simp
 
 /-- Given a formal group law `F`, `F(X,0) = X`. -/
 theorem zero_right : subst ![PowerSeries.X, 0] F.toFun = PowerSeries.X (R := R) := by
