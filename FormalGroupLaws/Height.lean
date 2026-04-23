@@ -1,4 +1,6 @@
 import FormalGroupLaws.Basic
+import Mathlib.Algebra.CharP.Invertible
+import FormalGroupLaws.AuxLem
 
 variable {R : Type*} [CommRing R] {σ τ : Type}
 
@@ -71,7 +73,9 @@ def _root_.FormalGroupHom.series : FormalGroupHom F F where
 
 section Height
 
-variable {p : ℕ} [ExpChar R p] {hp : p ≠ 1}
+open Finset
+
+variable {p : ℕ} [CharP R p] {hp : p ≠ 1}
 
 lemma zero_of_coeff_prime_pow_zero :
     (∀ n, coeff (p ^ n) (F.series p) = 0) → F.series p = 0 := by
@@ -81,17 +85,43 @@ lemma zero_of_coeff_prime_pow_zero :
   sorry
 
 lemma FormalGroupHom.exists_coeff_ne_zero_of_ne_zero {f : FormalGroupHom F G}
-    (hf : f.toFun ≠ 0) : ∃ n, coeff (p ^ n) f.toFun ≠ 0 := by
+    (hp : p.Prime) (hf : f.toFun ≠ 0) : ∃ n, coeff (p ^ n) f.toFun ≠ 0 := by
   let m := f.toFun.order.toNat
+  have m_pos : 0 < m := by sorry
   have : ∀ n < m, f.toFun.coeff n = 0 := coeff_of_lt_order_toNat
   have eq_aux := f.hom
   have ne_zero : f.toFun.coeff m ≠ 0 := coeff_order hf
-  -- have eq_aux₁ : (f.toFun.subst F.toFun).coeff (single 0 )
+  have eq_aux₁ : ∀ i ∈ Icc 1 (m - 1), (f.toFun.subst F.toFun).coeff
+      (single 0 i + single 1 (m - i)) = f.toFun.coeff m * m.choose i := by
+    intro i hi
+    rw [coeff_subst (HasSubst.of_constantCoeff_zero F.zero_constantCoeff), finsum_eq_single _ m]
+    · rw [smul_eq_mul]
+      congr
+      rw [MvPowerSeries.coeff_pow]
 
-  sorry
+
+      sorry
+
+
+    · sorry
+  have eq_aux₂ : ∀ i ∈ Icc 1 (m - 1), (G.toFun.subst (fun x ↦ f.toFun.toMvPowerSeries x)).coeff
+      (single 0 i + single 1 (m - i)) = 0 := sorry
+  have eq_aux₃ : ∀ i ∈ Icc 1 (m - 1), f.toFun.coeff m * m.choose i = 0 := by
+    intro i hi
+    rw [← eq_aux₁ i hi, f.hom, eq_aux₂ i hi]
+  have dvd_aux : ∀ i ∈ Icc 1 (m - 1), p ∣ m.choose i := by
+    intro i hi
+    specialize eq_aux₃ i hi
+    by_contra hc
+    have : IsUnit (m.choose i : R) := (CharP.isUnit_natCast_iff hp).mpr hc
+    have : f.toFun.coeff m = 0 := (IsUnit.mul_left_eq_zero this).mp eq_aux₃
+    exact ne_zero this
+  obtain ⟨n, hn⟩ : ∃ n, m = p ^ n := exists_pow_eq_of_prime_dvd_choose hp m_pos dvd_aux
+  exact ⟨n, hn ▸ ne_zero⟩
 
 lemma exist_coeff_pow_ne_zero_of_ne_zero (h : F.series p ≠ 0) :
     (∃ n, coeff (p ^ n) (F.series p) ≠ 0) := by
+
   let m := (F.series p).order.toNat
   have : ∀ n < m, (F.series p).coeff n = 0 := coeff_of_lt_order_toNat
   have eq_aux := (FormalGroupHom.series F p).hom
