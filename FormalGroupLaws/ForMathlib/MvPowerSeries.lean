@@ -142,8 +142,4 @@ lemma PowerSeries.expand_tsum [UniformSpace R] [T2Space R] [DiscreteUniformity R
   simp_rw [expand_apply]
   rw [tsum_subst hx (HasSubst.X_pow hp)]
 
-omit [Finite σ] in
-theorem PowerSeries.subst_sub {a : MvPowerSeries σ R} (ha : HasSubst a) (f g : PowerSeries R) :
-    subst a (f - g) = subst a f - subst a g := by
-  rw [← coe_substAlgHom ha, map_sub]
 end

@@ -178,7 +178,7 @@ theorem PowerSeries.constantCoeff_map (f : R →+* S) (φ : PowerSeries R) :
     constantCoeff (map f φ) = f (constantCoeff φ) := rfl
 
 omit [DecidableEq σ]
-lemma tsum_subst {x : ℕ → PowerSeries R} {g: MvPowerSeries σ R} [UniformSpace R] [T2Space R]
+lemma tsum_subst {x : ℕ → PowerSeries R} {g : MvPowerSeries σ R} [UniformSpace R] [T2Space R]
     [DiscreteUniformity R] (hx : Summable x) (hg : PowerSeries.HasSubst g) :
     (∑' i, x i).subst g = ∑' i, ((x i).subst g) := by
   rw [←PowerSeries.coe_substAlgHom hg, PowerSeries.substAlgHom_eq_aeval hg,
@@ -331,5 +331,3 @@ lemma PowerSeries.subst_express_as_tsum [UniformSpace R] [T2Space R] [DiscreteUn
 section
 
 end
-
-#min_imports

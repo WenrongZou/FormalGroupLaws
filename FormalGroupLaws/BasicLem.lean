@@ -333,7 +333,3 @@ variable (f : PowerSeries R) (h : IsUnit (PowerSeries.coeff 1 f)) (hc : PowerSer
 def subst_invFun : PowerSeries R := choose (PowerSeries.exist_subst_inv f h hc)
 
 def subst_invSpec := choose_spec (PowerSeries.exist_subst_inv f h hc)
-
-#check Invertible
-variable (a : R) [Invertible a]
-#check ⅟a

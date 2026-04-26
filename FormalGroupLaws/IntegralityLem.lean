@@ -6,6 +6,8 @@ import Mathlib.Algebra.CharP.Lemmas
 import Mathlib.RingTheory.MvPowerSeries.Expand
 import Mathlib.RingTheory.PowerSeries.Expand
 import FormalGroupLaws.ForMathlib.MvPowerSeries
+import Mathlib.LinearAlgebra.SModEq.Basic
+import Mathlib.Algebra.IsPrimePow
 
 /-!
 #Functional Integrality Lemma.
@@ -450,7 +452,6 @@ lemma congr_pow_mod_add' {r : ℕ} (n : ℕ) {F G : MvPowerSeries τ R} (hr : 1 
     F ^ n ≡ G ^ n [SMOD (I ^ (r + multiplicity q n)).MvPowerSeries] := by
   by_cases hn₀ : n = 0
   · simp [hn₀]
-    rfl
   have dvd_aux : q ^  multiplicity q n ∣ n := pow_multiplicity_dvd q n
   obtain ⟨l, hl⟩ := dvd_aux
   nth_rw 2 3 [hl]
@@ -1219,10 +1220,12 @@ lemma RModEq_aux₂ [UniformSpace K] [T2Space K] [DiscreteUniformity K] (hs0 : s
   obtain h₀ := RModEq_aux ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs0 h h_ind
   rw [f_F_eq_f_add, ←F_def] at h₀
   ring_nf at h₀
-  simp at h₀
+  simp only [map_sub] at h₀
   have mem_aux : (-(coeff n) (g.subst X₀) - (coeff n) (g.subst X₁)) ∈ R :=
     Subring.sub_mem R (Subring.neg_mem R coeff_subst_X_mem_aux) coeff_subst_X_mem_aux
-  exact (add_mem_cancel_right mem_aux).mp h₀
+  refine (add_mem_cancel_right mem_aux).mp ?_
+  convert h₀ using 1
+  ring
 
 lemma F_coeff_mem_ind [UniformSpace K] [T2Space K] [DiscreteUniformity K]
      {n : Fin 2 →₀ ℕ} {k : ℕ} (h : n.degree = k) :
@@ -1569,6 +1572,7 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       PowerSeries.coeff n (g.subst G + f_g' - g'.map R.subtype - f_g') ∈ R := by
   intro f_g' G h_ind
   have G_def : G = (inv_RecurFun ht hq σ s hg hg_unit).subst f_g' := rfl
+  have f_g'_def : f_g' = RecurFun ht hq σ s hg' := rfl
   unfold f_g'
   nth_rw 2 [decomp_f_g' ht hq σ s hg hg_unit hg' hs0]
   nth_rw 1 [FunEq_of_RecurFun ht hq σ s hg' hs0]
@@ -1599,10 +1603,9 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       exact order_G_pow _
     rw [mul_one] at this
     exact .trans (by exact_mod_cast (Nat.lt_pow_self (one_lt_q ht hq)).le) this
-  have {a b c : PowerSeries K} : a + b + (- a - c) = b - c := by ring
-  rw [this]
-  rw [tsum_eq_aux₁ ht hq σ s hg hg_unit hg']
-  rw [map_sub, Summable.map_tsum _ _
+  have {a b c : PowerSeries K} : a + b - a - c = b - c := by ring
+  rw [this, tsum_eq_aux₁ ht hq σ s hg hg_unit hg',
+    map_sub, Summable.map_tsum _ _
     (PowerSeries.WithPiTopology.continuous_coeff K n), Summable.map_tsum _ _
     (PowerSeries.WithPiTopology.continuous_coeff K n), tsum_eq_sum (s := range (n + 1)),
     tsum_eq_sum (s := range (n + 1)), ← Finset.sum_sub_distrib]

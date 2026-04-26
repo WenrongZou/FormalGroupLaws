@@ -20,7 +20,7 @@ theorem subst_comp_eq_id_iff {g : PowerSeries R} (hf : HasSubst f)
   · intro h
     rw [subst_comp_subst hg hf, h]
     funext x
-    simp [←map_algebraMap_eq_subst_X]
+    simp
 
 -- Define the inverse function by induction.
 def invFun_aux
