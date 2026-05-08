@@ -17,7 +17,7 @@ variable (F G : FormalGroup R) [F.IsComm] (n : ℕ)
 noncomputable
 def series (F : FormalGroup R) [F.IsComm] : ℕ → PowerSeries R
 | 0 => 0
-| k + 1 => F.toFun.subst ![(series F k), X]
+| k + 1 => F.toPowerSeries.subst ![(series F k), X]
 
 @[simp]
 lemma zero_series : F.series 0 = 0 := by
@@ -48,7 +48,7 @@ lemma subst_zero_eq_zero {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0) :
 /- this can be proved by nsmul_add in the mathlib `F.Point σ`. -/
 noncomputable
 def _root_.FormalGroupHom.series : FormalGroupHom F F where
-  toFun := F.series n
+  toPowerSeries := F.series n
   zero_constantCoeff := series_ConstCoeff _ _
   hom := by
     induction n with
@@ -58,8 +58,8 @@ def _root_.FormalGroupHom.series : FormalGroupHom F F where
         map_zero, ← Pi.zero_def,  subst_zero_eq_zero F.zero_constantCoeff]
     | succ k ih =>
       calc
-        _ = F.toFun.subst ![(F.series k).subst F.toFun, F.toFun] := sorry
-        _ = (F.series k).subst F.toFun +[F] F.toFun := rfl
+        _ = F.toPowerSeries.subst ![(F.series k).subst F.toPowerSeries, F.toPowerSeries] := sorry
+        _ = (F.series k).subst F.toPowerSeries +[F] F.toPowerSeries := rfl
         _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] (F.series k).toMvPowerSeries 1 +[F]
           (MvPowerSeries.X 1 +[F] MvPowerSeries.X 0) := by
           simp_rw [ih]
@@ -89,14 +89,14 @@ lemma zero_of_coeff_prime_pow_zero :
   sorry
 
 lemma FormalGroupHom.exists_coeff_ne_zero_of_ne_zero {f : FormalGroupHom F G}
-    (hp : p.Prime) (hf : f.toFun ≠ 0) : ∃ n, coeff (p ^ n) f.toFun ≠ 0 := by
-  let m := f.toFun.order.toNat
+    (hp : p.Prime) (hf : f.toPowerSeries ≠ 0) : ∃ n, coeff (p ^ n) f.toPowerSeries ≠ 0 := by
+  let m := f.toPowerSeries.order.toNat
   have m_pos : 0 < m := by sorry
-  have : ∀ n < m, f.toFun.coeff n = 0 := coeff_of_lt_order_toNat
+  have : ∀ n < m, f.toPowerSeries.coeff n = 0 := coeff_of_lt_order_toNat
   have eq_aux := f.hom
-  have ne_zero : f.toFun.coeff m ≠ 0 := coeff_order hf
-  have eq_aux₁ : ∀ i ∈ Icc 1 (m - 1), (f.toFun.subst F.toFun).coeff
-      (single 0 i + single 1 (m - i)) = f.toFun.coeff m * m.choose i := by
+  have ne_zero : f.toPowerSeries.coeff m ≠ 0 := coeff_order hf
+  have eq_aux₁ : ∀ i ∈ Icc 1 (m - 1), (f.toPowerSeries.subst F.toPowerSeries).coeff
+      (single 0 i + single 1 (m - i)) = f.toPowerSeries.coeff m * m.choose i := by
     intro i hi
     rw [coeff_subst (HasSubst.of_constantCoeff_zero F.zero_constantCoeff), finsum_eq_single _ m]
     · rw [smul_eq_mul]
@@ -108,9 +108,9 @@ lemma FormalGroupHom.exists_coeff_ne_zero_of_ne_zero {f : FormalGroupHom F G}
 
 
     · sorry
-  have eq_aux₂ : ∀ i ∈ Icc 1 (m - 1), (G.toFun.subst (fun x ↦ f.toFun.toMvPowerSeries x)).coeff
+  have eq_aux₂ : ∀ i ∈ Icc 1 (m - 1), (G.toPowerSeries.subst (fun x ↦ f.toPowerSeries.toMvPowerSeries x)).coeff
       (single 0 i + single 1 (m - i)) = 0 := sorry
-  have eq_aux₃ : ∀ i ∈ Icc 1 (m - 1), f.toFun.coeff m * m.choose i = 0 := by
+  have eq_aux₃ : ∀ i ∈ Icc 1 (m - 1), f.toPowerSeries.coeff m * m.choose i = 0 := by
     intro i hi
     rw [← eq_aux₁ i hi, f.hom, eq_aux₂ i hi]
   have dvd_aux : ∀ i ∈ Icc 1 (m - 1), p ∣ m.choose i := by
@@ -118,7 +118,7 @@ lemma FormalGroupHom.exists_coeff_ne_zero_of_ne_zero {f : FormalGroupHom F G}
     specialize eq_aux₃ i hi
     by_contra hc
     have : IsUnit (m.choose i : R) := (CharP.isUnit_natCast_iff hp).mpr hc
-    have : f.toFun.coeff m = 0 := (IsUnit.mul_left_eq_zero this).mp eq_aux₃
+    have : f.toPowerSeries.coeff m = 0 := (IsUnit.mul_left_eq_zero this).mp eq_aux₃
     exact ne_zero this
   -- have : ∀ i ∈ Icc 1 (m - 1), m.choose i ≡ 0 [MOD p] := by
   --   simp +contextual [dvd_aux, Nat.modEq_zero_iff_dvd]

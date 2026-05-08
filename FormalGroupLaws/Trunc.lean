@@ -65,7 +65,7 @@ theorem coeff_truncFun' (m : ℕ) (f : PowerSeries R) :
 
 
 -- noncomputable def trunc : PowerSeries A →+ Polynomial A where
---   toFun := truncFun n
+--   toPowerSeries := truncFun n
 --   map_zero' := by
 --     classical
 --     ext x

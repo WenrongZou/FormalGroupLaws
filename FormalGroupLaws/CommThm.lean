@@ -24,8 +24,8 @@ omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij = a_ji`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm :
-  F.comm ↔ ∀ (i j : ℕ), coeff (single 0 i + single 1 j) F.toFun
-    = coeff (single 0 j + single 1 i) F.toFun := by
+  F.comm ↔ ∀ (i j : ℕ), coeff (single 0 i + single 1 j) F.toPowerSeries
+    = coeff (single 0 j + single 1 i) F.toPowerSeries := by
   constructor
   -- forward direction
   · intro h i j
@@ -76,7 +76,7 @@ omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij - a_ji = 0`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm' :
-  F.comm ↔ ∀ (i j : ℕ), coeff (coeff_two i j) F.toFun - coeff (coeff_two j i) F.toFun = 0 := by
+  F.comm ↔ ∀ (i j : ℕ), coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries = 0 := by
   constructor
   · intro hF
     simp_rw [(comm_iff_coeff_symm F).mp hF]
@@ -85,7 +85,7 @@ theorem comm_iff_coeff_symm' :
     apply ((comm_iff_coeff_symm F).mpr)
     intro i j
     sorry
-    -- conv => rhs; rw [← add_zero ((coeff (coeff_two j i)) F.toFun), ←h i j]
+    -- conv => rhs; rw [← add_zero ((coeff (coeff_two j i)) F.toPowerSeries), ←h i j]
     -- ring
 
 /--  Over a coefficient ring `R` of characteristic zero,
@@ -199,8 +199,8 @@ lemma preCommutator_comp_preCommutator :
   there exist a nonzero formal group homomorphism from `F(X,Y)` to additive formal
   group law `Gₐ` or multiplicative formal group law `Gₘ`.-/
 theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
-    (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toFun ≠ 0) ∨
-    (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toFun ≠ 0) := by
+    (∃ (α : FormalGroupHom F (Gₐ (R := R))), α.toPowerSeries ≠ 0) ∨
+    (∃ (α : FormalGroupHom F (Gₘ (R := R))), α.toPowerSeries ≠ 0) := by
   let H := fun (a : MvPowerSeries (Fin 2) R) b => preCommutator F a b
   /- H (0, Y) = Y. -/
   -- have eq_aux₀ : subst ![0, X₁] H = X₁ (R := R) := sorry
@@ -226,7 +226,7 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
       multiplicative Formal Group `Gₘ`.-/
     right
     let α : FormalGroupHom F Gₘ.toFormalGroup := {
-      toFun := r m
+      toPowerSeries := r m
       zero_constantCoeff := constant_zero m
       hom := by
         /- here need some truncation result-/
@@ -238,7 +238,7 @@ theorem exists_nonzero_hom_to_Ga_or_Gm_of_not_comm (h : ¬ F.comm) :
     left
     have mgeTwo : m ≥ 2 := by grind
     let α : FormalGroupHom F Gₐ.toFormalGroup := {
-      toFun := r m
+      toPowerSeries := r m
       zero_constantCoeff := constant_zero m
       hom := by
         rw [Gₐ]
@@ -320,15 +320,15 @@ lemma comm_iff_commutator_eq_zero :
 
 -- variable (G G' : FormalGroup R) {α : FormalGroupHom G G'} in
 -- scoped[FormalGroup] notation:65 α:65 " •[" G:0 "] " f:66 =>
---   PowerSeries.subst f α.toFun
+--   PowerSeries.subst f α.toPowerSeries
 
 omit [Nontrivial R] in
 lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} {f g : MvPowerSeries σ R}
   (hf : constantCoeff f = 0) (hg : constantCoeff g = 0):
-  PowerSeries.subst (f +[G₁] g) α.toFun = (PowerSeries.subst f α.toFun) +[G₂]
-  (PowerSeries.subst g α.toFun) := by
+  PowerSeries.subst (f +[G₁] g) α.toPowerSeries = (PowerSeries.subst f α.toPowerSeries) +[G₂]
+  (PowerSeries.subst g α.toPowerSeries) := by
   calc
-    _ = subst ![f, g] (PowerSeries.subst G₁.toFun α.toFun) := by
+    _ = subst ![f, g] (PowerSeries.subst G₁.toPowerSeries α.toPowerSeries) := by
       rw [PowerSeries.subst, PowerSeries.subst, subst_comp_subst_apply
         (PowerSeries.HasSubst.const <| PowerSeries.HasSubst.of_constantCoeff_zero
         G₁.zero_constantCoeff) (HasSubst.FinPairing hf hg)]
@@ -356,15 +356,15 @@ lemma hom_add {G₁ G₂ : FormalGroup R} {α : FormalGroupHom G₁ G₂} {f g :
 /- Let `α` be a formal group homomorphism from `F(X,Y)` to `F'(X,Y)`, if `F'` is commutative
   then `α (commutator F) = 0` -/
 lemma zero_of_target_comm {F' : FormalGroup R} (α : FormalGroupHom F F') (hF' : F'.comm):
-  PowerSeries.subst (commutator F) α.toFun = 0 := by
+  PowerSeries.subst (commutator F) α.toPowerSeries = 0 := by
   simp [commutator]
   have aux₁ : constantCoeff (X₀ +[F] X₁) = 0 :=
     constantCoeff_subst_zero (fun s => by fin_cases s <;> simp) F.zero_constantCoeff
   have aux₂ : constantCoeff (X₀ +[F] X₁ +[F] addInv F X₀) = 0 := constantCoeff_subst_zero
     (fun s => by fin_cases s <;> simp [aux₁, constantCoeff_addInvF_X₀]) F.zero_constantCoeff
   rw [hom_add aux₂ constantCoeff_addInvF_X₁, hom_add aux₁ constantCoeff_addInvF_X₀,
-    hom_add (constantCoeff_X 0) (constantCoeff_X 1), add_assoc (Z₀ := PowerSeries.subst X₀ α.toFun),
-    add_comm hF' (Z₀ := PowerSeries.subst X₁ α.toFun), ←add_assoc,
+    hom_add (constantCoeff_X 0) (constantCoeff_X 1), add_assoc (Z₀ := PowerSeries.subst X₀ α.toPowerSeries),
+    add_comm hF' (Z₀ := PowerSeries.subst X₁ α.toPowerSeries), ←add_assoc,
     ←hom_add (constantCoeff_X 0) constantCoeff_addInvF_X₀,
     add_addInv_eq_zero _ (constantCoeff_X 0), add_assoc, ←hom_add
     (constantCoeff_X 1) constantCoeff_addInvF_X₁, add_addInv_eq_zero _ (constantCoeff_X 1), ←hom_add rfl rfl,
@@ -419,17 +419,17 @@ lemma order_neZero {f : MvPowerSeries σ R} (h : constantCoeff f = 0):
   formal group law over `R`, if `F'(X,Y)` is commutative and there exist a nonzero
   homomorphism from `F(X,Y)` to `F'(X,Y)`, then `F(X,Y)` is commutative.-/
 theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
-  (α : FormalGroupHom F F') (ha : α.toFun ≠ 0) :
+  (α : FormalGroupHom F F') (ha : α.toPowerSeries ≠ 0) :
   F'.comm → F.comm := by
   intro hF'
   by_contra hc
   have commutator_neZero : commutator F ≠ 0 := by
     by_contra hc'; exact hc <| (comm_iff_commutator_eq_zero _).mpr hc'
   let m := (F.commutator).order
-  let r := α.toFun.order
+  let r := α.toPowerSeries.order
   obtain meq := ne_zero_iff_order_finite.mp commutator_neZero
   obtain h := zero_of_target_comm F α hF'
-  have exist_nonZero_coeff : ∃ d, (coeff d) (PowerSeries.subst F.commutator α.toFun) ≠ 0 := by
+  have exist_nonZero_coeff : ∃ d, (coeff d) (PowerSeries.subst F.commutator α.toPowerSeries) ≠ 0 := by
     obtain ⟨d, hd₁, hd₂⟩ := exists_coeff_ne_zero_and_order meq
     have eq_aux : m.toNat - d 0 = d 1 := by
       subst m; rw [←hd₂, degree_eq_sum]; exact Eq.symm (Nat.eq_sub_of_add_eq' rfl)
@@ -463,8 +463,8 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
       ring
     use d'
     simp [PowerSeries.coeff_subst <| HasSubst.powerseries_commutator F]
-    have eq_single : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) α.toFun *
-      (coeff d') (F.commutator ^ d) = (PowerSeries.coeff r.toNat) α.toFun *
+    have eq_single : ∑ᶠ (d : ℕ), (PowerSeries.coeff d) α.toPowerSeries *
+      (coeff d') (F.commutator ^ d) = (PowerSeries.coeff r.toNat) α.toPowerSeries *
       (coeff d') (F.commutator ^ r.toNat) := by
       refine finsum_eq_single _ _ <| fun x hx => by
         by_cases hxLe : x < r.toNat
@@ -658,9 +658,9 @@ theorem comm_of_exists_nonzero_hom_to_comm (F' : FormalGroup R) [IsDomain R]
         exact n_find_spec
       exact pow_ne_zero r.toNat n_find_spec
     exact (mul_ne_zero_iff_right coeff_ne₂).mpr <| PowerSeries.coeff_order ha
-  have ne_zero : PowerSeries.subst F.commutator α.toFun ≠ 0 := by
+  have ne_zero : PowerSeries.subst F.commutator α.toPowerSeries ≠ 0 := by
     by_contra hc
-    have forall_coeff_eq_zero : ∀ d, (coeff d) (PowerSeries.subst F.commutator α.toFun) = 0 := by
+    have forall_coeff_eq_zero : ∀ d, (coeff d) (PowerSeries.subst F.commutator α.toPowerSeries) = 0 := by
       simp [hc]
     simp_all
   obtain h₁ := order_eq_top_iff.mpr h
@@ -698,7 +698,7 @@ def counter_example_F (r : R) (rNil : IsNilpotent r) (rTor : IsOfFinAddOrder r)
       (IsOfFinAddOrder.addOrderOf_pos rTor) ?_)
     exact Nat.Prime.one_lt (Nat.minFac_prime_iff.mpr ngtone)
   {
-  toFun := by
+  toPowerSeries := by
     let n := addOrderOf r
     have ngtone : n ≠ 1 := by
       by_contra hn; simp [n] at hn; contradiction
@@ -890,8 +890,8 @@ theorem no_nonzero_torsion_nilpotent_of_comm :
   let m := nilpotencyClass b
   let c := b ^ (m - 1)
   have coeff_neq : (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
-    (counter_example_F r rNil rTor rNeq).toFun ≠ (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
-    (subst ![X₁,X₀] (counter_example_F r rNil rTor rNeq).toFun) := by
+    (counter_example_F r rNil rTor rNeq).toPowerSeries ≠ (coeff (Finsupp.single 0 1 + Finsupp.single 1 p))
+    (subst ![X₁,X₀] (counter_example_F r rNil rTor rNeq).toPowerSeries) := by
     simp [counter_example_F, show addOrderOf r = n by rfl, show (n / p) • r = b by rfl, show nilpotencyClass b = m by rfl,
       show n.minFac = p by rfl, show b ^ (m - 1) = c by rfl]
     have eq_aux : subst ![X₁,X₀] (X₀ + X₁ + C c * X₀ * X₁ ^ p) =
@@ -995,7 +995,7 @@ theorem comm_iff_no_nonzero_torsion_nilpotent :
   · intro hr F
     simp at hr
     have mem_ideal : ∀ (i j : ℕ), ∀ (I : Ideal R), I.IsPrime →
-      (coeff (coeff_two i j) F.toFun - coeff (coeff_two j i) F.toFun) ∈ I := by
+      (coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries) ∈ I := by
       intro i j I hI
       let f := Ideal.Quotient.mk I
       let f_F := F.map f
@@ -1004,16 +1004,14 @@ theorem comm_iff_no_nonzero_torsion_nilpotent :
       obtain h₁ := comm_of_isDomain f_F
       exact (Quotient.mk_eq_zero I).mp ((comm_iff_coeff_symm' f_F).mp h₁ i j)
     have mem_nilpotent : ∀ (i j : ℕ),
-      IsNilpotent (coeff (coeff_two i j) F.toFun - coeff (coeff_two j i) F.toFun) :=
+      IsNilpotent (coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries) :=
       fun i j => nilpotent_iff_mem_prime.mpr (mem_ideal i j)
     have mem_torsion : ∀ (i j : ℕ),
-      IsOfFinAddOrder (coeff (coeff_two i j) F.toFun - coeff (coeff_two j i) F.toFun)  := by
+      IsOfFinAddOrder (coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries)  := by
       intro i j
 
       sorry
     have mem_zero : ∀ (i j : ℕ),
-      (coeff (coeff_two i j) F.toFun - coeff (coeff_two j i) F.toFun) = 0 :=
+      (coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries) = 0 :=
       fun i j => hr _ (mem_nilpotent i j) (mem_torsion i j)
     exact (comm_iff_coeff_symm' F).mpr mem_zero
-
-#min_imports

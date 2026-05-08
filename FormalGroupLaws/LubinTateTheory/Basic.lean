@@ -58,7 +58,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
   let F_f := choose (constructive_lemma π 2 phi_supp f f)
   have eq_aux : F_f = choose (constructive_lemma π 2 phi_supp f f) := rfl
   {
-  toFun := choose (constructive_lemma π 2 phi_supp f f)
+  toPowerSeries := choose (constructive_lemma π 2 phi_supp f f)
   zero_constantCoeff := by
     obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma π 2 phi_supp  f f)
     obtain ⟨h₁, h_hom⟩ := h₁
@@ -114,7 +114,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
       rw [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by norm_num),
         hf₁, phi_eq]
       simp
-    have hf_constant : PowerSeries.constantCoeff f.toFun = 0 := constantCoeff_LubinTateF _ _
+    have hf_constant : PowerSeries.constantCoeff f.toPowerSeries = 0 := constantCoeff_LubinTateF _ _
     have phi_supp' : ∀ i ∈ φ.support, Finset.univ.sum ⇑i = 1 := by
       -- same as above
       intro i
@@ -147,7 +147,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
     obtain ⟨htrunc, hsubst⟩ := h
     -- here prove `truncTotalDeg 2 G₁ = φ` and `f (G₁(X, Y, Z)) = G₁ (f(X), f(Y), f(Z))`.
     have aux₁ : ↑((truncTotalDegHom  2) G₁) = φ ∧
-      PowerSeries.subst G₁ f.toFun = subst f.toFun.toMvPowerSeries G₁ := by
+      PowerSeries.subst G₁ f.toPowerSeries = subst f.toPowerSeries.toMvPowerSeries G₁ := by
       constructor
       · rw [truncTotalDegHom_of_subst _ _ h_Ff, htrunc]
         unfold ϕ₁
@@ -189,16 +189,16 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
         rw [eq_aux₂, eq_aux₃]
       ·
         rw [G_eq₁]
-        have eq_aux₁ : PowerSeries.subst (subst ![subst ![Y₀, Y₁] F_f, Y₂] F_f) f.toFun
-          = subst ![subst ![Y₀, Y₁] F_f, Y₂ (R := 𝒪[K])] (PowerSeries.subst F_f f.toFun) := by
+        have eq_aux₁ : PowerSeries.subst (subst ![subst ![Y₀, Y₁] F_f, Y₂] F_f) f.toPowerSeries
+          = subst ![subst ![Y₀, Y₁] F_f, Y₂ (R := 𝒪[K])] (PowerSeries.subst F_f f.toPowerSeries) := by
           simp [PowerSeries.subst]
           rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
             (has_subst_aux₁ h_Ff)]
         rw [eq_aux₁, hf₂]
         let map_aux : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
-        | ⟨0, _⟩ => PowerSeries.subst (subst ![Y₀, Y₁] F_f) f.toFun
-        | ⟨1, _⟩ => f.toFun.toMvPowerSeries 2
-        have eq_aux₂ : subst ![subst ![Y₀, Y₁] F_f, Y₂] (subst f.toFun.toMvPowerSeries F_f)
+        | ⟨0, _⟩ => PowerSeries.subst (subst ![Y₀, Y₁] F_f) f.toPowerSeries
+        | ⟨1, _⟩ => f.toPowerSeries.toMvPowerSeries 2
+        have eq_aux₂ : subst ![subst ![Y₀, Y₁] F_f, Y₂] (subst f.toPowerSeries.toMvPowerSeries F_f)
           = subst map_aux F_f := by
           rw [subst_comp_subst_apply]
           apply subst_congr
@@ -221,12 +221,12 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
         rw [eq_aux₂]
         unfold map_aux
         let map_aux' : Fin 2 → MvPowerSeries (Fin 3) (𝒪[K])
-        | ⟨0, _⟩ => f.toFun.toMvPowerSeries 0
-        | ⟨1, _⟩ => f.toFun.toMvPowerSeries 1
-        have eq_aux₃ : PowerSeries.subst (subst ![Y₀, Y₁] F_f) f.toFun
+        | ⟨0, _⟩ => f.toPowerSeries.toMvPowerSeries 0
+        | ⟨1, _⟩ => f.toPowerSeries.toMvPowerSeries 1
+        have eq_aux₃ : PowerSeries.subst (subst ![Y₀, Y₁] F_f) f.toPowerSeries
           = subst map_aux' F_f := by
-          have eq_aux : subst ![Y₀, Y₁] (PowerSeries.subst F_f f.toFun)
-            = subst ![Y₀, Y₁] (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K]) := by
+          have eq_aux : subst ![Y₀, Y₁] (PowerSeries.subst F_f f.toPowerSeries)
+            = subst ![Y₀, Y₁] (subst f.toPowerSeries.toMvPowerSeries F_f) (S := 𝒪[K]) := by
             rw [hf₂]
           rw [PowerSeries.subst] at eq_aux
           rw [PowerSeries.subst, ←subst_comp_subst_apply (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f)
@@ -264,7 +264,7 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
 
     -- here prove  `truncTotalDegHom 2 G₂ = φ` and `f (G₂ (X, Y, Z)) = G₂ (f (X), f (Y), f (Z))`.
     have aux₂ : ↑((truncTotalDegHom 2) G₂) = φ ∧
-      PowerSeries.subst G₂ f.toFun = subst f.toFun.toMvPowerSeries G₂ := by
+      PowerSeries.subst G₂ f.toPowerSeries = subst f.toPowerSeries.toMvPowerSeries G₂ := by
       constructor
       ·
         rw [truncTotalDegHom_of_subst₂ _ _ h_Ff, htrunc, phi_eq]
@@ -304,8 +304,8 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
         ring_nf
       ·
         rw [G_eq₂]
-        have eq_aux₁ : PowerSeries.subst (subst ![Y₀, subst ![Y₁, Y₂] F_f] F_f) f.toFun
-          = subst ![Y₀, subst ![Y₁, Y₂ (R := 𝒪[K])] F_f] (PowerSeries.subst F_f f.toFun) := by
+        have eq_aux₁ : PowerSeries.subst (subst ![Y₀, subst ![Y₁, Y₂] F_f] F_f) f.toPowerSeries
+          = subst ![Y₀, subst ![Y₁, Y₂ (R := 𝒪[K])] F_f] (PowerSeries.subst F_f f.toPowerSeries) := by
           simp [PowerSeries.subst]
           rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero constantF_f))
             (has_subst_aux₂ h_Ff)]
@@ -330,8 +330,8 @@ def LubinTateFormalGroup :  FormalGroup (𝒪[K]) :=
           rw [subst_comp_subst_apply (hasSubst_of_constantCoeff_zero
             (fun s ↦ constantCoeff_X 1)) (has_subst_aux₂ constantF_f),
             subst_X (has_subst_aux₂ h_Ff)]
-          have eq_aux : subst ![Y₁, Y₂] (PowerSeries.subst F_f f.toFun) =
-            subst ![Y₁, Y₂ ] (subst f.toFun.toMvPowerSeries F_f) (S := 𝒪[K])  := by
+          have eq_aux : subst ![Y₁, Y₂] (PowerSeries.subst F_f f.toPowerSeries) =
+            subst ![Y₁, Y₂ ] (subst f.toPowerSeries.toMvPowerSeries F_f) (S := 𝒪[K])  := by
             rw [hf₂]
           rw [PowerSeries.subst, subst_comp_subst_apply
             (hasSubst_of_constantCoeff_zero fun s ↦ constantF_f)
@@ -402,15 +402,15 @@ lemma supp_of_linear_term :
 
 def Hom : FormalGroupHom (LubinTateFormalGroup _ f) (LubinTateFormalGroup _ f)
   := {
-    toFun := f.toFun
+    toPowerSeries := f.toPowerSeries
     zero_constantCoeff := by
       obtain h₁ := f.trunc_degree_two
       have coeff_aux₁ : (PowerSeries.constantCoeff)
-        (PowerSeries.trunc 2 f.toFun) = Polynomial.constantCoeff
+        (PowerSeries.trunc 2 f.toPowerSeries) = Polynomial.constantCoeff
         (Polynomial.C π * Polynomial.X) := by
         simp [h₁]
       calc
-        _ = PowerSeries.constantCoeff (PowerSeries.trunc 2 f.toFun) (R := ↥𝒪[K]) := by
+        _ = PowerSeries.constantCoeff (PowerSeries.trunc 2 f.toPowerSeries) (R := ↥𝒪[K]) := by
           simp [PowerSeries.coeff_trunc]
         _ = 0 := by
           simp [coeff_aux₁]
@@ -427,7 +427,7 @@ def Hom : FormalGroupHom (LubinTateFormalGroup _ f) (LubinTateFormalGroup _ f)
   `F_f` with coefficient in `𝒪[K]` admitting `f` as an endomorphism.-/
 theorem FormalGroupLaw_of_endomorphism  :
   ∃ (α : FormalGroupHom (LubinTateFormalGroup _ f) (LubinTateFormalGroup _ f)),
-  α.toFun = f.toFun := by
+  α.toPowerSeries = f.toPowerSeries := by
   use (Hom _ f)
   simp [Hom]
 
@@ -436,7 +436,7 @@ theorem FormalGroupLaw_of_endomorphism  :
   `F_f` with coefficient in `𝒪[K]` admitting `f` as an endomorphism.-/
 theorem exist_unique_FormalGroup :
   ∃! (F_f : FormalGroup (𝒪[K])), ∃ (α : FormalGroupHom F_f F_f),
-  α.toFun = f.toFun := by
+  α.toPowerSeries = f.toPowerSeries := by
   refine existsUnique_of_exists_of_unique ?_  ?_
   · use (LubinTateFormalGroup _ f)
     use (Hom _ f)
@@ -444,15 +444,15 @@ theorem exist_unique_FormalGroup :
   · obtain ⟨⟨h₁, h_hom⟩, h₂⟩ := choose_spec (constructive_lemma π 2 supp_of_linear_term f f)
     intro y₁ y₂ ⟨α, ha⟩ ⟨β, hb⟩
     obtain ⟨F_f', h1, h2⟩  := constructive_lemma_two π f f
-    obtain eq₁ := h2 y₁.toFun ⟨FormalGroup.truncTotalDegTwo y₁, by rw [←ha,α.hom]⟩
-    obtain eq₂ := h2 y₂.toFun ⟨FormalGroup.truncTotalDegTwo y₂, by rw [←hb,β.hom]⟩
+    obtain eq₁ := h2 y₁.toPowerSeries ⟨FormalGroup.truncTotalDegTwo y₁, by rw [←ha,α.hom]⟩
+    obtain eq₂ := h2 y₂.toPowerSeries ⟨FormalGroup.truncTotalDegTwo y₂, by rw [←hb,β.hom]⟩
     rw [FormalGroup.ext_iff, eq₁, ←eq₂]
 
 
 /-- Given a `f ∈ LubinTateF π`, and `F_f` be the unique Lubin Tate Formal Group associate to
   `f`, then the constant coefficient of `F_f` is zero. -/
 theorem constantCoeff_zero :
-  constantCoeff (LubinTateFormalGroup π f).toFun = 0 := by
+  constantCoeff (LubinTateFormalGroup π f).toPowerSeries = 0 := by
   -- rw [←coeff_zero_eq_constantCoeff]
   simp [constantCoeff_of_truncTotalDeg_ge_one _ (show 2 ≥ 1 by norm_num),
     FormalGroup.truncTotalDegTwo (LubinTateFormalGroup π f)]
@@ -461,8 +461,8 @@ theorem constantCoeff_zero :
 /-- Given a `f ∈ LubinTateF π`, and `F_f` be the unique Lubin Tate Formal Group associate to
   `f`, `f ∘ F_f (X, Y) = F_f (f(X), f(Y))`.-/
 theorem endomorphism :
-  PowerSeries.subst (LubinTateFormalGroup π f).toFun f.toFun =
-  subst f.toFun.toMvPowerSeries (LubinTateFormalGroup π f).toFun := by
+  PowerSeries.subst (LubinTateFormalGroup π f).toPowerSeries f.toPowerSeries =
+  subst f.toPowerSeries.toMvPowerSeries (LubinTateFormalGroup π f).toPowerSeries := by
   obtain a := choose (FormalGroupLaw_of_endomorphism π f)
   obtain ha := choose_spec (FormalGroupLaw_of_endomorphism π f)
   rw [←ha]
@@ -473,7 +473,7 @@ theorem endomorphism :
 /-- Given a `f ∈ LubinTateF π`, and `F_f` be the unique Lubin Tate Formal Group associate to
   `f`, then the truncation of total degree `2` of `F_f ∈ 𝒪[K]⟦X, Y⟧` is `X + Y`. -/
 theorem truncTotalDegTwo :
-  truncTotalDeg 2 (LubinTateFormalGroup π f).toFun = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  truncTotalDeg 2 (LubinTateFormalGroup π f).toPowerSeries = MvPolynomial.X 0 + MvPolynomial.X 1 := by
   simp [←FormalGroup.truncTotalDegTwo (LubinTateFormalGroup π f), truncTotalDegHom]
 
 
@@ -485,7 +485,7 @@ open LubinTateFormalGroup
 def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinTateFormalGroup π g) :=
   let hom_a := choose (constructive_lemma_poly π f g a)
   have hom_a_eq : hom_a = choose (constructive_lemma_poly π f g a) := rfl
-  { toFun := choose (constructive_lemma_poly π f g a)
+  { toPowerSeries := choose (constructive_lemma_poly π f g a)
     zero_constantCoeff := by
       obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly π f g a)
       rw [←hom_a_eq] at h₁ ⊢
@@ -504,7 +504,7 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
       rw [←hom_a_eq] at hom_a_spec₁ hom_a_spec₂
       obtain ⟨hom_a_trunc, hom_a_subst⟩ := hom_a_spec₁
       have eq_aux₁ : MvPowerSeries.truncTotalDeg 2 (PowerSeries.subst
-        (LubinTateFormalGroup π f).toFun hom_a)
+        (LubinTateFormalGroup π f).toPowerSeries hom_a)
         = MvPolynomial.C a * MvPolynomial.X 0 + MvPolynomial.C a * MvPolynomial.X 1 := by
         rw [MvPowerSeries.truncTotalDeg.PowerSeries_subst_n _ _ 2 (constantCoeff_zero π f), hom_a_trunc]
         simp
@@ -523,7 +523,7 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
             rw [hom_a_trunc]
             simp
       have eq_aux₂ : truncTotalDeg 2 (subst
-        hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toFun)
+        hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toPowerSeries)
         = MvPolynomial.C a * MvPolynomial.X 0 + MvPolynomial.C a * MvPolynomial.X 1 := by
         have aux : ∀ (x : Fin 2), constantCoeff (hom_a.toMvPowerSeries x) = 0 := by
           intro x
@@ -599,8 +599,8 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
           simp [if_neg neq₁, if_neg neq₂]
       /- `g ∘ hom_a (F_f (X, Y)) = hom_a (F_f (f(X), f(Y)))`. -/
       have eq_aux₃ : PowerSeries.subst (PowerSeries.subst
-        (LubinTateFormalGroup π f).toFun hom_a) g.toFun = subst f.toFun.toMvPowerSeries
-        (PowerSeries.subst (LubinTateFormalGroup π f).toFun hom_a) := by
+        (LubinTateFormalGroup π f).toPowerSeries hom_a) g.toPowerSeries = subst f.toPowerSeries.toMvPowerSeries
+        (PowerSeries.subst (LubinTateFormalGroup π f).toPowerSeries hom_a) := by
         obtain has_subst₃:=  PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero
           (LubinTateFormalGroup.constantCoeff_zero π f))
         obtain has_subst₄ := HasSubst.toMvPowerSeries (constantCoeff_LubinTateF π f) (σ := Fin 2)
@@ -616,8 +616,8 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
         rw [←LubinTateFormalGroup.endomorphism, PowerSeries.subst]
       /- `g ∘ F_g (hom_a (X), hom_a (Y)) = F_g (hom_a (f (X)), hom_a (f (Y)))`. -/
       have eq_aux₄ : PowerSeries.subst (subst hom_a.toMvPowerSeries
-        (LubinTateFormalGroup π g).toFun) g.toFun = subst f.toFun.toMvPowerSeries
-        (subst hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toFun) := by
+        (LubinTateFormalGroup π g).toPowerSeries) g.toPowerSeries = subst f.toPowerSeries.toMvPowerSeries
+        (subst hom_a.toMvPowerSeries (LubinTateFormalGroup π g).toPowerSeries) := by
         obtain has_subst₁ := PowerSeries.HasSubst.const (PowerSeries.HasSubst.of_constantCoeff_zero (LubinTateFormalGroup.constantCoeff_zero π g))
         obtain has_subst₂ := HasSubst.toMvPowerSeries hom_a_constantCoeff (σ := Fin 2)
         rw [PowerSeries.subst, ←subst_comp_subst_apply has_subst₁ has_subst₂, ←PowerSeries.subst,
@@ -627,8 +627,8 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
         has_subst₂ (HasSubst.toMvPowerSeries (constantCoeff_LubinTateF π f))]
         apply subst_congr
         funext s
-        have subst_eq : subst hom_a.toMvPowerSeries (g.toFun.toMvPowerSeries s)
-          = PowerSeries.toMvPowerSeries (PowerSeries.subst hom_a g.toFun) s := by
+        have subst_eq : subst hom_a.toMvPowerSeries (g.toPowerSeries.toMvPowerSeries s)
+          = PowerSeries.toMvPowerSeries (PowerSeries.subst hom_a g.toPowerSeries) s := by
           simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
           rw [subst_comp_subst_apply (PowerSeries.HasSubst.const (PowerSeries.HasSubst.X s))
           has_subst₂, subst_comp_subst_apply
@@ -638,8 +638,8 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
           funext t
           rw [subst_X has_subst₂]
           rfl
-        have subst_eq' : subst f.toFun.toMvPowerSeries (hom_a.toMvPowerSeries s)
-          = PowerSeries.toMvPowerSeries (PowerSeries.subst f.toFun hom_a) s := by
+        have subst_eq' : subst f.toPowerSeries.toMvPowerSeries (hom_a.toMvPowerSeries s)
+          = PowerSeries.toMvPowerSeries (PowerSeries.subst f.toPowerSeries hom_a) s := by
           simp [PowerSeries.toMvPowerSeries, PowerSeries.subst]
           rw [subst_comp_subst_apply (PowerSeries.HasSubst.const
           (PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_LubinTateF π f)))
@@ -659,11 +659,11 @@ def ScalarHom (a : 𝒪[K]) : FormalGroupHom (LubinTateFormalGroup π f) (LubinT
 /-- For all `f, g ∈ F_π`, the scalar homomorpshim `[a]_g,f` such that
   `PowerSeries.trunc 2 [a]_g,f = a * X` and `g ∘ [a]_g,f = [a]_g,f ∘ f`, and this
   `[a]_g,f` turn out to be a formal group homomorphim from `F_f` to `F_g`. -/
-theorem subst_of_ScalarHom (a : 𝒪[K]) : PowerSeries.trunc 2 (ScalarHom _ f g a).toFun
+theorem subst_of_ScalarHom (a : 𝒪[K]) : PowerSeries.trunc 2 (ScalarHom _ f g a).toPowerSeries
   = (Polynomial.C a) * (Polynomial.X) ∧
-  PowerSeries.subst (ScalarHom _ f g a).toFun g.toFun
-  = PowerSeries.subst f.toFun (ScalarHom _ f g a).toFun := by
-  have scalarHom_eq : (ScalarHom _ f g a).toFun = choose (constructive_lemma_poly π f g a) := rfl
+  PowerSeries.subst (ScalarHom _ f g a).toPowerSeries g.toPowerSeries
+  = PowerSeries.subst f.toPowerSeries (ScalarHom _ f g a).toPowerSeries := by
+  have scalarHom_eq : (ScalarHom _ f g a).toPowerSeries = choose (constructive_lemma_poly π f g a) := rfl
   obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly π f g a)
   exact h₁
 
@@ -674,19 +674,19 @@ theorem subst_of_ScalarHom (a : 𝒪[K]) : PowerSeries.trunc 2 (ScalarHom _ f g 
   `[a]_g,f` turn out to be a formal group homomorphim from `F_f` to `F_g`. -/
 theorem exist_unique_of_scalar_mul (f g : LubinTateF π) (a : 𝒪[K]) :
   ∃! (scalarHom : FormalGroupHom (LubinTateFormalGroup π f) (LubinTateFormalGroup π g)),
-  PowerSeries.trunc 2 scalarHom.toFun = (Polynomial.C a) * (Polynomial.X) ∧
-  PowerSeries.subst scalarHom.toFun g.toFun  = PowerSeries.subst f.toFun scalarHom.toFun := by
+  PowerSeries.trunc 2 scalarHom.toPowerSeries = (Polynomial.C a) * (Polynomial.X) ∧
+  PowerSeries.subst scalarHom.toPowerSeries g.toPowerSeries  = PowerSeries.subst f.toPowerSeries scalarHom.toPowerSeries := by
   /- Existence of homomorphism of formal group induced by `a ∈ 𝒪[K]`.-/
   use (ScalarHom _ f g a)
   /- Uniqueness of this homomorphism of formal group induced by `a ∈ 𝒪[K]`. -/
-  have scalarHom_eq : (ScalarHom _ f g a).toFun = choose (constructive_lemma_poly π f g a) := rfl
+  have scalarHom_eq : (ScalarHom _ f g a).toPowerSeries = choose (constructive_lemma_poly π f g a) := rfl
   obtain ⟨h₁, h₂⟩ := choose_spec (constructive_lemma_poly π f g a)
   simp
   constructor
   · exact h₁
   · intro a' ha₁' ha₂'
     apply  FormalGroupHom.ext_iff.mpr
-    obtain h1 := h₂ a'.toFun ⟨ha₁',ha₂'⟩
+    obtain h1 := h₂ a'.toPowerSeries ⟨ha₁',ha₂'⟩
     rw [scalarHom_eq]
     exact h1
 
@@ -694,7 +694,7 @@ theorem exist_unique_of_scalar_mul (f g : LubinTateF π) (a : 𝒪[K]) :
 /-- For all `f, g ∈ F_π` there is a unique power series`[a]_g,f` such that
   `PowerSeries.trunc 2 [a]_g,f = a * X`.  -/
 theorem ScalarHom.PowerSeries_trunc_two (f g : LubinTateF π) (a : 𝒪[K]) :
-  PowerSeries.trunc 2 (ScalarHom π f g a).toFun = Polynomial.C a * Polynomial.X := by
+  PowerSeries.trunc 2 (ScalarHom π f g a).toPowerSeries = Polynomial.C a * Polynomial.X := by
   obtain h₁ := choose_spec (exist_unique_of_scalar_mul π f g a)
   simp at h₁
   obtain ⟨h₁, h₂⟩ := h₁
@@ -708,8 +708,8 @@ theorem ScalarHom.PowerSeries_trunc_two (f g : LubinTateF π) (a : 𝒪[K]) :
 /-- For all `f, g ∈ F_π` there is a unique power series`[a]_g,f` such that
   `g ∘ [a]_g,f = [a]_g,f ∘ f`. -/
 theorem ScalarHom.subst_eq (f g : LubinTateF π) (a : 𝒪[K]) :
-  PowerSeries.subst (ScalarHom π f g a).toFun g.toFun = PowerSeries.subst
-  f.toFun (ScalarHom π f g a).toFun := by
+  PowerSeries.subst (ScalarHom π f g a).toPowerSeries g.toPowerSeries = PowerSeries.subst
+  f.toPowerSeries (ScalarHom π f g a).toPowerSeries := by
   obtain h₁ := choose_spec (exist_unique_of_scalar_mul π f g a)
   simp at h₁
   obtain ⟨h₁, h₂⟩ := h₁
@@ -731,21 +731,21 @@ open scoped FormalGroup
 /-- For any `f, g` be Lubin Tate F, `a b ∈ 𝒪[K]`,
   then `[a + b]_f,g = [a]_f, g + [b]_f, g` -/
 theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :
-  (ScalarHom π f g (a + b)).toFun = (ScalarHom π f g a).toFun +[(LubinTateFormalGroup π g)]
-  (ScalarHom π f g b).toFun := by
+  (ScalarHom π f g (a + b)).toPowerSeries = (ScalarHom π f g a).toPowerSeries +[(LubinTateFormalGroup π g)]
+  (ScalarHom π f g b).toPowerSeries := by
   /- use constructive_lemma_poly. -/
   obtain trunc_eq₁ := ScalarHom.PowerSeries_trunc_two π f g (a + b)
   obtain trunc_eq₂ := ScalarHom.PowerSeries_trunc_two π f g a
   obtain trunc_eq₃ := ScalarHom.PowerSeries_trunc_two π f g b
   obtain ⟨φ, h₁, h₂⟩ := constructive_lemma_poly π f g (a + b)
-  let F₂ := (ScalarHom π f g a).toFun +[(LubinTateFormalGroup π g)] (ScalarHom π f g b).toFun
+  let F₂ := (ScalarHom π f g a).toPowerSeries +[(LubinTateFormalGroup π g)] (ScalarHom π f g b).toPowerSeries
   obtain ⟨htrunc, hsubst⟩ := h₁
   simp at h₂
   have eq_aux : PowerSeries.trunc 2 F₂ =
     Polynomial.C (a + b) * Polynomial.X := by
     unfold F₂ FormalGroup.add
     have coeff_zero : ∀ (x : Fin 2),
-    PowerSeries.constantCoeff (![(ScalarHom π f g a).toFun, (ScalarHom π f g b).toFun] x) = 0
+    PowerSeries.constantCoeff (![(ScalarHom π f g a).toPowerSeries, (ScalarHom π f g b).toPowerSeries] x) = 0
       := by
       intro x
       fin_cases x
@@ -759,9 +759,9 @@ theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :
     rw [ScalarHom.PowerSeries_trunc_two, ScalarHom.PowerSeries_trunc_two]
     ring
   have subst_aux₂ : PowerSeries.subst F₂
-    g.toFun = PowerSeries.subst f.toFun F₂  := by
+    g.toPowerSeries = PowerSeries.subst f.toPowerSeries F₂  := by
     unfold F₂ FormalGroup.add
-    have has_subst₁ : HasSubst ![(ScalarHom π f g a).toFun, (ScalarHom π f g b).toFun] := by
+    have has_subst₁ : HasSubst ![(ScalarHom π f g a).toPowerSeries, (ScalarHom π f g b).toPowerSeries] := by
       refine hasSubst_of_constantCoeff_zero ?_
       intro x
       fin_cases x
@@ -801,8 +801,8 @@ theorem additive_of_ScalarHom (f g : LubinTateF π) (a b : 𝒪[K]) :
 -- Proposition 2.15.2
 /-- For any `f, g, h` in LubinTate F, then `[a * b]_f, h = [a]_g, h ∘ [b]_f, g`-/
 theorem multiplicative_of_ScalarHom (f g h : LubinTateF π) (a b : 𝒪[K]) :
-  (ScalarHom π f h (a * b)).toFun = PowerSeries.subst (ScalarHom π f g b).toFun
-  (ScalarHom π g h a).toFun := by
+  (ScalarHom π f h (a * b)).toPowerSeries = PowerSeries.subst (ScalarHom π f g b).toPowerSeries
+  (ScalarHom π g h a).toPowerSeries := by
   obtain ⟨φ, h₁, h₂⟩ := constructive_lemma_poly π f h (a * b)
   obtain ⟨htrunc, hsubst⟩ := h₁
   obtain trunc_eq₁ := ScalarHom.PowerSeries_trunc_two π f h (a * b)
@@ -810,20 +810,20 @@ theorem multiplicative_of_ScalarHom (f g h : LubinTateF π) (a b : 𝒪[K]) :
   obtain has_subst₂ :=  PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_LubinTateF π f)
   obtain has_subst₃ :=  PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_LubinTateF π g)
   obtain has_subst₄ := PowerSeries.HasSubst.of_constantCoeff_zero' (ScalarHom π g h a).zero_constantCoeff
-  have trunc_eq₂ : PowerSeries.trunc 2 (PowerSeries.subst (ScalarHom π f g b).toFun
-    (ScalarHom π g h a).toFun) = Polynomial.C a * Polynomial.C b * Polynomial.X := by
+  have trunc_eq₂ : PowerSeries.trunc 2 (PowerSeries.subst (ScalarHom π f g b).toPowerSeries
+    (ScalarHom π g h a).toPowerSeries) = Polynomial.C a * Polynomial.C b * Polynomial.X := by
     rw [PowerSeries.trunc_of_subst_trunc' _ _ (ScalarHom π f g b).zero_constantCoeff,
       ScalarHom.PowerSeries_trunc_two π g h a]
     simp
     rw [←PowerSeries.smul_eq_C_mul, PowerSeries.subst_smul has_subst₁, PowerSeries.subst_X has_subst₁,
       PowerSeries.smul_eq_C_mul, PowerSeries.trunc_C_mul, ScalarHom.PowerSeries_trunc_two π f g b]
     ring
-  have subst_eq₁ : PowerSeries.subst (ScalarHom π f h (a * b)).toFun
-    h.toFun = PowerSeries.subst f.toFun (ScalarHom π f h (a * b)).toFun := by
+  have subst_eq₁ : PowerSeries.subst (ScalarHom π f h (a * b)).toPowerSeries
+    h.toPowerSeries = PowerSeries.subst f.toPowerSeries (ScalarHom π f h (a * b)).toPowerSeries := by
     exact ScalarHom.subst_eq π f h (a * b)
-  have subst_eq₂ : PowerSeries.subst (PowerSeries.subst (ScalarHom π f g b).toFun
-    (ScalarHom π g h a).toFun) h.toFun = PowerSeries.subst f.toFun (PowerSeries.subst
-    (ScalarHom π f g b).toFun (ScalarHom π g h a).toFun) := by
+  have subst_eq₂ : PowerSeries.subst (PowerSeries.subst (ScalarHom π f g b).toPowerSeries
+    (ScalarHom π g h a).toPowerSeries) h.toPowerSeries = PowerSeries.subst f.toPowerSeries (PowerSeries.subst
+    (ScalarHom π f g b).toPowerSeries (ScalarHom π g h a).toPowerSeries) := by
     rw [←PowerSeries.subst_comp_subst_apply has_subst₄ has_subst₁, ScalarHom.subst_eq,
       PowerSeries.subst_comp_subst_apply has_subst₃ has_subst₁, ScalarHom.subst_eq,
       PowerSeries.subst_comp_subst_apply has_subst₁ has_subst₂]
@@ -835,11 +835,11 @@ theorem multiplicative_of_ScalarHom (f g h : LubinTateF π) (a b : 𝒪[K]) :
 
 
 /-- Given a Lubin Tate `f`, then `[1]_f,f = PowerSeries.X`-/
-theorem ScalarHom_one (f : LubinTateF π): (ScalarHom π f f 1).toFun = PowerSeries.X := by
+theorem ScalarHom_one (f : LubinTateF π): (ScalarHom π f f 1).toPowerSeries = PowerSeries.X := by
   obtain ⟨φ, h₁, h₂⟩ := constructive_lemma_poly π f f 1
   obtain ⟨htrunc, hsubst⟩ := h₁
-  have eq_aux : PowerSeries.subst PowerSeries.X f.toFun
-    = PowerSeries.subst f.toFun PowerSeries.X (R := 𝒪[K]) := by
+  have eq_aux : PowerSeries.subst PowerSeries.X f.toPowerSeries
+    = PowerSeries.subst f.toPowerSeries PowerSeries.X (R := 𝒪[K]) := by
     simp [PowerSeries.subst_X (PowerSeries.HasSubst.of_constantCoeff_zero'
       (constantCoeff_LubinTateF π f)), ←PowerSeries.map_algebraMap_eq_subst_X]
   simp at h₂
@@ -852,19 +852,19 @@ theorem ScalarHom_one (f : LubinTateF π): (ScalarHom π f f 1).toFun = PowerSer
   `α` from `F_f` to `F_g`. -/
 theorem LubinTateFormalGroup_of_SameClass (f g : LubinTateF π) :
   ∃ (α : FormalGroupIso (LubinTateFormalGroup π f) (LubinTateFormalGroup π g)),
-  PowerSeries.subst α.toHom.toFun g.toFun = PowerSeries.subst f.toFun α.toHom.toFun := by
+  PowerSeries.subst α.toHom.toPowerSeries g.toPowerSeries = PowerSeries.subst f.toPowerSeries α.toHom.toPowerSeries := by
   let α : FormalGroupIso (LubinTateFormalGroup π f) (LubinTateFormalGroup π g) := {
     toHom := ScalarHom π f g 1
     invHom := ScalarHom π g f 1
     left_inv := by
-      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π f g 1).toFun ?_ ?_).mpr ?_
+      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π f g 1).toPowerSeries ?_ ?_).mpr ?_
       · exact PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π f g 1).zero_constantCoeff)
       · exact PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π g f 1).zero_constantCoeff)
       · rw [←multiplicative_of_ScalarHom]
         simp
         exact ScalarHom_one π f
     right_inv := by
-      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π g f 1).toFun ?_ ?_).mpr ?_
+      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π g f 1).toPowerSeries ?_ ?_).mpr ?_
       · exact PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π g f 1).zero_constantCoeff)
       · exact PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π f g 1).zero_constantCoeff)
       · rw [←multiplicative_of_ScalarHom]
@@ -881,19 +881,19 @@ theorem LubinTateFormalGroup_of_SameClass (f g : LubinTateF π) :
   isomorphism `α` from `F_f` to `F_g`. -/
 theorem LubinTateFormalGroup_of_SameClass' (f g : LubinTateF π) :
   ∃! (α : FormalGroupStrictIso (LubinTateFormalGroup π f) (LubinTateFormalGroup π g)),
-  PowerSeries.subst α.toHom.toFun g.toFun = PowerSeries.subst f.toFun α.toHom.toFun := by
+  PowerSeries.subst α.toHom.toPowerSeries g.toPowerSeries = PowerSeries.subst f.toPowerSeries α.toHom.toPowerSeries := by
   let α : FormalGroupStrictIso (LubinTateFormalGroup π f) (LubinTateFormalGroup π g) := {
     toHom := ScalarHom π f g 1
     invHom := ScalarHom π g f 1
     left_inv := by
-      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π f g 1).toFun ?_ ?_).mpr ?_
+      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π f g 1).toPowerSeries ?_ ?_).mpr ?_
       · refine PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π f g 1).zero_constantCoeff)
       · refine PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π g f 1).zero_constantCoeff)
       · rw [←multiplicative_of_ScalarHom]
         simp
         exact ScalarHom_one π f
     right_inv := by
-      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π g f 1).toFun ?_ ?_).mpr ?_
+      refine (PowerSeries.subst_comp_eq_id_iff (ScalarHom π g f 1).toPowerSeries ?_ ?_).mpr ?_
       · refine PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π g f 1).zero_constantCoeff)
       · refine PowerSeries.HasSubst.of_constantCoeff_zero' ((ScalarHom π f g 1).zero_constantCoeff)
       · rw [←multiplicative_of_ScalarHom]
@@ -901,7 +901,7 @@ theorem LubinTateFormalGroup_of_SameClass' (f g : LubinTateF π) :
         exact ScalarHom_one π g
     one_coeff_one := by
       calc
-        _ = Polynomial.coeff (PowerSeries.trunc 2 (ScalarHom π f g 1).toFun) 1 := by
+        _ = Polynomial.coeff (PowerSeries.trunc 2 (ScalarHom π f g 1).toPowerSeries) 1 := by
           rw [PowerSeries.coeff_trunc, if_pos (by norm_num)]
         _ = 1 := by
           simp [ScalarHom.PowerSeries_trunc_two]
@@ -909,7 +909,7 @@ theorem LubinTateFormalGroup_of_SameClass' (f g : LubinTateF π) :
   use α
   simp
   have trunc_striciso : ∀ (γ : FormalGroupStrictIso (LubinTateFormalGroup π f)
-    (LubinTateFormalGroup π g)), PowerSeries.trunc 2 γ.toHom.toFun = Polynomial.X := by
+    (LubinTateFormalGroup π g)), PowerSeries.trunc 2 γ.toHom.toPowerSeries = Polynomial.X := by
     intro γ
     ext d
     norm_cast
@@ -933,8 +933,8 @@ theorem LubinTateFormalGroup_of_SameClass' (f g : LubinTateF π) :
       obtain ⟨φ, h₁, h₂⟩ := constructive_lemma_poly π f g 1
       obtain ⟨htrunc, hsubst⟩ := h₁
       simp at h₂
-      have subst_eq₂ : PowerSeries.subst α.toHom.toFun g.toFun = PowerSeries.subst f.toFun
-        α.toHom.toFun := ScalarHom.subst_eq π f g 1
+      have subst_eq₂ : PowerSeries.subst α.toHom.toPowerSeries g.toPowerSeries = PowerSeries.subst f.toPowerSeries
+        α.toHom.toPowerSeries := ScalarHom.subst_eq π f g 1
       rw [h₂ _ (trunc_striciso _) hb, h₂ _ (trunc_striciso _) subst_eq₂]
     exact (FormalGroupStrictIso.ext_iff' _ _ _ _ ).mpr eq₁
 

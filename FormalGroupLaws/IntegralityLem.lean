@@ -1305,7 +1305,7 @@ theorem coeff_inv_add_mem_Subring [UniformSpace K] [T2Space K] [DiscreteUniformi
         (RModEq_aux₂ ht hq σ hs a_congr hp_mem s hs₁ hs₂ hg hg_unit hs₀ h hk))
 
 def CommFormalGroup.InvAdd_RecurFun_Aux : CommFormalGroup K where
-  toFun := inv_add_RecurFun ht hq σ s hg hg_unit
+  toPowerSeries := inv_add_RecurFun ht hq σ s hg hg_unit
   zero_constantCoeff := by
     rw [inv_add_RecurFun, PowerSeries.constantCoeff_subst_eq_zero _ _
       (constantCoeff_inv_RecurFun ..)]

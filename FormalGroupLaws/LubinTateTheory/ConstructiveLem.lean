@@ -26,26 +26,26 @@ noncomputable section LubinTateF
 instance : Fintype 𝓀[K] := Fintype.ofFinite 𝓀[K]
 
 structure LubinTateF where
-  toFun : PowerSeries 𝒪[K]
-  trunc_degree_two : toFun.trunc 2 = Polynomial.C π * Polynomial.X
-  mod_pi : PowerSeries.C π ∣ toFun - PowerSeries.X ^ Fintype.card 𝓀[K]
+  toPowerSeries : PowerSeries 𝒪[K]
+  trunc_degree_two : toPowerSeries.trunc 2 = Polynomial.C π * Polynomial.X
+  mod_pi : PowerSeries.C π ∣ toPowerSeries - PowerSeries.X ^ Fintype.card 𝓀[K]
 namespace LubinTateF
 
 variable (F : LubinTateF π)
 
 lemma toMvPowerSeries_trunc_degree_two :
-    (F.toFun : MvPowerSeries Unit 𝒪[K]).truncTotal _ 2
+    (F.toPowerSeries : MvPowerSeries Unit 𝒪[K]).truncTotal _ 2
       = MvPolynomial.C π * MvPolynomial.X default := by
   sorry
   -- rw [truncTotalDeg_powerSeries, (MvPolynomial.pUnitAlgEquiv _).symm_apply_eq]
   -- simpa using F.trunc_degree_two
 
 lemma toMvPowerSeries_mod_pi :
-    MvPowerSeries.C  π ∣ F.toFun - MvPowerSeries.X default ^ Fintype.card 𝓀[K] :=
+    MvPowerSeries.C  π ∣ F.toPowerSeries - MvPowerSeries.X default ^ Fintype.card 𝓀[K] :=
   F.mod_pi
 
 /-- constant coefficient of `f` in Lubin Tate `F_π` is zero.-/
-lemma constantCoeff_LubinTateF : PowerSeries.constantCoeff F.toFun = 0 := by
+lemma constantCoeff_LubinTateF : PowerSeries.constantCoeff F.toPowerSeries = 0 := by
   sorry
 
 
@@ -111,8 +111,8 @@ lemma constructive_lemma_ind_hyp
     {a : Fin n → 𝒪[K]} (f g : LubinTateF π) (r : ℕ) (hr : 2 ≤ r) :
     ∃! ϕr : MvPolynomial (Fin n) 𝒪[K], ϕr.totalDegree < r
         ∧ truncTotal _ 2 ϕr = ϕ₁
-          ∧ truncTotal _ r (f.toFun.subst ϕr.toMvPowerSeries)
-            = truncTotal _ r (ϕr.toMvPowerSeries.subst (g.toFun.toMvPowerSeries ·)) := by
+          ∧ truncTotal _ r (f.toPowerSeries.subst ϕr.toMvPowerSeries)
+            = truncTotal _ r (ϕr.toMvPowerSeries.subst (g.toPowerSeries.toMvPowerSeries ·)) := by
   induction r, hr using Nat.le_induction with
   | base => sorry
   | succ d hd ih =>
@@ -137,7 +137,7 @@ lemma constructive_lemma_ind_hyp
     -- have hp_hasSubst : PowerSeries.HasSubst p.toMvPowerSeries := by
     --   simpa using hp_constantCoeff
     -- -- construction: (f ∘ p - p ∘ g) / (π^r - 1)π
-    -- have h_first_term : C π ∣ ((PowerSeries.substAlgHom hp_hasSubst) f.toFun - p.toMvPowerSeries ^ Fintype.card 𝓀[K]) := by
+    -- have h_first_term : C π ∣ ((PowerSeries.substAlgHom hp_hasSubst) f.toPowerSeries - p.toMvPowerSeries ^ Fintype.card 𝓀[K]) := by
     --   -- f(X) - X^q = π * u(X)
     --   -- show f(p(x1, ..., xn)) - p(x1, ..., xn)^q = π * u(p(x1, ..., xn))
     --   obtain ⟨u, hu⟩ := f.mod_pi
@@ -148,7 +148,7 @@ lemma constructive_lemma_ind_hyp
     --     rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
     --     rfl
     -- -- show p(g(x)) = p(x1^q, ..., xn^q) mod π
-    -- have h_second_term_inner {d : ℕ} (i : Fin d) : C π ∣ g.toFun.toMvPowerSeries i - X i ^ Fintype.card 𝓀[K] := by
+    -- have h_second_term_inner {d : ℕ} (i : Fin d) : C π ∣ g.toPowerSeries.toMvPowerSeries i - X i ^ Fintype.card 𝓀[K] := by
     --   obtain ⟨u, hu⟩ := g.mod_pi
     --   use (PowerSeries.substAlgHom (PowerSeries.HasSubst.X i)) u
     --   convert congrArg (PowerSeries.substAlgHom (PowerSeries.HasSubst.X (S := 𝒪[K]) i)) hu
@@ -156,7 +156,7 @@ lemma constructive_lemma_ind_hyp
     --       PowerSeries.subst, PowerSeries.substAlgHom, substAlgHom_apply]
     --   · rw [map_mul, ← Polynomial.coe_C, PowerSeries.substAlgHom_coe, Polynomial.aeval_C]
     --     rfl
-    -- have h_second_term : C π ∣ p.toMvPowerSeries.subst (g.toFun.toMvPowerSeries · ) - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
+    -- have h_second_term : C π ∣ p.toMvPowerSeries.subst (g.toPowerSeries.toMvPowerSeries · ) - p.toMvPowerSeries.subst (X · ^ Fintype.card 𝓀[K]) := by
     --   -- p is a polynomial so we may use MvPolynomial
     --   rw [subst_coe, subst_coe]
     --   -- this means we can write stuff like p.sum!
@@ -171,10 +171,10 @@ lemma constructive_lemma_ind_hyp
     --   sorry
     -- sorry
     -- --   sorry
-    -- -- hav_mv : (C _ _) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries ^ residue_size K := by
+    -- -- hav_mv : (C _ _) π ∣ f.toPowerSeries.subst p.toMvPowerSeries - p.toMvPowerSeries ^ residue_size K := by
     -- --   sorry
 
-    -- -- have h₁ : (sMvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toFun.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toFun.toMvPowerSeries
+    -- -- have h₁ : (sMvPolynomial.C (Fin n) 𝒪[K]) π ∣ f.toPowerSeries.subst p.toMvPowerSeries - p.toMvPowerSeries.subst g.toPowerSeries.toMvPowerSeries
 
 -- Proposition 2.11
 theorem constructive_lemma
@@ -183,7 +183,7 @@ theorem constructive_lemma
     (f g : LubinTateF π) :
     ∃! ϕ : MvPowerSeries (Fin n) 𝒪[K],
       truncTotal _ 2 ϕ = ϕ₁
-        ∧ PowerSeries.subst ϕ f.toFun = subst (g.toFun.toMvPowerSeries ·) ϕ := by
+        ∧ PowerSeries.subst ϕ f.toPowerSeries = subst (g.toPowerSeries.toMvPowerSeries ·) ϕ := by
   sorry
 
 /-- This is constructive lemma in two variable. More specific, given two `f, g ∈ F_π`,
@@ -193,7 +193,7 @@ theorem constructive_lemma_two
     (f g : LubinTateF π) :
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.X (0 : Fin 2) + MvPolynomial.X (1 : Fin 2) ∧
-    PowerSeries.subst ϕ g.toFun = subst (f.toFun.toMvPowerSeries · ) ϕ := by
+    PowerSeries.subst ϕ g.toPowerSeries = subst (f.toPowerSeries.toMvPowerSeries · ) ϕ := by
   let a := fun (x : Fin 2) => 1
 
   sorry
@@ -205,7 +205,7 @@ theorem constructive_lemma_two'
     (f g : LubinTateF π) (a : 𝒪[K]):
     ∃! (ϕ : MvPowerSeries (Fin 2) 𝒪[K]), (truncTotalDegHom 2 ϕ)
     = MvPolynomial.C a * MvPolynomial.X (0 : Fin 2) + MvPolynomial.C a * MvPolynomial.X (1 : Fin 2) ∧
-    PowerSeries.subst ϕ g.toFun = subst (f.toFun.toMvPowerSeries · ) ϕ := by
+    PowerSeries.subst ϕ g.toPowerSeries = subst (f.toPowerSeries.toMvPowerSeries · ) ϕ := by
   let a := fun (x : Fin 2) => 1
 
   sorry

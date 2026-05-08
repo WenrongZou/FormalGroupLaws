@@ -27,7 +27,7 @@ theorem constructive_lemma_poly
   (f g : LubinTateF π) (a : 𝒪[K]) :
   ∃! (ϕ : PowerSeries 𝒪[K]), (PowerSeries.trunc 2 ϕ)
   = Polynomial.C a * Polynomial.X  ∧
-  PowerSeries.subst ϕ g.toFun = PowerSeries.subst f.toFun ϕ := by
+  PowerSeries.subst ϕ g.toPowerSeries = PowerSeries.subst f.toPowerSeries ϕ := by
   let a := fun (x : Fin 2) => 1
 
   sorry
@@ -302,7 +302,7 @@ theorem truncTotalDegTwo.X {x : σ}  :
 
 /-- Given a formal group law `F (X, Y)` over ring `R`, `F (X, Y)≅ X + Y (mod deg 2)` -/
 theorem FormalGroup.truncTotalDegTwo (F : FormalGroup R) :
-  ((truncTotalDegHom 2) F.toFun) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  ((truncTotalDegHom 2) F.toPowerSeries) = MvPolynomial.X 0 + MvPolynomial.X 1 := by
   ext d
   simp [truncTotalDegHom, truncTotalDeg_eq, MvPolynomial.coeff_sum, coeff_truncTotalDegEq]
   by_cases hd : d = Finsupp.single 0 1

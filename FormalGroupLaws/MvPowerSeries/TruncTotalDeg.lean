@@ -90,7 +90,7 @@ lemma MvPowerSeries.truncTotalDeg_map_add (f g : MvPowerSeries σ R) (n : ℕ) :
 `MvPowerSeries.truncTotalDeg` as a monoid homomorphism.
 -/
 def MvPowerSeries.truncTotalDegHom (n : ℕ) : MvPowerSeries σ R →+ MvPolynomial σ R where
-  toFun := truncTotalDeg n
+  toPowerSeries := truncTotalDeg n
   map_zero' := by
     simp [truncTotalDeg, truncTotalDegEq]
   map_add' := by

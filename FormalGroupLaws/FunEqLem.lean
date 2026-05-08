@@ -1351,7 +1351,7 @@
 --   let F := (inv_add_aux hp_prime hn hq σ s hg hg_unit)
 --   have f_def : f = (RecurFun hp_prime hn hq σ s hg) := rfl
 --   have F_def : F = (inv_add_aux hp_prime hn hq σ s hg hg_unit) := rfl
---   { toFun := F
+--   { toPowerSeries := F
 --     zero_constantCoeff := constantCoeff_inv_add_aux ..
 --     lin_coeff_X := coeff_inv_add_aux_X ..
 --     lin_coeff_Y := coeff_inv_add_aux_Y ..
@@ -1366,7 +1366,7 @@
 
 -- /- `inv_add` define to be `f_g⁻¹(f_g(X) + f_g(Y))`, this is a formal group law over `R`. -/
 -- -- def inv_add : CommFormalGroup R where
--- --   toFun := toSubring (inv_add_aux hp_prime hn hq σ s g hg hg_unit) R
+-- --   toPowerSeries := toSubring (inv_add_aux hp_prime hn hq σ s g hg hg_unit) R
 -- --     (coeff_inv_add_mem_Subring hp_prime hn hq σ s g hg hg_unit)
 -- --   zero_constantCoeff := sorry
 -- --   lin_coeff_X := sorry
