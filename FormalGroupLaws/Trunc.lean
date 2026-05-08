@@ -1,6 +1,9 @@
-import Mathlib.RingTheory.MvPowerSeries.Substitution
-import Mathlib.RingTheory.PowerSeries.Substitution
+module
 
+public import Mathlib.RingTheory.MvPowerSeries.Substitution
+public import Mathlib.RingTheory.PowerSeries.Substitution
+
+@[expose] public section
 
 namespace PowerSeries
 

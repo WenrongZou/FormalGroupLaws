@@ -15,12 +15,13 @@ variable {R : Type u} [CommRing R] (U : FormalGroup R) {C : Type u} [Category.{v
 
 def FGL : CommRingCat.{u} ⥤ Type u where
   obj R := FormalGroup R
-  map f := FormalGroup.map f.hom
+  map f := by
+    refine TypeCat.ofHom <| FormalGroup.map f.hom
   map_id R := by
-    ext F : 1
+    ext F : 3
     simp [FormalGroup.map]
   map_comp f g := by
-    ext F : 1
+    ext F : 3
     simp [FormalGroup.map]
 
 def IsUniversal : Prop :=

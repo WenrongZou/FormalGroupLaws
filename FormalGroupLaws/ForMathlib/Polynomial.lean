@@ -1,16 +1,19 @@
-import Mathlib.Algebra.Polynomial.Expand
-import Mathlib.Algebra.MvPolynomial.Expand
-import Mathlib.RingTheory.MvPolynomial.Basic
-import Mathlib.RingTheory.PowerSeries.Substitution
-import Mathlib.RingTheory.MvPowerSeries.Substitution
+module
+
+public import Mathlib.Algebra.MvPolynomial.Expand
+public import Mathlib.Algebra.Polynomial.Expand
+public import Mathlib.RingTheory.MvPolynomial.Basic
+public import Mathlib.RingTheory.PowerSeries.Substitution
+
+@[expose] public section
 
 section prime_pow_poly
 
 open MvPolynomial
 
-#check Polynomial.induction_on'
-#check MvPolynomial.induction_on
-#check MvPolynomial.instCharP
+-- #check Polynomial.induction_on'
+-- #check MvPolynomial.induction_on
+-- #check MvPolynomial.instCharP
 
 variable {R : Type*} {p : ℕ} [CommSemiring R] [ExpChar R p] {σ : Type*}
 

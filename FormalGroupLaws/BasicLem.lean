@@ -1,8 +1,11 @@
-import Mathlib.RingTheory.MvPowerSeries.Substitution
-import Mathlib.RingTheory.PowerSeries.Substitution
-import FormalGroupLaws.Basic
-import FormalGroupLaws.SubstInv
+module
 
+public import Mathlib.RingTheory.MvPowerSeries.Substitution
+public import Mathlib.RingTheory.PowerSeries.Substitution
+public import FormalGroupLaws.Basic
+public import FormalGroupLaws.SubstInv
+
+@[expose] public section
 
 noncomputable section
 
@@ -15,23 +18,11 @@ theorem PowerSeries.constantCoeff_def (f : PowerSeries R) :
 
 lemma subst_self (f : MvPowerSeries (Fin 2) R):
   f =
-  MvPowerSeries.subst
-    (fun x ↦
-      match x with
-      | ⟨0, _⟩ => X₀
-      | ⟨1, _⟩ => X₁)
-    f := by
-  have eq_aux : MvPowerSeries.X = (fun (x : Fin 2) ↦
-      match x with
-      | ⟨0, isLt⟩ => X₀
-      | ⟨1, isLt⟩ => X₁ (R := R)) := by
-    funext x
-    by_cases hx : x = 0
-    simp [hx]
-    have hx' : x = 1 := by omega
-    simp [hx']
-  rw [←eq_aux]
-  simp [←map_algebraMap_eq_subst_X f]
+  MvPowerSeries.subst ![X₀, X₁] f := by
+  have eq_aux : MvPowerSeries.X = ![X₀ (R := R), X₁] := by
+    ext s : 1
+    fin_cases s <;> simp
+  simp [← eq_aux, ←map_algebraMap_eq_subst_X f]
 
 
 -- need some theorem like associativity of substitution

@@ -1,8 +1,9 @@
-import Mathlib.RingTheory.MvPowerSeries.Expand
-import Mathlib.RingTheory.PowerSeries.Expand
-import Mathlib.RingTheory.PowerSeries.PiTopology
-import Mathlib.Algebra.Order.Monoid.Unbundled.Pow
-import FormalGroupLaws.MvPowerSeries
+module
+
+public import FormalGroupLaws.MvPowerSeries
+public import Mathlib.RingTheory.PowerSeries.Expand
+
+@[expose] public section
 
 variable {R S : Type*} [CommRing R] [CommRing S] {σ τ: Type*} [Finite σ] [Finite τ]
 

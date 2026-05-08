@@ -3,8 +3,11 @@ Copyright (c) 2025 Wenrong Zou. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Wenrong Zou
 -/
+module
 
-import FormalGroupLaws.SubstInv
+public import FormalGroupLaws.SubstInv
+
+@[expose] public section
 
 /-!
 

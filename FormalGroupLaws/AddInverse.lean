@@ -1,5 +1,8 @@
-import FormalGroupLaws.Basic
-import Mathlib.Algebra.Group.Pointwise.Finset.BigOperators
+module
+public import FormalGroupLaws.Basic
+public import Mathlib.Algebra.Group.Pointwise.Finset.BigOperators
+
+@[expose] public section
 
 noncomputable section
 
@@ -608,9 +611,7 @@ omit [Nontrivial R] in
 variable {F} in
 lemma constantCoeff_addInvF_X : MvPowerSeries.constantCoeff (addInv F X) = 0 := by
   simp [addInv]
-  rw [subst, X, constantCoeff, constantCoeff_subst_zero (by simp) _]
-  rw [addInv_X, PowerSeries.constantCoeff_coe, constantCoeff_mk, FormalGroup.addInv_aux]
-
+  rfl
 
 omit [Nontrivial R] in
 variable {F} in

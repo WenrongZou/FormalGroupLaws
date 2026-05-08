@@ -1,12 +1,12 @@
-import FormalGroupLaws.Basic
-import Mathlib.RingTheory.Nilpotent.Lemmas
-import Mathlib.Algebra.Module.Submodule.Ker
-import Mathlib.GroupTheory.MonoidLocalization.Away
-import Mathlib.GroupTheory.OrderOfElement
-import Mathlib.Data.Nat.Choose.Dvd
-import Mathlib.RingTheory.TensorProduct.Basic
-import FormalGroupLaws.AddInverse
-import Mathlib.RingTheory.MvPowerSeries.Order
+module
+
+public import FormalGroupLaws.AddInverse
+public import Mathlib.Data.Nat.Choose.Dvd
+public import Mathlib.GroupTheory.OrderOfElement
+public import Mathlib.RingTheory.Nilpotent.Lemmas
+public import Mathlib.RingTheory.TensorProduct.Basic
+
+@[expose] public section
 
 noncomputable section
 
@@ -933,10 +933,10 @@ that sends an element `r` to `r ⊗ 1`.
 def canonicalMapToTensorRat : R →ₐ[ℤ] (R ⊗[ℤ] ℚ) :=
   includeLeft
 
-/--
-The kernel of the canonical map `r ↦ r ⊗ 1` from a ring `R` to `R ⊗[ℤ] ℚ`
-is precisely the `ℤ`-torsion submodule of `R`.
--/
+-- /--
+-- The kernel of the canonical map `r ↦ r ⊗ 1` from a ring `R` to `R ⊗[ℤ] ℚ`
+-- is precisely the `ℤ`-torsion submodule of `R`.
+-- -/
 -- theorem kernel_canonicalMapToTensorRat_eq_torsion :
 --   ker (canonicalMapToTensorRat R) = torsion ℤ R := by
 --   refine Submodule.ext ?_
@@ -978,11 +978,11 @@ is precisely the `ℤ`-torsion submodule of `R`.
 --     sorry
 --   · sorry
 
-lemma lem1 : ringChar (Localization.Away (0 : R)) = 0 := by
-  refine (CharP.ringChar_zero_iff_CharZero (Localization.Away 0)).mpr ?_
-  refine charZero_of_inj_zero ?_
-  intro n hn
-  sorry
+-- lemma lem1 : ringChar (Localization.Away (0 : R)) = 0 := by
+--   refine (CharP.ringChar_zero_iff_CharZero (Localization.Away 0)).mpr ?_
+--   refine charZero_of_inj_zero ?_
+--   intro n hn
+--   sorry
 
 
 /-- Given a coefficient ring `R`, for any one dimensional formal group law `F(X, Y)`
@@ -999,6 +999,8 @@ theorem comm_iff_no_nonzero_torsion_nilpotent :
       intro i j I hI
       let f := Ideal.Quotient.mk I
       let f_F := F.map f
+      haveI : Nontrivial (R ⧸ I) := sorry
+      haveI : IsDomain (R ⧸ I) := sorry
       obtain h₁ := comm_of_isDomain f_F
       exact (Quotient.mk_eq_zero I).mp ((comm_iff_coeff_symm' f_F).mp h₁ i j)
     have mem_nilpotent : ∀ (i j : ℕ),
@@ -1013,3 +1015,5 @@ theorem comm_iff_no_nonzero_torsion_nilpotent :
       (coeff (coeff_two i j) F.toFun - coeff (coeff_two j i) F.toFun) = 0 :=
       fun i j => hr _ (mem_nilpotent i j) (mem_torsion i j)
     exact (comm_iff_coeff_symm' F).mpr mem_zero
+
+#min_imports

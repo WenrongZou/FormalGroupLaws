@@ -1,7 +1,11 @@
-import FormalGroupLaws.Basic
-import Mathlib.Algebra.CharP.Basic
-import Mathlib.Data.Int.ConditionallyCompleteOrder
-import Mathlib.GroupTheory.GroupAction.Ring
+module
+
+public import FormalGroupLaws.Basic
+public import Mathlib.Algebra.CharP.Basic
+public import Mathlib.Data.Int.ConditionallyCompleteOrder
+public import Mathlib.GroupTheory.GroupAction.Ring
+
+@[expose] public section
 
 variable {R S: Type*} [CommRing R] [CommRing S] {σ τ: Type*} (I : Ideal R) [DecidableEq σ] {n : ℕ}
   [DecidableEq τ] [Algebra R S]

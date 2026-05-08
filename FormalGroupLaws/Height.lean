@@ -1,6 +1,10 @@
-import FormalGroupLaws.Basic
-import Mathlib.Algebra.CharP.Invertible
-import FormalGroupLaws.AuxLem
+module
+
+public import FormalGroupLaws.Basic
+public import Mathlib.Algebra.CharP.Invertible
+public import FormalGroupLaws.AuxLem
+
+@[expose] public section
 
 variable {R : Type*} [CommRing R] {σ τ : Type}
 
@@ -116,8 +120,11 @@ lemma FormalGroupHom.exists_coeff_ne_zero_of_ne_zero {f : FormalGroupHom F G}
     have : IsUnit (m.choose i : R) := (CharP.isUnit_natCast_iff hp).mpr hc
     have : f.toFun.coeff m = 0 := (IsUnit.mul_left_eq_zero this).mp eq_aux₃
     exact ne_zero this
-  obtain ⟨n, hn⟩ : ∃ n, m = p ^ n := exists_pow_eq_of_prime_dvd_choose hp m_pos dvd_aux
-  exact ⟨n, hn ▸ ne_zero⟩
+  -- have : ∀ i ∈ Icc 1 (m - 1), m.choose i ≡ 0 [MOD p] := by
+  --   simp +contextual [dvd_aux, Nat.modEq_zero_iff_dvd]
+  obtain this := Choose.eq_pow_multiplicity_of_choose_modEq_zero_nat (hp := ⟨hp⟩) m_pos
+    (by simp +contextual [dvd_aux, Nat.modEq_zero_iff_dvd])
+  exact ⟨_, this ▸ ne_zero⟩
 
 lemma exist_coeff_pow_ne_zero_of_ne_zero (h : F.series p ≠ 0) :
     (∃ n, coeff (p ^ n) (F.series p) ≠ 0) := by

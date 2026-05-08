@@ -1,4 +1,8 @@
-import FormalGroupLaws.Trunc
+module
+
+public import FormalGroupLaws.Trunc
+
+@[expose] public section
 
 namespace PowerSeries
 

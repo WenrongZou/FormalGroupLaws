@@ -1,14 +1,10 @@
-import FormalGroupLaws.Basic
-import FormalGroupLaws.BasicLem
-import Mathlib.RingTheory.PowerSeries.PiTopology
-import FormalGroupLaws.MvPowerSeries
-import Mathlib.Algebra.CharP.Lemmas
-import Mathlib.RingTheory.MvPowerSeries.Expand
-import Mathlib.RingTheory.PowerSeries.Expand
-import FormalGroupLaws.ForMathlib.MvPowerSeries
-import Mathlib.LinearAlgebra.SModEq.Basic
-import Mathlib.Algebra.IsPrimePow
+module
 
+public import FormalGroupLaws.ForMathlib.MvPowerSeries
+public import Mathlib.Algebra.IsPrimePow
+public import Mathlib.LinearAlgebra.SModEq.Basic
+
+@[expose] public section
 /-!
 #Functional Integrality Lemma.
 
@@ -886,7 +882,7 @@ lemma le_order₁ {b : ℕ} : b ≤ (PowerSeries.subst (inv_add_RecurFun ht hq �
     exact le_mul_of_one_le_right' <| PowerSeries.one_le_order (constantCoeff_RecurFun ..)
   refine .trans (ENat.self_le_mul_left _ (zero_ne_one' _).symm) <|
     .trans (mul_le_mul (ENat.one_le_iff_ne_zero.mpr <| order_ne_zero_iff_constCoeff_eq_zero.mpr
-      (constantCoeff_inv_add_RecurFun ..)) ?_ (zero_le _) (zero_le _))
+      (constantCoeff_inv_add_RecurFun ..)) ?_ zero_le zero_le)
         (PowerSeries.le_order_subst _ (HasSubst.inv_add_RecurFun ..) _)
   rw [← PowerSeries.smul_eq_C_mul]
   exact .trans le_aux₁ (.trans (PowerSeries.le_order_map _) (PowerSeries.le_order_smul))
@@ -1037,7 +1033,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         PowerSeries.subst_pow has_subst_F, PowerSeries.subst_X has_subst_F,
         PowerSeries.coeff_subst (HasSubst.pow has_subst_F le_q_pow)]
       simp_rw [MvPowerSeries.coeff_smul, PowerSeries.coeff_map, smul_eq_mul, pow_mul]
-      refine finsum_eq_finset_sum_of_support_subset _ (Function.support_subset_iff'.mpr ?_)
+      refine finsum_eq_finsetSum_of_support_subset _ (Function.support_subset_iff'.mpr ?_)
       intro d hd
       simp only [coe_range, Set.mem_Iio, not_lt] at hd
       have : (MvPowerSeries.coeff n) ((F ^ q ^ i) ^ d) = 0 := by
@@ -1168,7 +1164,7 @@ lemma RModEq_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
         (.trans (.trans ?_ (PowerSeries.le_order_map _)) le_order_smul)) (le_order_subst _ has_subst_F _))))
     have le_aux' : q ^ b ≤ (monomial (q ^ b) (1 : K)).order * f.order := by
       refine .trans (ENat.self_le_mul_right _ (zero_ne_one' _).symm)
-        (mul_le_mul ?_ ?_ zero_le_one (zero_le _))
+        (mul_le_mul ?_ ?_ zero_le_one zero_le)
       · rw [PowerSeries.order_monomial]
         split_ifs <;> simp
       exact ENat.one_le_iff_ne_zero.mpr <| PowerSeries.order_ne_zero_iff_constCoeff_eq_zero.mpr
@@ -1408,7 +1404,7 @@ theorem decomp_InvAdd_RecurFun [UniformSpace K] [T2Space K] [DiscreteUniformity 
   · simp_rw [coeff_X]
     split_ifs with h <;> simp
   rw [coeff_mul, coeff_mul]
-  simp only [AddSubmonoidClass.coe_finset_sum, Subring.coe_mul, coeff_map, Subring.subtype_apply]
+  simp only [AddSubmonoidClass.coe_finsetSum, Subring.coe_mul, coeff_map, Subring.subtype_apply]
   congr! 2 with l  hl
   simp_rw [coeff_X]
   split_ifs with h <;> simp
@@ -1506,7 +1502,7 @@ lemma coeff_mem_aux {i b n : ℕ} (hi : i ≠ 0) {G : PowerSeries K} (hG : G.con
     by_cases hdvd : q ^ i ∣ n
     · obtain ⟨d, hd⟩ := hdvd
       simp_rw [hd, PowerSeries.coeff_expand_mul, PowerSeries.coeff_pow]
-      simp only [AddSubmonoidClass.coe_finset_sum, SubmonoidClass.coe_finset_prod]
+      simp only [AddSubmonoidClass.coe_finsetSum, SubmonoidClass.coe_finsetProd]
       rw [sum_congr rfl]
       intro l hl
       rw [prod_congr rfl]
@@ -1598,7 +1594,7 @@ lemma coeff_g_G_mem_aux [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       (one_le_q_pow hq)) _)
     have : q ^ b * 1 ≤ (G ^ q ^ b).order * ((PowerSeries.map (σ ^ b)) (RecurFun ht hq σ s hg)).order := by
       refine mul_le_mul ?_ (.trans (PowerSeries.one_le_order (constantCoeff_RecurFun ..))
-        (PowerSeries.le_order_map _)) (zero_le_one' ℕ∞) (zero_le _)
+        (PowerSeries.le_order_map _)) (zero_le_one' ℕ∞) zero_le
       rw [← PowerSeries.order_eq_order]
       exact order_G_pow _
     rw [mul_one] at this
@@ -1880,7 +1876,7 @@ lemma PartIII.coeff_tsum_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K]
     ↑b ≤ ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f).order := by
     rw [PowerSeries.order_expand]
     exact .trans (by simp) (smul_le_smul (Nat.lt_pow_self (one_lt_q ht hq)).le
-      (PowerSeries.one_le_order hf) b.zero_le (zero_le _))
+      (PowerSeries.one_le_order hf) b.zero_le zero_le)
   have le_order_aux₃ (b : ℕ) : b ≤ PowerSeries.order (PowerSeries.subst ((PowerSeries.map
     R.subtype) h) (((f.expand (q ^ b) (q_pow_neZero hq)).map (σ ^ b)))) := by
     have : ((PowerSeries.map R.subtype) h).order * ((PowerSeries.map (σ ^ b))
@@ -1896,7 +1892,7 @@ lemma PartIII.coeff_tsum_mem [UniformSpace K] [T2Space K] [DiscreteUniformity K]
       refine .trans ?_ (PowerSeries.le_order_map _)
       exact le_expand_aux b (constantCoeff_RecurFun ..)
     exact .trans (.trans (by simp) (mul_le_mul (PowerSeries.one_le_order (by simp [h₀]))
-      le_aux b.cast_nonneg' (zero_le _))) this
+      le_aux b.cast_nonneg' zero_le)) this
   have le_order_aux₄ (b : ℕ) : b ≤ PowerSeries.order ((PowerSeries.map (σ ^ b))
     ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f')) := by
     refine .trans (le_expand_aux b <| PowerSeries.constantCoeff_subst_eq_zero (by simp [h₀]) _
@@ -1989,7 +1985,7 @@ lemma coeff_inv_RecurFun_g'_mem_Subring' [UniformSpace K] [T2Space K] [DiscreteU
         ↑b ≤ ((PowerSeries.expand (q ^ b) (q_pow_neZero hq)) f).order := by
         rw [PowerSeries.order_expand]
         exact .trans (by simp) (smul_le_smul (Nat.lt_pow_self (one_lt_q ht hq)).le
-          (PowerSeries.one_le_order hf) b.zero_le (zero_le _))
+          (PowerSeries.one_le_order hf) b.zero_le zero_le)
       refine .trans (.trans (le_expand_aux n (constantCoeff_RecurFun ..))
         (PowerSeries.le_order_map _)) PowerSeries.le_order_smul
   rw [eq_aux₁]
@@ -2161,7 +2157,7 @@ lemma coeff_pow_eq_ind {α : PowerSeries K} {β : PowerSeries R} {k i: ℕ} (hi 
   induction i, hi using Nat.le_induction with
   | base =>
     intro n hn
-    simp only [pow_two, PowerSeries.coeff_mul, AddSubmonoidClass.coe_finset_sum, Subring.coe_mul]
+    simp only [pow_two, PowerSeries.coeff_mul, AddSubmonoidClass.coe_finsetSum, Subring.coe_mul]
     rw [sum_congr rfl]
     intro l hl
     simp only [mem_antidiagonal] at hl
@@ -2172,7 +2168,7 @@ lemma coeff_pow_eq_ind {α : PowerSeries K} {β : PowerSeries R} {k i: ℕ} (hi 
     rw [h_ind _ (by omega), h_ind _ (by omega)]
   | succ m hm ih =>
     intro n hn
-    simp only [pow_succ, PowerSeries.coeff_mul, AddSubmonoidClass.coe_finset_sum, Subring.coe_mul]
+    simp only [pow_succ, PowerSeries.coeff_mul, AddSubmonoidClass.coe_finsetSum, Subring.coe_mul]
     rw [sum_congr rfl]
     intro l hl
     simp only [mem_antidiagonal] at hl
