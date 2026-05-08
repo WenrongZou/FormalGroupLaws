@@ -6,8 +6,6 @@ public import FormalGroupLaws.Basic
 public import FormalGroupLaws.BasicLem
 public import FormalGroupLaws.CommThm
 public import FormalGroupLaws.ForMathlib.MvPowerSeries
-public import FormalGroupLaws.ForMathlib.Polynomial
-public import FormalGroupLaws.FunEqLem
 public import FormalGroupLaws.Height
 public import FormalGroupLaws.IntegralityLem
 public import FormalGroupLaws.LubinTateTheory.Basic

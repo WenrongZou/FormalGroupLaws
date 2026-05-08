@@ -1,3 +1,4 @@
+module
 -- import Mathlib.RingTheory.PowerSeries.Substitution
 -- import Mathlib.RingTheory.PowerSeries.Trunc
 -- import FormalGroupLaws.Basic

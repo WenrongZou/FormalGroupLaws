@@ -552,7 +552,7 @@ theorem subst_addInv_eq_zero : MvPowerSeries.subst ![X, (addInv_X F)] F.toPowerS
   simp_rw [trunc_apply, ←Polynomial.coe_C, ←Polynomial.coe_X]
   rw [sum_fin_eq_sum_range' (fun i => (Polynomial.C (addInv_aux F i) : PowerSeries R)
     * (Polynomial.X).toPowerSeries ^ i), Nat.Ico_zero_eq_range,
-    ←Polynomial.eval₂_C_X_eq_coe, Polynomial.eval₂_finset_sum, ←Polynomial.eval₂_C_X_eq_coe,
+    ←Polynomial.eval₂_C_X_eq_coe, Polynomial.eval₂_finsetSum, ←Polynomial.eval₂_C_X_eq_coe,
     sum_congr rfl]
   intro i hi
   rw [Polynomial.eval₂_C_X_eq_coe]
@@ -586,7 +586,7 @@ theorem subst_addInv_eq_zero_left : MvPowerSeries.subst ![(addInv_X_left F), X] 
   simp_rw [trunc_apply, ←Polynomial.coe_C, ←Polynomial.coe_X]
   rw [sum_fin_eq_sum_range' (fun i => (Polynomial.C (addInv_aux' F i) : PowerSeries R)
     * (Polynomial.X).toPowerSeries ^ i), Nat.Ico_zero_eq_range,
-    ←Polynomial.eval₂_C_X_eq_coe, Polynomial.eval₂_finset_sum, ←Polynomial.eval₂_C_X_eq_coe,
+    ←Polynomial.eval₂_C_X_eq_coe, Polynomial.eval₂_finsetSum, ←Polynomial.eval₂_C_X_eq_coe,
     sum_congr rfl]
   intro i hi
   rw [Polynomial.eval₂_C_X_eq_coe]

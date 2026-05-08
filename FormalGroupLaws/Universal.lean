@@ -1,6 +1,9 @@
-import Mathlib.CategoryTheory.RepresentedBy
-import FormalGroupLaws.Basic
-import Mathlib.Algebra.Category.Ring.Basic
+module
+
+public import FormalGroupLaws.Basic
+public import Mathlib.Algebra.Category.Ring.Basic
+
+@[expose] public section
 
 universe u v w
 

@@ -1,10 +1,37 @@
--- import FormalGroupLaws.Basic
--- import FormalGroupLaws.MvPowerSeries.TruncTotalDeg
--- import Mathlib.NumberTheory.LocalField.Basic
--- import Mathlib.RingTheory.Valuation.Discrete.Basic
--- import Mathlib.RingTheory.MvPowerSeries.Trunc
+module
 
--- open ValuativeRel MvPowerSeries Classical
+public import FormalGroupLaws.Basic
+public import Mathlib.NumberTheory.LocalField.Basic
+public import Mathlib.RingTheory.Valuation.Discrete.Basic
+public import Mathlib.RingTheory.MvPowerSeries.Trunc
+
+@[expose] public section
+
+noncomputable section
+
+namespace LubinTate
+
+open ValuativeRel MvPowerSeries Classical
+
+variable {K : Type*} [Field K] [ValuativeRel K] [UniformSpace K] [IsUniformAddGroup K]
+  [IsValuativeTopology K] [IsNonarchimedeanLocalField K]
+
+/-- For a nonarchimedean local field, we have that valuation of `K` is
+rank one discrete. -/
+instance : (valuation K).IsRankOneDiscrete := inferInstance
+
+/- `π` is a uniformizer of `valuation K`. -/
+variable (π : 𝒪[K]) (h : (valuation K).IsUniformizer π)
+
+instance : Fintype 𝓀[K] := Fintype.ofFinite 𝓀[K]
+
+structure 𝓕 where
+  toPowerSeries : PowerSeries 𝒪[K]
+  trunc_degree_two : toPowerSeries.trunc 2 = Polynomial.C π * Polynomial.X
+  mod_pi : PowerSeries.C π ∣ toPowerSeries - PowerSeries.X ^ Fintype.card 𝓀[K]
+
+
+
 
 -- universe u
 
