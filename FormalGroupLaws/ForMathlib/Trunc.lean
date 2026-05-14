@@ -74,6 +74,11 @@ lemma truncTotal_homogeneous_same : (p.homogeneousComponent n).truncTotal n = 0 
   simp [coeff_truncTotal_eq_ite, coeff_homogeneousComponent]
   grind
 
+lemma constantCoeff_eq_of_truncTotal_two_eq {q : MvPowerSeries σ R}
+    (h : p.truncTotal 2 = q.truncTotal 2) :
+    p.constantCoeff = q.constantCoeff := calc
+  _ = (p.truncTotal 2).constantCoeff := by simp [constantCoeff_truncTotal_eq_ite]
+  _ = _ := by simp [h, constantCoeff_truncTotal_eq_ite]
 
 lemma eq_of_forall_truncTotal_eq {f g : MvPowerSeries σ R} :
     f = g ↔ ∀ k, f.truncTotal k = g.truncTotal k := sorry
