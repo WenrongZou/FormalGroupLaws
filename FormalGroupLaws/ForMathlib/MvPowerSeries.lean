@@ -12,14 +12,16 @@ section
 
 open MvPowerSeries
 
+namespace MvPowerSeries
 
-variable {p : ℕ} (hp : p ≠ 0) (φ : MvPowerSeries σ R)
 
-lemma MvPowerSeries.one_le_order {F : MvPowerSeries σ R} (hF : F.constantCoeff = 0) :
+variable {p m n : ℕ} (hp : p ≠ 0) (φ : MvPowerSeries σ R)
+
+lemma one_le_order {F : MvPowerSeries σ R} (hF : F.constantCoeff = 0) :
     1 ≤ F.order :=
   ENat.one_le_iff_ne_zero.mpr <| order_ne_zero_iff_constCoeff_eq_zero.mpr hF
 
-lemma MvPowerSeries.subst_zero_of_constantCoeff_zero {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0) :
+lemma subst_zero_of_constantCoeff_zero {f : MvPowerSeries σ R} (hf : f.constantCoeff = 0) :
     f.subst (0 : σ → MvPowerSeries τ S) = 0 := by
   ext n
   rw [coeff_subst (by simp [hasSubst_def]), coeff_zero, finsum_eq_zero_of_forall_eq_zero]
@@ -28,6 +30,24 @@ lemma MvPowerSeries.subst_zero_of_constantCoeff_zero {f : MvPowerSeries σ R} (h
   · simp [hd, hf]
   obtain ⟨i, hi⟩ : d.support.Nonempty := d.support_nonempty_iff.mpr hd
   simp [Finsupp.prod, Finset.prod_eq_zero hi, coeff_zero, zero_pow <| d.mem_support_iff.mp hi]
+
+lemma homogeneousComponent_eq_ite :
+    (φ.homogeneousComponent n).homogeneousComponent m = if m = n then
+      (φ.homogeneousComponent n) else 0 := by
+  ext d
+  grind [coeff_homogeneousComponent]
+
+#check MvPowerSeries.map
+
+omit [Algebra R S] in
+theorem ker_map (f : R →+* S) :
+    RingHom.ker (map f (σ := σ)) = Ideal.map C (RingHom.ker f) := by
+  -- ext
+  -- rw [MvPolynomial.mem_map_C_iff, RingHom.mem_ker, MvPolynomial.ext_iff]
+  -- simp_rw [coeff_map, coeff_zero, RingHom.mem_ker]
+  sorry
+
+end MvPowerSeries
 
 end
 
