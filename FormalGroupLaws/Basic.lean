@@ -175,11 +175,12 @@ theorem PowerSeries.toMvPowerSeries_apply (i : σ) (f : PowerSeries R) :
     f.toMvPowerSeries i = f.subst (MvPowerSeries.X i) := by
   rw [toMvPowerSeries, coe_substAlgHom]
 
-theorem HasSubst.toMvPowerSeries [Finite σ] {f : PowerSeries R} (hf : f.constantCoeff = 0) :
-    HasSubst (f.toMvPowerSeries · (σ := σ)) (S := R) := by
+theorem PowerSeries.HasSubst.toMvPowerSeries [Finite σ]
+    {f : PowerSeries R} (hf : f.constantCoeff = 0) :
+    MvPowerSeries.HasSubst (f.toMvPowerSeries · (σ := σ)) (S := R) := by
   refine MvPowerSeries.hasSubst_of_constantCoeff_zero fun x => by
     rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero
-      (constantCoeff_X _) _ hf]
+      (MvPowerSeries.constantCoeff_X _) _ hf]
 
 lemma PowerSeries.toMvPowerSeries_val {f : PowerSeries R} {a : σ → MvPowerSeries τ R} (i : σ)
     (ha : MvPowerSeries.HasSubst a) : (f.toMvPowerSeries i).subst a = f.subst (a i) := by
@@ -575,40 +576,126 @@ theorem decomp_Y_add : ∃ G, F.toPowerSeries = X₁ + X₀ * G := by
   rw [← hG]
   ring_nf
 
-/-- Let `G₁, G₂` be two formal group laws over `CommRing A`. A homomorphism (over `A`)
-  `F (X, Y) → G (X, Y)` is a power series `α(X) = b₁ * X + b₂ * X ^ 2 + ⋯` with coefficients
-  in `A` without constant term such that `α(F (X, Y)) = G (α (X), α (Y))`. -/
+section FormalGroupHom
+
+variable {F G : FormalGroup R}
+
+variable (F G) in
+/-- Let $F G$ be two formal group laws over commutative ring $R$. A homomorphism (over $R$)
+$F (X, Y) → G (X, Y)$ is a power series $α(X) = b_1 X + b_2 X ^ 2 + ⋯$ with coefficients
+in $R$ without constant term such that $α(F (X, Y)) = G (α (X), α (Y))$. -/
 @[ext]
-structure FormalGroupHom  (G₁ G₂ : FormalGroup R) where
+structure FormalGroupHom where
+  /-- The underlying power series of a formal group homomorphism. -/
   toPowerSeries : PowerSeries R
+  /-- Constant coefficient of underlying power series is zero. -/
   zero_constantCoeff : toPowerSeries.constantCoeff = 0
-  hom : toPowerSeries.subst (G₁.toPowerSeries) = G₂.toPowerSeries.subst (R := R) (toPowerSeries.toMvPowerSeries ·)
+  /-- The homomorphism condition: $f(F(X,Y))=G(f(X),f(Y))$. -/
+  hom : toPowerSeries.subst F = G.toPowerSeries.subst (toPowerSeries.toMvPowerSeries ·)
 
 section FormalGroupIso
 
-/-- The homomorphism `α(X) : F (X, Y) → G (X, Y)` is an isomorphism if there exists a
-  homomorphism `β(X) : G (X, Y) → F (X, Y)` such that `α ∘ β = id,  β ∘ α = id`. -/
+variable (F G) in
+/-- The homomorphism $α(X) : F (X, Y) → G (X, Y)$ is an isomorphism if there exists a
+homomorphism $β(X) : G (X, Y) → F (X, Y)$ such that $α ∘ β = id$ and $β ∘ α = id$. -/
 @[ext]
-structure FormalGroupIso (G₁ G₂ : FormalGroup R) where
-  toHom : FormalGroupHom G₁ G₂
-  invHom : FormalGroupHom G₂ G₁
-  left_inv : (PowerSeries.subst toHom.toPowerSeries) ∘ (PowerSeries.subst invHom.toPowerSeries) = id
-  right_inv : (PowerSeries.subst invHom.toPowerSeries) ∘ (PowerSeries.subst toHom.toPowerSeries) = id
+structure FormalGroupIso where
+  /-- The underlying formal group homomorphism of a formal group isomorphism. -/
+  toHom : FormalGroupHom F G
+  /-- The inverse homomorphism of underlying formal group homomorphism. -/
+  invHom : FormalGroupHom G F
+  /-- `toHom ∘ invHom = id`. -/
+  left_inv : toHom.toPowerSeries.subst ∘ (PowerSeries.subst invHom.toPowerSeries) = id
+  /-- `invHom ∘ toHom = id`. -/
+  right_inv : invHom.toPowerSeries.subst ∘ (PowerSeries.subst toHom.toPowerSeries) = id
 
-/-- An isomorphism `α(X) : F (X, Y) → G (X, Y)`, `α(X) = a₁ * X + a₂ * X ^ 2 + ⋯`
-  is called strict isomorphism if `a₁ = 1`.-/
-@[ext]
-structure FormalGroupStrictIso (G₁ G₂ : FormalGroup R) extends FormalGroupIso G₁ G₂ where
-  one_coeff_one : toHom.toPowerSeries.coeff 1 = 1
+@[simp]
+lemma FormalGroupIso.toHom_subst_invHom {α : FormalGroupIso F G} :
+    α.toHom.toPowerSeries.subst α.invHom.toPowerSeries = PowerSeries.X := by
+  symm
+  calc
+    _ = id PowerSeries.X := by rw [id]
+    _ = _ := by
+      rw [← α.left_inv, Function.comp_apply, PowerSeries.subst_X
+        <| PowerSeries.HasSubst.of_constantCoeff_zero' α.invHom.zero_constantCoeff]
 
-theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
+@[simp]
+lemma FormalGroupIso.invHom_subst_toHom {α : FormalGroupIso F G} :
+    α.invHom.toPowerSeries.subst α.toHom.toPowerSeries = PowerSeries.X := by
+  symm
+  calc
+    _ = id PowerSeries.X := by rw [id]
+    _ = _ := by
+      rw [← α.right_inv, Function.comp_apply, PowerSeries.subst_X
+        <| PowerSeries.HasSubst.of_constantCoeff_zero' α.toHom.zero_constantCoeff]
+
+/-- An isomorphism $α(X) : F (X, Y) → G (X, Y)$, $α(X) = a_1 X + a_2 X ^ 2 + ⋯$
+is called strict isomorphism if $a_1 = 1$. -/
+class FormalGroupIso.IsStrict (α : FormalGroupIso F G) : Prop where
+  coeff_one : α.toHom.toPowerSeries.coeff 1 = 1
+
+open PowerSeries HasSubst in
+theorem FormalGroupIso.ext_iff' {α β : FormalGroupIso F G} :
     α = β ↔ α.toHom = β.toHom := by
-  rw [FormalGroupStrictIso.ext_iff]
-  refine ⟨fun h => h.1, fun h => ⟨h, FormalGroupHom.ext ?_⟩⟩
-  obtain ⟨g, h₁, h₂⟩ := PowerSeries.exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
-    β.toHom.zero_constantCoeff
-  simp only [and_imp] at h₂
-  rw [h₂ _ (h ▸ α.left_inv) α.invHom.zero_constantCoeff,
-    h₂ _ β.left_inv β.invHom.zero_constantCoeff]
+  rw [FormalGroupIso.ext_iff, and_iff_left_iff_imp]
+  intro h
+  rw [FormalGroupHom.ext_iff, ← (X_subst α.invHom.toPowerSeries), ← β.toHom_subst_invHom,
+    ← subst_comp_subst_apply (.of_constantCoeff_zero' (β.toHom.zero_constantCoeff))
+      (.of_constantCoeff_zero' (β.invHom.zero_constantCoeff)), ← h, α.invHom_subst_toHom,
+      subst_X (.of_constantCoeff_zero' (β.invHom.zero_constantCoeff))]
 
 end FormalGroupIso
+
+open MvPowerSeries
+
+/-- Given a formal group homomorphism $f : F → G$ and `x : F.Point σ`, then we have a
+`f x : G.Point σ`. -/
+def FormalGroupHom.applyPoint (f : FormalGroupHom F G) (x : F.Point σ) : G.Point σ :=
+  ⟨f.toPowerSeries.subst x.val, IsNilpotent_subst'
+    x.prop.const (f.zero_constantCoeff ▸ IsNilpotent.zero)⟩
+
+@[simp]
+lemma FormalGroupHom.applyPoint_val (f : FormalGroupHom F G) (x : F.Point σ) :
+    (f.applyPoint x).val =  f.toPowerSeries.subst x.val := rfl
+
+/-- Corecion of a formal group homomorphism $f : F → G$ to a function from `F.Point σ` to
+`G.Point σ`. This instance enable us to use the notation `f x` for a `x : F.Point σ`. -/
+instance : CoeFun (FormalGroupHom F G) (fun _ ↦ {σ : Type*} → F.Point σ → G.Point σ) where
+  coe f := f.applyPoint
+
+lemma FormalGroupHom.map_add (f : FormalGroupHom F G) {x y : F.Point σ} :
+    f (x + y) = f x + f y := by
+  apply Subtype.ext
+  have : HasSubst ![x.val, y.val] := by simp [hasSubst_of_constantCoeff_nilpotent, x.prop, y.prop]
+  calc
+    _ = (f.toPowerSeries.subst F.toPowerSeries).subst ![x.val, y.val] := by
+      simp [PowerSeries.subst, PowerSeries.subst, subst_comp_subst_apply, PowerSeries.HasSubst,
+        F.zero_constantCoeff, x.prop, y.prop, hasSubst_of_constantCoeff_nilpotent]
+    _ = _ := by
+      rw [f.hom, subst_comp_subst_apply
+        (PowerSeries.HasSubst.toMvPowerSeries f.zero_constantCoeff) this]
+      congr
+      ext s : 1
+      fin_cases s <;> simp [PowerSeries.toMvPowerSeries_val _ this]
+
+/-- A formal group homomorphism $f : F → G$ is a add monoid homomorphism from `F.Point σ` to
+`G.Point σ`. -/
+def FormalGroupHom.toAddMonoidHom (f : FormalGroupHom F G) : F.Point σ →+ G.Point σ where
+  toFun := f.applyPoint
+  map_zero' := Subtype.ext <| PowerSeries.subst_zero_of_constantCoeff_zero f.zero_constantCoeff
+  map_add' _ _ := f.map_add
+
+lemma FormalGroupHom.toAddMonoidHom_apply (f : FormalGroupHom F G) {x : F.Point σ} :
+    f.toAddMonoidHom x = f.applyPoint x := rfl
+
+end FormalGroupHom
+
+-- theorem FormalGroupStrictIso.ext_iff' (G₁ G₂ : FormalGroup R) (α β : FormalGroupStrictIso G₁ G₂) :
+--     α = β ↔ α.toHom = β.toHom := by
+--   rw [FormalGroupStrictIso.ext_iff]
+--   refine ⟨fun h => h.1, fun h => ⟨h, FormalGroupHom.ext ?_⟩⟩
+--   obtain ⟨g, h₁, h₂⟩ := PowerSeries.exist_unique_subst_inv_left _ (by simp [β.one_coeff_one])
+--     β.toHom.zero_constantCoeff
+--   simp only [and_imp] at h₂
+--   rw [h₂ _ (h ▸ α.left_inv) α.invHom.zero_constantCoeff,
+--     h₂ _ β.left_inv β.invHom.zero_constantCoeff]
