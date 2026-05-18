@@ -40,6 +40,8 @@ section ToSubring
 
 variable {σ : Type*} (T : Subring R)
 
+name_power_vars Y₀, Y₁, Y₂ over T
+
 -- /- If `F` is a formal group with coefficient in `T`, where `T` is a subring of `R`, then
 --   `F` is a formal group with coefficient in `R`.-/
 -- def FormalGroup.ofSubring : FormalGroup T → FormalGroup R := fun F => F.map (Subring.subtype T)
@@ -62,107 +64,108 @@ def FormalGroup.toSubring (F : FormalGroup R) (hF : ∀ n, F.toPowerSeries n ∈
       simp [F.lin_coeff_Y]
     norm_cast at aux
   assoc := by
-    have coeff_mem_aux (s : Fin 3): ∀ n, (X s (R := R)) n ∈ T := by
-      intro n; rw [←coeff_apply (X s), coeff_X]; split_ifs <;> simp
-    have eq_aux (s : Fin 3) : (X s (R := R)).toSubring _ (coeff_mem_aux s) = (X s (R := T)) := by
-      ext n; rw [coeff_X]; split_ifs with h <;> simp [coeff_X, h]
-    have aux' {h : T} : (algebraMap (↥T.toSubsemiring) R) h =
-      (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h := rfl
-    have has_subst_aux₀ : HasSubst ![subst ![Y₀ (R := T), Y₁] (F.toPowerSeries.toSubring T hF), Y₂] :=
-      has_subst_aux₁ <| (Subring.coe_eq_zero_iff T).mp <| by simp [F.zero_constantCoeff]
-    have has_subst_aux₀' : HasSubst ![Y₀ (R := T), subst ![Y₁, Y₂] (F.toPowerSeries.toSubring T hF)] :=
-      has_subst_aux₂ <| (Subring.coe_eq_zero_iff T).mp <| by simp [F.zero_constantCoeff]
-    have has_subst_aux' : HasSubst ![(X 1).toSubring T (coeff_mem_aux 1), Y₂] :=
-      HasSubst.FinPairing ((Subring.coe_eq_zero_iff T).mp <| by simp) (constantCoeff_X _)
-    ext n
-    /- TODO: could clean up using the follow-/
+    sorry
+    -- have coeff_mem_aux (s : Fin 3): ∀ n, (X s (R := R)) n ∈ T := by
+    --   intro n; rw [←coeff_apply (X s), coeff_X]; split_ifs <;> simp
+    -- have eq_aux (s : Fin 3) : (X s (R := R)).toSubring _ (coeff_mem_aux s) = (X s (R := T)) := by
+    --   ext n; rw [coeff_X]; split_ifs with h <;> simp [coeff_X, h]
+    -- have aux' {h : T} : (algebraMap (↥T.toSubsemiring) R) h =
+    --   (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h := rfl
+    -- have has_subst_aux₀ : HasSubst ![subst ![Y₀, Y₁] (F.toPowerSeries.toSubring T hF), Y₂] :=
+    --   has_subst_aux₁ <| (Subring.coe_eq_zero_iff T).mp <| by simp [F.zero_constantCoeff]
+    -- have has_subst_aux₀' : HasSubst ![Y₀ , subst ![Y₁, Y₂] (F.toPowerSeries.toSubring T hF)] :=
+    --   has_subst_aux₂ <| (Subring.coe_eq_zero_iff T).mp <| by simp [F.zero_constantCoeff]
+    -- have has_subst_aux' : HasSubst ![(X 1).toSubring T (coeff_mem_aux 1), Y₂] :=
+    --   HasSubst.FinPairing ((Subring.coe_eq_zero_iff T).mp <| by simp) (constantCoeff_X _)
+    -- ext n
+    -- /- TODO: could clean up using the follow-/
+    -- -- calc
+    -- --   _ = (coeff n) (subst ![subst ![Y₀, Y₁] F.toPowerSeries, Y₂] F.toPowerSeries) := by
+    -- --     obtain h₁ := coeff_subst_finite has_subst_aux₀ (F.toPowerSeries.toSubring T hF) n
+    -- --     rw [coeff_subst (has_subst_aux₁ F.zero_constantCoeff), coeff_subst has_subst_aux₀,
+    -- --       ← Algebra.algebraMap_ofSubsemiring_apply, RingHom.eq_toAddMonoidHom,
+    -- --       AddMonoidHom.map_finsum (algebraMap T R).toAddMonoidHom h₁, finsum_congr]
+    -- --     intro d
+    -- --     simp only [RingHom.toAddMonoidHom_eq_coe, Nat.succ_eq_add_one, Nat.reduceAdd,
+    -- --       Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue, Matrix.cons_val_zero,
+    -- --       Matrix.cons_val_one, Matrix.cons_val_fin_one, smul_eq_mul, AddMonoidHom.coe_coe,
+    -- --       Algebra.algebraMap_ofSubsemiring_apply, Subring.coe_mul, coeff_toSubring]
+
+    -- --     sorry
+    -- --   _ = _ := sorry
+
     -- calc
     --   _ = (coeff n) (subst ![subst ![Y₀, Y₁] F.toPowerSeries, Y₂] F.toPowerSeries) := by
+    --     rw [coeff_subst <| has_subst_aux₁ F.zero_constantCoeff, coeff_subst has_subst_aux₀]
     --     obtain h₁ := coeff_subst_finite has_subst_aux₀ (F.toPowerSeries.toSubring T hF) n
-    --     rw [coeff_subst (has_subst_aux₁ F.zero_constantCoeff), coeff_subst has_subst_aux₀,
-    --       ← Algebra.algebraMap_ofSubsemiring_apply, RingHom.eq_toAddMonoidHom,
-    --       AddMonoidHom.map_finsum (algebraMap T R).toAddMonoidHom h₁, finsum_congr]
-    --     intro d
-    --     simp only [RingHom.toAddMonoidHom_eq_coe, Nat.succ_eq_add_one, Nat.reduceAdd,
-    --       Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue, Matrix.cons_val_zero,
-    --       Matrix.cons_val_one, Matrix.cons_val_fin_one, smul_eq_mul, AddMonoidHom.coe_coe,
-    --       Algebra.algebraMap_ofSubsemiring_apply, Subring.coe_mul, coeff_toSubring]
+    --     erw [← Algebra.algebraMap_ofSubsemiring_apply, AddMonoidHom.map_finsum (algebraMap
+    --       (↥T.toSubsemiring) R).toAddMonoidHom h₁]
+    --     simp [Algebra.algebraMap_ofSubsemiring_apply]
+    --     congr! 3 with i
+    --     · simp [coeff_mul, coeff_mul]
+    --       congr with j
+    --       congr
+    --       · simp [coeff_pow, coeff_pow]
+    --         congr! 2 with x_1 x_2 x_3 x_4
+    --         obtain h₂ := coeff_subst_finite (has_subst_XY (R := T)) (F.toPowerSeries.toSubring T hF)
+    --           (x_1 x_3)
+    --         erw [← @Algebra.algebraMap_ofSubsemiring_apply, coeff_apply,
+    --            ←coeff_apply (subst ![Y₀, Y₁] (F.toPowerSeries.toSubring T hF)) (x_1 x_3),
+    --           coeff_subst has_subst_XY,
+    --           AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₂]
+    --         simp [Algebra.algebraMap_ofSubsemiring_apply]
+    --         rw [coeff_subst (has_subst_XY (R := R))]
+    --         apply finsum_congr
+    --         intro x'
+    --         rw [Y₀, ←eq_aux 0, Y₁, ← eq_aux 1,]
+    --         simp [coeff_mul, coeff_pow]
+    --       · simp [Y₂, ←eq_aux 2, coeff_pow, coeff_pow]
+    --   _ = _ := by
+    --     obtain h₁ := coeff_subst_finite has_subst_aux₀' (F.toPowerSeries.toSubring T hF) n
+    --     erw [F.assoc, coeff_subst <| has_subst_aux₂ F.zero_constantCoeff,
+    --       coeff_subst has_subst_aux₀', ← @Algebra.algebraMap_ofSubsemiring_apply,
+    --       AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₁]
+    --     simp [Algebra.algebraMap_ofSubsemiring_apply]
+    --     congr! 3 with d
+    --     simp [coeff_mul]
+    --     congr! 1 with x_1 x_2
+    --     rw [Y₀, Y₀,  ←eq_aux 0, Y₁, Y₁, ←eq_aux 1]
+    --     simp [coeff_pow]
+    --     congr! 3 with x_1 x_2 x_3 x_4
+    --     obtain h₂ := coeff_subst_finite has_subst_aux' (F.toPowerSeries.toSubring T hF) (x_1 x_3)
+    --     erw [coeff_subst has_subst_YZ, coeff_subst has_subst_aux',
+    --       ← Algebra.algebraMap_ofSubsemiring_apply,
+    --       AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₂]
+    --     simp [Algebra.algebraMap_ofSubsemiring_apply]
+    --     congr! 3 with d
+    --     simp [coeff_mul]
+    --     rw [Y₂, Y₂, ←eq_aux 2]
+    --     simp [coeff_pow]
 
-    --     sorry
-    --   _ = _ := sorry
+-- lemma CommFormalGroup.toSubring_comm (F : CommFormalGroup R) (hF : ∀ n, F.toPowerSeries n ∈ T) :
+--     F.toPowerSeries.toSubring _ hF = (F.toPowerSeries.toSubring _ hF).subst ![X₁, X₀] := by
+--   ext d
+--   simp only [coeff_toSubring, Nat.succ_eq_add_one, Nat.reduceAdd]
+--   conv_lhs => rw [F.comm]
+--   have h₁ := coeff_subst_finite (has_subst_swap (R := T)) (F.toPowerSeries.toSubring T hF) d
 
-    calc
-      _ = (coeff n) (subst ![subst ![Y₀, Y₁] F.toPowerSeries, Y₂] F.toPowerSeries) := by
-        rw [coeff_subst <| has_subst_aux₁ F.zero_constantCoeff, coeff_subst has_subst_aux₀]
-        obtain h₁ := coeff_subst_finite has_subst_aux₀ (F.toPowerSeries.toSubring T hF) n
-        erw [← Algebra.algebraMap_ofSubsemiring_apply, AddMonoidHom.map_finsum (algebraMap
-          (↥T.toSubsemiring) R).toAddMonoidHom h₁]
-        simp [Algebra.algebraMap_ofSubsemiring_apply]
-        congr! 3 with i
-        · simp [coeff_mul, coeff_mul]
-          congr with j
-          congr
-          · simp [coeff_pow, coeff_pow]
-            congr! 2 with x_1 x_2 x_3 x_4
-            obtain h₂ := coeff_subst_finite (has_subst_XY (R := T)) (F.toPowerSeries.toSubring T hF)
-              (x_1 x_3)
-            erw [← @Algebra.algebraMap_ofSubsemiring_apply, coeff_apply,
-               ←coeff_apply (subst ![Y₀, Y₁] (F.toPowerSeries.toSubring T hF)) (x_1 x_3),
-              coeff_subst has_subst_XY,
-              AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₂]
-            simp [Algebra.algebraMap_ofSubsemiring_apply]
-            rw [coeff_subst (has_subst_XY (R := R))]
-            apply finsum_congr
-            intro x'
-            rw [Y₀, ←eq_aux 0, Y₁, ← eq_aux 1,]
-            simp [coeff_mul, coeff_pow]
-          · simp [Y₂, ←eq_aux 2, coeff_pow, coeff_pow]
-      _ = _ := by
-        obtain h₁ := coeff_subst_finite has_subst_aux₀' (F.toPowerSeries.toSubring T hF) n
-        erw [F.assoc, coeff_subst <| has_subst_aux₂ F.zero_constantCoeff,
-          coeff_subst has_subst_aux₀', ← @Algebra.algebraMap_ofSubsemiring_apply,
-          AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₁]
-        simp [Algebra.algebraMap_ofSubsemiring_apply]
-        congr! 3 with d
-        simp [coeff_mul]
-        congr! 1 with x_1 x_2
-        rw [Y₀, Y₀,  ←eq_aux 0, Y₁, Y₁, ←eq_aux 1]
-        simp [coeff_pow]
-        congr! 3 with x_1 x_2 x_3 x_4
-        obtain h₂ := coeff_subst_finite has_subst_aux' (F.toPowerSeries.toSubring T hF) (x_1 x_3)
-        erw [coeff_subst has_subst_YZ, coeff_subst has_subst_aux',
-          ← Algebra.algebraMap_ofSubsemiring_apply,
-          AddMonoidHom.map_finsum (algebraMap (↥T.toSubsemiring) R).toAddMonoidHom h₂]
-        simp [Algebra.algebraMap_ofSubsemiring_apply]
-        congr! 3 with d
-        simp [coeff_mul]
-        rw [Y₂, Y₂, ←eq_aux 2]
-        simp [coeff_pow]
+--   rw [coeff_subst has_subst_swap, coeff_subst has_subst_swap, ← Subring.subtype_apply,
+--     RingHom.eq_toAddMonoidHom, AddMonoidHom.map_finsum (T.subtype.toAddMonoidHom) h₁, finsum_congr]
+--   intro n
+--   simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue,
+--     Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one, smul_eq_mul,
+--     RingHom.toAddMonoidHom_eq_coe, AddMonoidHom.coe_coe, Subring.subtype_apply, Subring.coe_mul,
+--     coeff_toSubring, X_pow_eq, monomial_mul_monomial, coeff_monomial]
+--   split_ifs <;> simp
 
-lemma CommFormalGroup.toSubring_comm (F : CommFormalGroup R) (hF : ∀ n, F.toPowerSeries n ∈ T) :
-    F.toPowerSeries.toSubring _ hF = (F.toPowerSeries.toSubring _ hF).subst ![X₁, X₀] := by
-  ext d
-  simp only [coeff_toSubring, Nat.succ_eq_add_one, Nat.reduceAdd]
-  conv_lhs => rw [F.comm]
-  have h₁ := coeff_subst_finite (has_subst_swap (R := T)) (F.toPowerSeries.toSubring T hF) d
-
-  rw [coeff_subst has_subst_swap, coeff_subst has_subst_swap, ← Subring.subtype_apply,
-    RingHom.eq_toAddMonoidHom, AddMonoidHom.map_finsum (T.subtype.toAddMonoidHom) h₁, finsum_congr]
-  intro n
-  simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Finsupp.prod_pow, Fin.prod_univ_two, Fin.isValue,
-    Matrix.cons_val_zero, Matrix.cons_val_one, Matrix.cons_val_fin_one, smul_eq_mul,
-    RingHom.toAddMonoidHom_eq_coe, AddMonoidHom.coe_coe, Subring.subtype_apply, Subring.coe_mul,
-    coeff_toSubring, X_pow_eq, monomial_mul_monomial, coeff_monomial]
-  split_ifs <;> simp
-
-def CommFormalGroup.toSubring (F : CommFormalGroup R) (hF : ∀ n, F.toPowerSeries n ∈ T) :
-    CommFormalGroup T where
-  toPowerSeries := F.toPowerSeries.toSubring _ hF
-  zero_constantCoeff := ((F : FormalGroup R).toSubring _ hF).zero_constantCoeff
-  lin_coeff_X := ((F : FormalGroup R).toSubring _ hF).lin_coeff_X
-  lin_coeff_Y := ((F : FormalGroup R).toSubring _ hF).lin_coeff_Y
-  assoc := ((F : FormalGroup R).toSubring _ hF).assoc
-  comm := F.toSubring_comm _ hF
+-- def CommFormalGroup.toSubring (F : CommFormalGroup R) (hF : ∀ n, F.toPowerSeries n ∈ T) :
+--     CommFormalGroup T where
+--   toPowerSeries := F.toPowerSeries.toSubring _ hF
+--   zero_constantCoeff := ((F : FormalGroup R).toSubring _ hF).zero_constantCoeff
+--   lin_coeff_X := ((F : FormalGroup R).toSubring _ hF).lin_coeff_X
+--   lin_coeff_Y := ((F : FormalGroup R).toSubring _ hF).lin_coeff_Y
+--   assoc := ((F : FormalGroup R).toSubring _ hF).assoc
+--   comm := F.toSubring_comm _ hF
 
 end ToSubring
 
