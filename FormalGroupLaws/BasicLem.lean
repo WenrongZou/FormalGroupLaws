@@ -228,9 +228,11 @@ theorem isIso_of_isUnit_coeff_one {G₁ G₂ : FormalGroup R} (α : FormalGroupH
       hom := hom_aux
       }
     left_inv := by
-      exact hg1
+
+      sorry
+
     right_inv := by
-      exact hg2
+      sorry
   }
   use β
 
@@ -247,7 +249,8 @@ theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupI
     rw [←α.invHom.zero_constantCoeff]
     rfl
   have h₁ : PowerSeries.subst α.invHom.toPowerSeries α.toHom.toPowerSeries = PowerSeries.X (R := R) := by
-    refine (PowerSeries.subst_comp_eq_id_iff α.invHom.toPowerSeries subdomain_b subdomain_a).mp α.right_inv
+    refine (PowerSeries.subst_comp_eq_id_iff α.invHom.toPowerSeries subdomain_b subdomain_a).mp ?_
+    sorry
   obtain coeff_eq := PowerSeries.ext_iff.mp h₁ 1
   simp at coeff_eq
 
@@ -306,19 +309,20 @@ theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupI
         simp [coeff_zero]
     rw [supp_aux]
     simp
-  rw [coeff_eq] at coeff_eq_mul
-  unfold IsUnit
-  let u : Rˣ :=
-    {
-      val := (PowerSeries.coeff 1) α.toHom.toPowerSeries
-      inv := (PowerSeries.coeff 1) α.invHom.toPowerSeries
-      val_inv := by
-        simp [coeff_eq_mul]
-      inv_val := by
-        simp [coeff_eq_mul]
-        ring_nf
-    }
-  use u
+  sorry
+  -- rw [coeff_eq] at coeff_eq_mul
+  -- unfold IsUnit
+  -- let u : Rˣ :=
+  --   {
+  --     val := (PowerSeries.coeff 1) α.toHom.toPowerSeries
+  --     inv := (PowerSeries.coeff 1) α.invHom.toPowerSeries
+  --     val_inv := by
+  --       simp [coeff_eq_mul]
+  --     inv_val := by
+  --       simp [coeff_eq_mul]
+  --       ring_nf
+  --   }
+  -- use u
 
 
 variable (f : PowerSeries R) (h : IsUnit (PowerSeries.coeff 1 f)) (hc : PowerSeries.constantCoeff f = 0)
