@@ -13,13 +13,15 @@ open MvPowerSeries Classical FormalGroup
 
 variable {R : Type*} [CommRing R] {σ : Type*}
 
+name_power_vars X₀, X₁ over R
+
 theorem PowerSeries.constantCoeff_def (f : PowerSeries R) :
     PowerSeries.constantCoeff f = MvPowerSeries.constantCoeff f := rfl
 
 lemma subst_self (f : MvPowerSeries (Fin 2) R):
   f =
   MvPowerSeries.subst ![X₀, X₁] f := by
-  have eq_aux : MvPowerSeries.X = ![X₀ (R := R), X₁] := by
+  have eq_aux : MvPowerSeries.X = ![X₀, X₁] := by
     ext s : 1
     fin_cases s <;> simp
   simp [← eq_aux, ←map_algebraMap_eq_subst_X f]

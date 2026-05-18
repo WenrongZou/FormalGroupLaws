@@ -19,7 +19,7 @@ variable {R : Type u} [CommRing R] (U : FormalGroup R) {C : Type u} [Category.{v
 def FGL : CommRingCat.{u} ⥤ Type u where
   obj R := FormalGroup R
   map f := by
-    refine TypeCat.ofHom <| FormalGroup.map f.hom
+    refine TypeCat.ofHom <| fun i => FormalGroup.map i f.hom
   map_id R := by
     ext F : 3
     simp [FormalGroup.map]

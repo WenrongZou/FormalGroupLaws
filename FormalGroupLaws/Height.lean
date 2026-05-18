@@ -51,29 +51,31 @@ def _root_.FormalGroupHom.series : FormalGroupHom F F where
   toPowerSeries := F.series n
   zero_constantCoeff := series_ConstCoeff _ _
   hom := by
-    induction n with
-    | zero =>
-      simp only [zero_series, map_zero]
-      rw [← coe_substAlgHom <| HasSubst.of_constantCoeff_zero F.zero_constantCoeff,
-        map_zero, ← Pi.zero_def,  subst_zero_eq_zero F.zero_constantCoeff]
-    | succ k ih =>
-      calc
-        _ = F.toPowerSeries.subst ![(F.series k).subst F.toPowerSeries, F.toPowerSeries] := sorry
-        _ = (F.series k).subst F.toPowerSeries +[F] F.toPowerSeries := rfl
-        _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] (F.series k).toMvPowerSeries 1 +[F]
-          (MvPowerSeries.X 1 +[F] MvPowerSeries.X 0) := by
-          simp_rw [ih]
-          congr
-          · exact List.ofFn_inj.mp rfl
-          · -- easy sorry, use comm
-            sorry
-        _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] ((F.series k).toMvPowerSeries 1 +[F]
-            MvPowerSeries.X 1) +[F] MvPowerSeries.X 0 := sorry
-        _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] MvPowerSeries.X 0
-            +[F] (F.series (k + 1)).toMvPowerSeries 1 := sorry
-        _ = _ := by
+    /- directly use F.Point σ is a AddMonoid. -/
+    sorry
+    -- induction n with
+    -- | zero =>
+    --   simp only [zero_series, map_zero]
+    --   rw [← coe_substAlgHom <| HasSubst.of_constantCoeff_zero F.zero_constantCoeff,
+    --     map_zero, ← Pi.zero_def,  subst_zero_eq_zero F.zero_constantCoeff]
+    -- | succ k ih =>
+    --   calc
+    --     _ = F.toPowerSeries.subst ![(F.series k).subst F.toPowerSeries, F.toPowerSeries] := sorry
+    --     _ = (F.series k).subst F.toPowerSeries +[F] F.toPowerSeries := rfl
+    --     _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] (F.series k).toMvPowerSeries 1 +[F]
+    --       (MvPowerSeries.X 1 +[F] MvPowerSeries.X 0) := by
+    --       simp_rw [ih]
+    --       congr
+    --       · exact List.ofFn_inj.mp rfl
+    --       · -- easy sorry, use comm
+    --         sorry
+    --     _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] ((F.series k).toMvPowerSeries 1 +[F]
+    --         MvPowerSeries.X 1) +[F] MvPowerSeries.X 0 := sorry
+    --     _ = (F.series k).toMvPowerSeries (0 : Fin 2) +[F] MvPowerSeries.X 0
+    --         +[F] (F.series (k + 1)).toMvPowerSeries 1 := sorry
+    --     _ = _ := by
 
-          sorry
+    --       sorry
 
 section Height
 
