@@ -1,4 +1,29 @@
 module
+
+public import FormalGroupLaws.Basic
+public import FormalGroupLaws.LubinTateTheory.ConstructiveLem
+
+@[expose] public section
+
+noncomputable section
+
+open ValuativeRel MvPowerSeries Classical Finsupp
+
+variable {K σ : Type*} [Field K] [ValuativeRel K] [TopologicalSpace K]
+  [IsNonarchimedeanLocalField K] {π : (valuation K).Uniformizer}
+
+namespace FormalGroup
+
+variable (f g : LubinTate.𝓕 π)
+
+def LT : FormalGroup 𝒪[K] where
+  toPowerSeries := LubinTate.Phi f f (equivFunOnFinite.symm 1)
+  zero_constantCoeff := sorry
+  lin_coeff_X := sorry
+  lin_coeff_Y := sorry
+  assoc := sorry
+
+
 -- import Mathlib.RingTheory.PowerSeries.Substitution
 -- import Mathlib.RingTheory.PowerSeries.Trunc
 -- import FormalGroupLaws.Basic

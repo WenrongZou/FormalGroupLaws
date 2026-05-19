@@ -3,7 +3,6 @@ module
 public import FormalGroupLaws.Basic
 public import FormalGroupLaws.ForMathlib.Trunc
 public import FormalGroupLaws.ForMathlib.MvPowerSeries
--- public import FormalGroupLaws.ForMathlib.FiniteField
 public import Mathlib.NumberTheory.LocalField.Basic
 public import Mathlib.RingTheory.Valuation.Discrete.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Trunc
@@ -109,7 +108,7 @@ namespace FormalGroup
 
 namespace LubinTate
 
-instance Invertible.pi_sub_pi_pow {k : ℕ} [NeZero k] :
+instance {k : ℕ} [NeZero k] :
     Invertible (1 - π.val ^ k) := by
   have : π.val ^ k ∈ 𝓂[K] := by
     simp [Ideal.pow_mem_of_mem, π.valuation_gt_one.not_isUnit, Nat.pos_of_neZero]
@@ -406,7 +405,7 @@ lemma constructive_lemma : f.toPowerSeries.subst (Phi f g a) =
         ih _ (le_refl n), add_right_inj]
       conv_rhs => rw [Phi_aux, dif_neg hn, subst_add hasSubst_aux, map_add]
       nth_rw 1 [Phi_aux, dif_neg hn, PowerSeries.homogeneous_subst_add (constanceCoeff_F π)
-        (constantCoeff_Phi_aux ..), coeff_one_F]
+        (constantCoeff_Phi_aux ..) hn, coeff_one_F]
       rw [homogeneous_subst_eq_homogeneous _ _ (constantCoeff_choose π f g a hn)]
       obtain h1 := eq_add_of_sub_eq' (pi_dvd_sub π f g (Phi_aux f g a n) hn).choose_spec
       rw [← map_smul, ← map_smul, smul_eq_C_mul, smul_eq_C_mul, ← map_add, ← map_add]
@@ -431,8 +430,9 @@ lemma truncTotal_subst_aux {G : MvPowerSeries σ 𝒪[K]} (k : ℕ) (hG : G.cons
     ((f.toPowerSeries.subst G).truncTotal (k.succ + 1)).toMvPowerSeries =
       ((f.toPowerSeries.subst (G.truncTotal k.succ).toMvPowerSeries).truncTotal
         (k.succ + 1)).toMvPowerSeries + C π.val * G.homogeneousComponent k.succ := by
-  rw [PowerSeries.truncTotal_subst, truncTotal_succ_eq G, truncTotal_succ_eq,
-    PowerSeries.homogeneous_subst_add (constanceCoeff_F π) _ , PowerSeries.truncTotal_subst, map_add,
+  rw [PowerSeries.truncTotal_subst _, truncTotal_succ_eq G, truncTotal_succ_eq,
+    PowerSeries.homogeneous_subst_add (constanceCoeff_F π) _ k.succ_ne_zero,
+      PowerSeries.truncTotal_subst _, map_add,
       truncTotal_homogeneous_same, _root_.add_zero, coeff_one_F, smul_eq_C_mul,
       ← _root_.add_assoc, add_left_inj]
   · conv_rhs => rw [truncTotal_succ_eq]
@@ -440,8 +440,12 @@ lemma truncTotal_subst_aux {G : MvPowerSeries σ 𝒪[K]} (k : ℕ) (hG : G.cons
     ext d
     simp [coeff_truncTotal_eq_ite]
     grind
+  · exact PowerSeries.HasSubst.of_constantCoeff_zero <| by
+      simpa [← coeff_zero_eq_constantCoeff, map_add, MvPolynomial.coeff_coe,
+        coeff_homogeneousComponent, coeff_truncTotal_eq_ite]
   · simp [← coeff_zero_eq_constantCoeff_apply, ← MvPolynomial.constantCoeff_eq,
     constantCoeff_truncTotal_eq_ite, hG]
+  · exact PowerSeries.HasSubst.of_constantCoeff_zero hG
 
 /- $G(g) = G_k(g) + π^{k+1} • Δ_{k+1} (mod deg (k+2))$. -/
 lemma truncTotal_subst_aux₂ {G : MvPowerSeries σ 𝒪[K]} (k : ℕ) (hG : G.constantCoeff = 0):
@@ -499,7 +503,7 @@ lemma constructive_lemma : f.toPowerSeries.subst (Phi f g a) =
   by_cases! hn : n = 0
   · simp [hn, truncTotal_zero]
   have : n = n - 1 + 1 := (Nat.succ_pred_eq_of_ne_zero hn).symm
-  rw [this, PowerSeries.truncTotal_subst, Phi_truncTotal, eq_aux]
+  rw [this, PowerSeries.truncTotal_subst (PowerSeries.HasSubst.of_constantCoeff_zero rfl), Phi_truncTotal, eq_aux]
   conv_rhs => rw [truncTotal_subst_eq_truncTotal_left
     (PowerSeries.constantCoeff_toMvPowerSeries (constanceCoeff_F π)), Phi_truncTotal]
 
