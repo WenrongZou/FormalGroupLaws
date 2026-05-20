@@ -80,6 +80,38 @@ lemma constantCoeff_eq_of_truncTotal_two_eq {q : MvPowerSeries σ R}
   _ = (p.truncTotal 2).constantCoeff := by simp [constantCoeff_truncTotal_eq_ite]
   _ = _ := by simp [h, constantCoeff_truncTotal_eq_ite]
 
+lemma truncTotal_two_eq_of_constantCoeff_eq_zero_of_homogeneousComponent_one_eq
+    {p q : MvPowerSeries σ R} (hp : p.constantCoeff = 0)
+    (hq : q.constantCoeff = 0) (h : p.homogeneousComponent 1 = q.homogeneousComponent 1) :
+    p.truncTotal 2 = q.truncTotal 2 := by
+  ext d
+  by_cases hd : d.degree < 2
+  · rw [coeff_truncTotal _ hd, coeff_truncTotal _ hd]
+    rcases show d.degree = 0 ∨ d.degree = 1 by omega with hd0 | hd1
+    · have hd_zero : d = 0 := d.degree_eq_zero_iff.mp hd0
+      simp [hd_zero, hp, hq]
+    · have hcoeff := congr_fun h d
+      change coeff d (homogeneousComponent 1 p) =
+        coeff d (homogeneousComponent 1 q) at hcoeff
+      rw [coeff_homogeneousComponent, if_pos hd1, coeff_homogeneousComponent,
+        if_pos hd1] at hcoeff
+      exact hcoeff
+  · simp [coeff_truncTotal_eq_ite, hd]
+
+omit [Finite σ] in
+lemma homogeneousComponent_one_eq_self_of_constantCoeff_eq_zero_of_coeff_zero_of_one_lt_degree
+    {p : MvPowerSeries σ R} (h0 : p.constantCoeff = 0)
+    (hgt : ∀ d : σ →₀ ℕ, 1 < d.degree → coeff d p = 0) :
+    p.homogeneousComponent 1 = p := by
+  ext d
+  by_cases hd : d.degree = 1
+  · simp [coeff_homogeneousComponent, hd]
+  · rw [coeff_homogeneousComponent, if_neg hd]
+    rcases Nat.lt_or_gt_of_ne hd with hd0 | hlt
+    · have hd_zero : d = 0 := d.degree_eq_zero_iff.mp (by omega)
+      simp [hd_zero, h0]
+    · exact (hgt d hlt).symm
+
 lemma eq_of_forall_truncTotal_eq {f g : MvPowerSeries σ R} :
     f = g ↔ ∀ k, f.truncTotal k = g.truncTotal k := by
   constructor
@@ -218,11 +250,42 @@ lemma truncTotal_subst [Finite σ] (ha : PowerSeries.HasSubst a) :
   rw [subst, MvPowerSeries.truncTotal_subst_eq_truncTotal_right_of_le ha.const fun _ ↦ le_rfl,
     subst]
 
+lemma truncTotal_subst_eq_trunc [Finite σ] (ha : a.constantCoeff = 0) :
+    (f.subst a).truncTotal n = ((f.trunc n).toPowerSeries.subst a).truncTotal n := by
+  rw [subst, MvPowerSeries.truncTotal_subst_eq_truncTotal_left (fun _ => ha)]
+  congr
+  ext d
+  rw [Polynomial.coeff_coe, coeff_trunc, coeff, MvPolynomial.coeff_coe]
+  simp [MvPowerSeries.coeff_truncTotal_eq_ite]
+
 lemma constantCoeff_toMvPowerSeries {p : PowerSeries R} (hp : p.constantCoeff = 0) :
     ∀ i : σ, (p.toMvPowerSeries i).constantCoeff = 0 := by
   intro i
   rw [PowerSeries.toMvPowerSeries_apply,
     PowerSeries.constantCoeff_subst_eq_zero (MvPowerSeries.constantCoeff_X i) _ hp]
+
+lemma homogeneousComponent_one_toMvPowerSeries (p : PowerSeries R) (i : σ) :
+    (p.toMvPowerSeries i).homogeneousComponent 1 = p.coeff 1 • MvPowerSeries.X i := by
+  classical
+  ext d
+  by_cases hdi : d = Finsupp.single i 1
+  · simp [MvPowerSeries.coeff_homogeneousComponent, PowerSeries.toMvPowerSeries_apply,
+      PowerSeries.coeff_subst_single, hdi]
+  · have haux : ¬(d.degree = 1 ∧ d = Finsupp.single i (d i)) := by
+      rintro ⟨hd, hd'⟩
+      apply hdi
+      rw [hd']
+      congr
+      rw [hd', Finsupp.degree_single] at hd
+      exact hd
+    by_cases hd1 : d.degree = 1
+    · have hd' : ¬ d = Finsupp.single i (d i) := fun hd' => haux ⟨hd1, hd'⟩
+      rw [MvPowerSeries.coeff_homogeneousComponent, PowerSeries.toMvPowerSeries_apply,
+        PowerSeries.coeff_subst_single, if_pos hd1, if_neg hd']
+      simp [MvPowerSeries.coeff_X, hdi]
+    · rw [MvPowerSeries.coeff_homogeneousComponent, PowerSeries.toMvPowerSeries_apply,
+        PowerSeries.coeff_subst_single, if_neg hd1]
+      simp [MvPowerSeries.coeff_X, hdi]
 
 lemma homogeneous_subst_add (hf : f.constantCoeff = 0) (ha : a.constantCoeff = 0)
     (hn : n ≠ 0) :
@@ -230,11 +293,10 @@ lemma homogeneous_subst_add (hf : f.constantCoeff = 0) (ha : a.constantCoeff = 0
       (f.subst a).homogeneousComponent n + f.coeff 1 • b.homogeneousComponent n := by
   let H := b.homogeneousComponent n
   have hH0 : H.constantCoeff = 0 := by
-    rw [← MvPowerSeries.coeff_zero_eq_constantCoeff_apply, MvPowerSeries.coeff_homogeneousComponent]
-    rw [if_neg (by simpa using hn.symm)]
-  have hsubst_add : PowerSeries.HasSubst (a + H) := by
-    exact PowerSeries.HasSubst.of_constantCoeff_zero (by simp [ha, hH0])
-  have hsubst_a : PowerSeries.HasSubst a := PowerSeries.HasSubst.of_constantCoeff_zero ha
+    simp +contextual [← MvPowerSeries.coeff_zero_eq_constantCoeff, H,
+      MvPowerSeries.coeff_homogeneousComponent, hn.symm]
+  have hsubst_add : HasSubst (a + H) := HasSubst.of_constantCoeff_zero (by simp [ha, hH0])
+  have hsubst_a : PowerSeries.HasSubst a := HasSubst.of_constantCoeff_zero ha
   have hpow_eq {d : σ →₀ ℕ} (hd : d.degree = n) (k : ℕ) (hk : 2 ≤ k) :
       MvPowerSeries.coeff d ((a + H) ^ k) = MvPowerSeries.coeff d (a ^ k) := by
     let Q : MvPowerSeries σ S :=
