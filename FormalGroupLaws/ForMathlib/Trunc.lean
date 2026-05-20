@@ -214,7 +214,7 @@ variable {R S σ τ : Type*} [CommRing R] [CommRing S] {f : PowerSeries R} {a b 
   {n : ℕ} [Algebra R S]
 
 lemma truncTotal_subst [Finite σ] (ha : PowerSeries.HasSubst a) :
-  (f.subst a).truncTotal n = (f.subst (a.truncTotal n)).truncTotal n := by
+    (f.subst a).truncTotal n = (f.subst (a.truncTotal n)).truncTotal n := by
   rw [subst, MvPowerSeries.truncTotal_subst_eq_truncTotal_right_of_le ha.const fun _ ↦ le_rfl,
     subst]
 

@@ -26,7 +26,7 @@ omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij = a_ji`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm :
-  F.IsComm ↔ ∀ (i j : ℕ), coeff (single 0 i + single 1 j) F.toPowerSeries
+    F.IsComm ↔ ∀ (i j : ℕ), coeff (single 0 i + single 1 j) F.toPowerSeries
     = coeff (single 0 j + single 1 i) F.toPowerSeries := by
   constructor
   -- forward direction
@@ -80,7 +80,7 @@ omit [Nontrivial R] in
 /-- For any formal group law `F(X,Y)`, `F(X,Y) = F(Y,X)` if and only if
   for any `i, j ∈ ℕ`, `a_ij - a_ji = 0`, where `a_ij` is coefficient of `X^i Y^j`. -/
 theorem comm_iff_coeff_symm' :
-  F.IsComm ↔ ∀ (i j : ℕ), coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries = 0 := by
+    F.IsComm ↔ ∀ (i j : ℕ), coeff (coeff_two i j) F.toPowerSeries - coeff (coeff_two j i) F.toPowerSeries = 0 := by
   constructor
   · intro hF
     simp_rw [(comm_iff_coeff_symm F).mp hF]
@@ -96,7 +96,7 @@ theorem comm_iff_coeff_symm' :
 if `R` contains no nonzero element that is both torsion and nilpotent,
 then any one-dimensional formal group law over `R` is commutative. -/
 theorem comm_of_char_zero_and_no_torsion_nilpotent (h : IsAddTorsionFree R) :
-  ¬ ∃ r : R, r ≠ 0 ∧ IsNilpotent r ∧ addOrderOf r ≠ 0 → F.IsComm := by
+    ¬ ∃ r : R, r ≠ 0 ∧ IsNilpotent r ∧ addOrderOf r ≠ 0 → F.IsComm := by
   sorry
 
 -- /-- Given `f, g` be two MvPowerSeries, preCommutator define to be

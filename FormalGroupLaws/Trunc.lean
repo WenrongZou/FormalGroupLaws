@@ -94,8 +94,8 @@ noncomputable def trunc' : PowerSeries R →+ Polynomial R where
 
 
 
-theorem eq_of_forall_trunc_eq (f g: PowerSeries R)
-  (h : ∀ (n : ℕ), trunc n f = trunc n g) : f = g := by
+theorem eq_of_forall_trunc_eq (f g : PowerSeries R)
+    (h : ∀ (n : ℕ), trunc n f = trunc n g) : f = g := by
   ext n
   obtain hn := h (n + 1)
   have eq_aux : trunc (n + 1) f = trunc (n + 1) g := by
@@ -109,8 +109,8 @@ theorem eq_of_forall_trunc_eq (f g: PowerSeries R)
     _ = _ := by
       simp [coeff_trunc]
 
-theorem eq_of_forall_trunc'_eq (f g: PowerSeries R)
-  (h : ∀ (n : ℕ), trunc' n f = trunc' n g) : f = g := by
+theorem eq_of_forall_trunc'_eq (f g : PowerSeries R)
+    (h : ∀ (n : ℕ), trunc' n f = trunc' n g) : f = g := by
   ext n
   obtain hn := h n
   have eq_aux : truncFun' n f = truncFun' n g := by
@@ -127,8 +127,8 @@ theorem eq_of_forall_trunc'_eq (f g: PowerSeries R)
 
 
 
-theorem trunc_of_subst (f g: PowerSeries R)(hg : constantCoeff g = 0)
-  : trunc n (subst g f) = trunc n (subst (trunc n g) f) := by
+theorem trunc_of_subst (f g: PowerSeries R) (hg : constantCoeff g = 0) :
+    trunc n (subst g f) = trunc n (subst (trunc n g) f) := by
   ext m
   by_cases hm : m < n
   -- first cast m < n
@@ -187,15 +187,15 @@ theorem trunc_of_subst (f g: PowerSeries R)(hg : constantCoeff g = 0)
     rw [if_neg hm, if_neg hm]
 
 lemma trunc'_eq_trunc_succ (f : PowerSeries R) :
-  trunc' n f = trunc (n + 1) f := rfl
+    trunc' n f = trunc (n + 1) f := rfl
 
-theorem trunc'_of_subst (f g: PowerSeries R)
-  (hg : PowerSeries.constantCoeff g = 0)
-  : trunc' n (subst g f) = trunc' n (subst (trunc' n g) f) := by
+theorem trunc'_of_subst (f g : PowerSeries R)
+    (hg : PowerSeries.constantCoeff g = 0) :
+    trunc' n (subst g f) = trunc' n (subst (trunc' n g) f) := by
   rw [trunc'_eq_trunc_succ, trunc'_eq_trunc_succ, trunc'_eq_trunc_succ, trunc_of_subst _ _ _ hg]
 
-theorem trunc'_of_succ (f: PowerSeries R) (n : ℕ) :
-  trunc' (n + 1) f = trunc' n f + Polynomial.monomial (n + 1) (coeff (n + 1) f) := by
+theorem trunc'_of_succ (f : PowerSeries R) (n : ℕ) :
+    trunc' (n + 1) f = trunc' n f + Polynomial.monomial (n + 1) (coeff (n + 1) f) := by
   unfold trunc'
   simp
   unfold truncFun'
@@ -210,8 +210,8 @@ theorem trunc'_of_succ (f: PowerSeries R) (n : ℕ) :
     rw [add_comm]
 
 lemma trunc'_of_succ_mk (f : ℕ → R) (n : ℕ) :
-  trunc' (n + 1) (mk f) = trunc'
-  n (mk f) + (Polynomial.C (f (n + 1))) * (Polynomial.X) ^ (n + 1) := by
+    trunc' (n + 1) (mk f) = trunc'
+    n (mk f) + (Polynomial.C (f (n + 1))) * (Polynomial.X) ^ (n + 1) := by
   unfold trunc' truncFun'
   have finset_aux : Finset.Iic (n + 1) = insert (n + 1) (Finset.Iic (n)) := by
     refine (Finset.erase_eq_iff_eq_insert ?_ ?_).mp ?_

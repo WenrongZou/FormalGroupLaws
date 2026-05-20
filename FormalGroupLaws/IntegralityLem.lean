@@ -364,8 +364,8 @@ theorem coeff_RecurFun_mul_mem (n : ℕ) :
         exact h'
 
 include hs₁ hs₂ in
-lemma coeff_RecurFun_mul_mem_i (n i: ℕ) :
-  ∀ (x : R), x ∈ I ^ (multiplicity q n + i) →
+lemma coeff_RecurFun_mul_mem_i (n i : ℕ) :
+    ∀ (x : R), x ∈ I ^ (multiplicity q n + i) →
     ((RecurFun ht hq σ s hg).coeff n) * x ∈ R.subtype '' ↑(I ^ i) := by
   rw [pow_add]
   intro x hx
@@ -2027,8 +2027,8 @@ lemma mem_ideal_aux' {m r: ℕ} {α : ℕ → K} (h : ∀ i ∈ range m, α i �
     rw [←hb₂, ←ha₂, this, map_add]
     ring_nf
 
-lemma mem_ideal_aux₂ {α : Type*} {s : Finset α} {r : ℕ} {f : α → K}
-     : (h : ∀ i ∈ s, f i ∈ R.subtype '' ↑(I ^ r)) →
+lemma mem_ideal_aux₂ {α : Type*} {s : Finset α} {r : ℕ} {f : α → K} :
+    (h : ∀ i ∈ s, f i ∈ R.subtype '' ↑(I ^ r)) →
     ∑ i ∈ s, f i ∈ R.subtype '' ↑(I ^ r) := by
   refine Finset.induction (by simp) ?_ s
   intro a s' hs' ih ih'

@@ -61,7 +61,7 @@ open FormalGroup LubinTate
 variable {R σ : Type*} [CommRing R]
 
 lemma C_dvd_iff_forall_dvd_coeff (c : R) (p : MvPowerSeries σ R) :
-  C c ∣ p ↔ ∀ n, c ∣ (coeff n) p := by
+    C c ∣ p ↔ ∀ n, c ∣ (coeff n) p := by
   constructor <;> intro hp
   · intro n
     obtain ⟨d, rfl⟩ := hp

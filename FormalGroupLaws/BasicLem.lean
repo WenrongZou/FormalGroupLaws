@@ -18,9 +18,8 @@ name_power_vars X₀, X₁ over R
 theorem PowerSeries.constantCoeff_def (f : PowerSeries R) :
     PowerSeries.constantCoeff f = MvPowerSeries.constantCoeff f := rfl
 
-lemma subst_self (f : MvPowerSeries (Fin 2) R):
-  f =
-  MvPowerSeries.subst ![X₀, X₁] f := by
+lemma subst_self (f : MvPowerSeries (Fin 2) R) :
+    f = MvPowerSeries.subst ![X₀, X₁] f := by
   have eq_aux : MvPowerSeries.X = ![X₀, X₁] := by
     ext s : 1
     fin_cases s <;> simp
@@ -28,9 +27,9 @@ lemma subst_self (f : MvPowerSeries (Fin 2) R):
 
 
 -- need some theorem like associativity of substitution
-theorem subst_assoc (f g: PowerSeries  R)
-  (h : MvPowerSeries σ R) (hg : PowerSeries.HasSubst g) (hh : PowerSeries.HasSubst h) :
-  PowerSeries.subst (PowerSeries.subst h g) f
+theorem subst_assoc (f g : PowerSeries R)
+    (h : MvPowerSeries σ R) (hg : PowerSeries.HasSubst g) (hh : PowerSeries.HasSubst h) :
+    PowerSeries.subst (PowerSeries.subst h g) f
     = PowerSeries.subst h (PowerSeries.subst g f) := by
   simp [←PowerSeries.subst_comp_subst hg hh]
 
@@ -108,8 +107,8 @@ lemma substDomain_aux {g : PowerSeries R} (hb3 : (PowerSeries.constantCoeff) g =
   rw [g.toMvPowerSeries_apply, PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_X _) _ hb3]
 
 lemma isIso_iff_substDomain_aux {A : Type*} [CommRing A] {g : PowerSeries A}
-  (hb3 : (PowerSeries.constantCoeff) g = 0)
-  : HasSubst (g.toMvPowerSeries · (σ := Fin 2))  := by
+    (hb3 : (PowerSeries.constantCoeff) g = 0) :
+    HasSubst (g.toMvPowerSeries · (σ := Fin 2)) := by
   -- apply substDomain_of_constantCoeff_nilpotent
   refine hasSubst_of_constantCoeff_zero ?_
   -- do as a lemma every x : Fin 2 coeff is zero
@@ -129,10 +128,10 @@ lemma isIso_iff_substDomain_aux {A : Type*} [CommRing A] {g : PowerSeries A}
 
 
 lemma isIso_iff_aux {A : Type*} [CommRing A] {G₁ G₂ : FormalGroup A}
-  (α : FormalGroupHom G₁ G₂)  {g : PowerSeries A}
-  (hb3 : (PowerSeries.constantCoeff) g = 0):
-  MvPowerSeries.subst (PowerSeries.toMvPowerSeries · (PowerSeries.subst g α.toPowerSeries)) G₂.toPowerSeries =
-  PowerSeries.subst (subst (g.toMvPowerSeries · ) G₁.toPowerSeries) α.toPowerSeries := by
+    (α : FormalGroupHom G₁ G₂) {g : PowerSeries A}
+    (hb3 : (PowerSeries.constantCoeff) g = 0) :
+    MvPowerSeries.subst (PowerSeries.toMvPowerSeries · (PowerSeries.subst g α.toPowerSeries)) G₂.toPowerSeries =
+    PowerSeries.subst (subst (g.toMvPowerSeries · ) G₁.toPowerSeries) α.toPowerSeries := by
   obtain h1 := α.hom
   have eq_aux : subst (g.toMvPowerSeries · ) (PowerSeries.subst G₁.toPowerSeries α.toPowerSeries)
     = subst (g.toMvPowerSeries · ) (subst (α.toPowerSeries.toMvPowerSeries ·)  G₂.toPowerSeries) := by
@@ -239,7 +238,7 @@ theorem isIso_of_isUnit_coeff_one {G₁ G₂ : FormalGroup R} (α : FormalGroupH
 
 
 theorem isUnit_coeff_one_of_isIso {G₁ G₂ : FormalGroup R} (α : FormalGroupIso G₁ G₂) :
-  IsUnit (PowerSeries.coeff 1 α.toHom.toPowerSeries) := by
+    IsUnit (PowerSeries.coeff 1 α.toHom.toPowerSeries) := by
   have subdomain_a : PowerSeries.HasSubst α.toHom.toPowerSeries := by
     apply PowerSeries.HasSubst.of_constantCoeff_zero
     rw [←α.toHom.zero_constantCoeff]

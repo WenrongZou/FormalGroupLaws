@@ -107,10 +107,10 @@ lemma PowerSeries.coeff_coe {f : PowerSeries R} (n : ℕ) :
 
 @[simp]
 lemma PowerSeries.constantCoeff_coe {f : PowerSeries R} : MvPowerSeries.constantCoeff f =
-  PowerSeries.constantCoeff f := rfl
+    PowerSeries.constantCoeff f := rfl
 
 lemma RingHom.eq_toAddMonoidHom {S T : Type*} [Semiring S] [Semiring T] (f : S →+* T) {x : S} :
-  f x = f.toAddMonoidHom x := rfl
+    f x = f.toAddMonoidHom x := rfl
 
 lemma HasSubst.FinPairing {f g : MvPowerSeries σ R} (hf : constantCoeff f = 0)
     (hg : constantCoeff g = 0) : HasSubst ![f, g] :=
@@ -124,8 +124,8 @@ lemma has_subst_XY : HasSubst (![Y₀, Y₁]) (S := R) := HasSubst.X_two
 lemma has_subst_YZ : HasSubst (![Y₁, Y₂]) (S := R) := HasSubst.X_two
 
 lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSeries σ R}
-  [Fintype σ] (hf : ∀ x : σ, constantCoeff (f x) = 0) (hg : constantCoeff g = 0):
-  constantCoeff (subst f g) = 0 := by
+    [Fintype σ] (hf : ∀ x : σ, constantCoeff (f x) = 0) (hg : constantCoeff g = 0) :
+    constantCoeff (subst f g) = 0 := by
   rw [constantCoeff_subst <| hasSubst_of_constantCoeff_zero hf]
   apply finsum_eq_zero_of_forall_eq_zero <| fun x => by
     by_cases hx : x = 0
@@ -143,7 +143,7 @@ lemma constantCoeff_subst_zero {f : σ → MvPowerSeries τ S} {g : MvPowerSerie
 
 variable {F} in
 lemma has_subst_aux₁ (hF : constantCoeff F = 0) : HasSubst (![subst ![Y₀, Y₁] F, Y₂])
-  (S := R):= by
+    (S := R) := by
   refine hasSubst_of_constantCoeff_zero ?_
   intro s; fin_cases s
   · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.zero_eta, Fin.isValue, Matrix.cons_val_zero]
@@ -152,7 +152,7 @@ lemma has_subst_aux₁ (hF : constantCoeff F = 0) : HasSubst (![subst ![Y₀, Y�
 
 variable {F} in
 lemma has_subst_aux₂ (hF : constantCoeff F = 0) : HasSubst ![Y₀, subst ![Y₁, Y₂] F]
-  (S := R):= by
+    (S := R) := by
   refine hasSubst_of_constantCoeff_zero ?_
   intro s
   fin_cases s
