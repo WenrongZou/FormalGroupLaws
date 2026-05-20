@@ -27,7 +27,9 @@ lemma homogeneousComponent_eq_ite :
   ext d
   grind [coeff_homogeneousComponent]
 
-#check MvPowerSeries.map
+lemma constantCoeff_homogeneousComponent (hn : n ≠ 0) :
+    constantCoeff (φ.homogeneousComponent n) = 0 := by
+  simp +contextual [← coeff_zero_eq_constantCoeff, coeff_homogeneousComponent, hn.symm]
 
 omit [Algebra R S] in
 theorem ker_map (f : R →+* S) :

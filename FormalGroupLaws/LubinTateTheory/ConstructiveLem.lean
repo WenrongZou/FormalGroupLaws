@@ -3,6 +3,7 @@ module
 public import FormalGroupLaws.Basic
 public import FormalGroupLaws.ForMathlib.Trunc
 public import FormalGroupLaws.ForMathlib.MvPowerSeries
+public import FormalGroupLaws.ForMathlib.MvPowerSeries.Ideal
 public import Mathlib.NumberTheory.LocalField.Basic
 public import Mathlib.RingTheory.Valuation.Discrete.Basic
 public import Mathlib.RingTheory.MvPowerSeries.Trunc
@@ -151,6 +152,11 @@ lemma coeff_L_eq_zero_of_one_lt_degree {d : σ →₀ ℕ} (hd : 1 < d.degree) :
   simp [L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum,
     MvPolynomial.coeff_sum, MvPolynomial.coeff_X', this]
 
+omit [TopologicalSpace K] [IsNonarchimedeanLocalField K] [Finite σ] in
+@[simp]
+lemma constantCoeff_L : MvPolynomial.constantCoeff (L a) = 0 := by
+  simp [L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+
 
 def Ideal_aux : Ideal (MvPowerSeries σ 𝒪[K]) := 𝓂[K].map C
 
@@ -191,7 +197,23 @@ lemma pi_dvd_sub_iff_smod_eq {F G : MvPowerSeries σ 𝒪[K]} :
     simp only [maximalIdeal_eq_span π, Ideal.map_span, Set.image_singleton] at ha
     exact Ideal.mem_span_singleton.mp ha
 
-lemma pi_dvd_sub (F : MvPowerSeries σ 𝒪[K]) {n : ℕ} (hn : n ≠ 0) :
+-- lemma pi_dvd_sub (F : MvPowerSeries σ 𝒪[K])
+--     -- (hF : F.constantCoeff = 0)
+--     {n : ℕ} (hn : n ≠ 0) :
+--     C π.val * C (1 - π.val ^ n) ∣ F.subst (g.toPowerSeries.toMvPowerSeries · ) -
+--       f.toPowerSeries.subst F := by
+--   haveI : NeZero n := { out := hn }
+--   have : C π.val * C (1 - π.val ^ n) * C (⅟(1 - π.val ^ n)) ∣
+--       F.subst (g.toPowerSeries.toMvPowerSeries · ) - f.toPowerSeries.subst F := by
+--     rw [mul_assoc, ← map_mul, Invertible.mul_invOf_self, map_one, mul_one]
+--     apply (pi_dvd_sub_iff_smod_eq _ ).mpr
+--     -- have : PowerSeries.HasSubst F := PowerSeries.HasSubst.of_constantCoeff_zero hF
+--     -- grw [PowerSeries.subst, SModEq.subst_left (f.mod_pi) this.const, ← PowerSeries.subst, ]
+--     sorry
+--   exact dvd_of_mul_right_dvd this
+
+lemma pi_dvd_sub {F : MvPowerSeries σ 𝒪[K]} (hF : F.constantCoeff = 0)
+    {n : ℕ} (hn : n ≠ 0) :
     C π.val * C (1 - π.val ^ n) ∣ F.subst (g.toPowerSeries.toMvPowerSeries · ) -
       f.toPowerSeries.subst F := by
   haveI : NeZero n := { out := hn }
@@ -199,51 +221,84 @@ lemma pi_dvd_sub (F : MvPowerSeries σ 𝒪[K]) {n : ℕ} (hn : n ≠ 0) :
       F.subst (g.toPowerSeries.toMvPowerSeries · ) - f.toPowerSeries.subst F := by
     rw [mul_assoc, ← map_mul, Invertible.mul_invOf_self, map_one, mul_one]
     apply (pi_dvd_sub_iff_smod_eq _ ).mpr
-
-    sorry
+    have : PowerSeries.HasSubst F := PowerSeries.HasSubst.of_constantCoeff_zero hF
+    grw [PowerSeries.subst, SModEq.subst_left (f.mod_pi) this.const, ← PowerSeries.subst,
+      PowerSeries.subst_pow this, PowerSeries.subst_X this, frob_eq, expand, substAlgHom_apply,
+      ]
+    refine SModEq.subst_right ?_ ?_ ?_
+    · exact hasSubst_of_constantCoeff_zero
+        <| PowerSeries.constantCoeff_toMvPowerSeries (constanceCoeff_F π)
+    · exact HasSubst.X_pow qK_neZero
+    · intro i
+      grw [PowerSeries.toMvPowerSeries_apply, PowerSeries.subst, SModEq.subst_left g.mod_pi
+        (PowerSeries.HasSubst.X i).const,
+        ← PowerSeries.subst, PowerSeries.subst_pow (PowerSeries.HasSubst.X i),
+          PowerSeries.subst_X (PowerSeries.HasSubst.X i)]
   exact dvd_of_mul_right_dvd this
 
+/-  haveI : NeZero n := { out := hn }
+  have : C π.val * C (1 - π.val ^ n) * C (⅟(1 - π.val ^ n)) ∣
+      F.subst (g.toPowerSeries.toMvPowerSeries · ) - f.toPowerSeries.subst F := by
+    rw [mul_assoc, ← map_mul, Invertible.mul_invOf_self, map_one, mul_one]
+    apply (pi_dvd_sub_iff_smod_eq _ ).mpr
+
+    sorry
+  exact dvd_of_mul_right_dvd this -/
+
+
 -- variable (π f g) in
+-- variable {π} in
+-- def Phi_aux : ℕ → MvPowerSeries σ 𝒪[K]
+--   | 0 => 0
+--   -- | 1 => L a
+--   | n + 1 =>
+--     if h : n = 0 then L a else
+--     -- have : C π.val * C (1 - π.val ^ n) ∣ (Phi_aux n).subst (g.toPowerSeries.toMvPowerSeries · ) -
+--     --   f.toPowerSeries.subst (Phi_aux n) := pi_dvd_sub π f g (Phi_aux n) h
+--     Phi_aux n + homogeneousComponent (n + 1) (pi_dvd_sub π f g (Phi_aux n) h).choose
+
 variable {π} in
-def Phi_aux : ℕ → MvPowerSeries σ 𝒪[K]
-  | 0 => 0
+def Phi_aux : ℕ → {φ : MvPowerSeries σ 𝒪[K] // φ.constantCoeff = 0}
+  | 0 => ⟨0, constantCoeff_zero⟩
   -- | 1 => L a
   | n + 1 =>
-    if h : n = 0 then L a else
-    -- have : C π.val * C (1 - π.val ^ n) ∣ (Phi_aux n).subst (g.toPowerSeries.toMvPowerSeries · ) -
-    --   f.toPowerSeries.subst (Phi_aux n) := pi_dvd_sub π f g (Phi_aux n) h
-    Phi_aux n + homogeneousComponent (n + 1) (pi_dvd_sub π f g (Phi_aux n) h).choose
+    if h : n = 0 then ⟨L a, by simp [← coeff_zero_eq_constantCoeff,
+      ← MvPolynomial.constantCoeff_eq]⟩ else
+    ⟨(Phi_aux n).val + homogeneousComponent (n + 1)
+      (pi_dvd_sub π f g (Phi_aux n).prop h).choose, by
+      rw [map_add, (Phi_aux n).prop, constantCoeff_homogeneousComponent _
+        (Nat.zero_ne_add_one n).symm, _root_.add_zero]⟩
 
 @[simp]
-lemma Phi_aux_zero : Phi_aux f g a 0 = 0 := rfl
+lemma Phi_aux_zero : (Phi_aux f g a 0).val = 0 := rfl
 
 @[simp]
-lemma Phi_aux_one : Phi_aux f g a 1 = L a := rfl
+lemma Phi_aux_one : (Phi_aux f g a 1).val = L a := rfl
 
 variable {n : ℕ}
 
-lemma constantCoeff_Phi_aux : (Phi_aux f g a n).constantCoeff = 0 := by
-  induction n with
-  | zero => simp
-  | succ k ih =>
-    by_cases! hk : k = 0
-    · simp [hk, L, MvPolynomial.sumSMulX, ← coeff_zero_eq_constantCoeff, linearCombination,
-        Finsupp.sum, MvPolynomial.coeff_sum]
-    simp [Phi_aux, dif_neg hk, map_add, ih, ← coeff_zero_eq_constantCoeff,
-      coeff_homogeneousComponent, _root_.add_zero]
+-- lemma constantCoeff_Phi_aux : (Phi_aux f g a n).constantCoeff = 0 := by
+--   induction n with
+--   | zero => simp
+--   | succ k ih =>
+--     by_cases! hk : k = 0
+--     · simp [hk, L, MvPolynomial.sumSMulX, ← coeff_zero_eq_constantCoeff, linearCombination,
+--         Finsupp.sum, MvPolynomial.coeff_sum]
+--     simp [Phi_aux, dif_neg hk, map_add, ih, ← coeff_zero_eq_constantCoeff,
+--       coeff_homogeneousComponent, _root_.add_zero]
 
 lemma constantCoeff_choose (h : n ≠ 0) :
-    (pi_dvd_sub π f g (Phi_aux f g a n) h).choose.constantCoeff = 0 := by
-  obtain h_spec := (pi_dvd_sub π f g (Phi_aux f g a n) h).choose_spec
+    (pi_dvd_sub π f g (Phi_aux f g a n).prop h).choose.constantCoeff = 0 := by
+  obtain h_spec := (pi_dvd_sub π f g (Phi_aux f g a n).prop h).choose_spec
   have : (C π.val * C (1 - π.val ^ n) * (pi_dvd_sub π f g
-      (Phi_aux f g a n) h).choose).constantCoeff = 0 := by
+      (Phi_aux f g a n).prop h).choose).constantCoeff = 0 := by
     rw [← h_spec, map_sub, constantCoeff_subst_eq_zero,
-      PowerSeries.constantCoeff_subst_eq_zero (constantCoeff_Phi_aux ..) _
+      PowerSeries.constantCoeff_subst_eq_zero (Phi_aux f g a n).prop _
         (constanceCoeff_F π), sub_zero]
     · exact hasSubst_of_constantCoeff_zero <| PowerSeries.constantCoeff_toMvPowerSeries
         (constanceCoeff_F π)
     · exact PowerSeries.constantCoeff_toMvPowerSeries (constanceCoeff_F π)
-    exact constantCoeff_Phi_aux π f g a
+    exact (Phi_aux f g a n).prop
   simp only [map_sub, map_one, map_pow, map_mul, constantCoeff_C, mul_eq_zero] at this
   obtain (h1 | h2) | h3 := this
   · absurd π.ne_zero
@@ -253,7 +308,7 @@ lemma constantCoeff_choose (h : n ≠ 0) :
   · simpa using h3
 
 lemma coeff_Phi_aux_of_lt {d : σ →₀ ℕ} (h : n < d.degree) :
-    (Phi_aux f g a n).coeff d = 0 := by
+    (Phi_aux f g a n).val.coeff d = 0 := by
   induction n generalizing d with
   | zero => simp
   | succ k ih =>
@@ -265,7 +320,7 @@ lemma coeff_Phi_aux_of_lt {d : σ →₀ ℕ} (h : n < d.degree) :
       coeff_homogeneousComponent, (Nat.ne_of_lt' h)]
 
 lemma homogenous_Phi_aux_of_lt {m : ℕ} (h : n < m) :
-    homogeneousComponent m (Phi_aux f g a n) = 0 := by
+    homogeneousComponent m (Phi_aux f g a n).val = 0 := by
   ext d
   simp only [coeff_homogeneousComponent, coeff_zero, ZeroMemClass.coe_zero,
     ZeroMemClass.coe_eq_zero, ite_eq_right_iff]
@@ -273,7 +328,7 @@ lemma homogenous_Phi_aux_of_lt {m : ℕ} (h : n < m) :
 
 lemma homogeneous_Phi_aux (h : n ≠ 0) :
     (homogeneousComponent (n + 1)) (Phi_aux f g a n.succ) =
-      ((pi_dvd_sub π f g (Phi_aux f g a n) h).choose).homogeneousComponent (n + 1) := by
+      ((pi_dvd_sub π f g (Phi_aux f g a n).prop h).choose).homogeneousComponent (n + 1) := by
   nth_rw 1 [Phi_aux, dif_neg h, map_add]
   rw [← isHomogeneous_iff_eq_homogeneousComponent.mp (isHomogeneous_homogeneousComponent _ _),
     add_eq_right]
@@ -282,10 +337,10 @@ section
 
 variable {π} in
 /-- This is a unique solution in the constructive lemma. -/
-def Phi : MvPowerSeries σ 𝒪[K] := fun d => (Phi_aux f g a d.degree).coeff d
+def Phi : MvPowerSeries σ 𝒪[K] := fun d => (Phi_aux f g a d.degree).val.coeff d
 
 @[simp]
-lemma coeff_Phi {d : σ →₀ ℕ} : (Phi f g a).coeff d = (Phi_aux f g a d.degree).coeff d := rfl
+lemma coeff_Phi {d : σ →₀ ℕ} : (Phi f g a).coeff d = (Phi_aux f g a d.degree).val.coeff d := rfl
 
 end
 
@@ -317,7 +372,7 @@ lemma Phi_truncTotal_two : (Phi f g a).truncTotal 2 = L a := by
   simp +contextual [Finset.sum_eq_zero, this]
 
 lemma Phi_truncTotal {n : ℕ} :
-    (Phi f g a).truncTotal (n + 1) = Phi_aux f g a n := by
+    (Phi f g a).truncTotal (n + 1) = (Phi_aux f g a n).val := by
   induction n with
   | zero => simp [Phi_truncTotal_one]
   | succ k ih =>
@@ -336,12 +391,12 @@ lemma Phi_truncTotal {n : ℕ} :
     rw [coeff_truncTotal _ (Nat.lt_of_not_le hd₁), coeff_Phi, ← hd]
 
 lemma Phi_aux_truncTotal_eq_self {n : ℕ} :
-    (truncTotal (n + 1)) (Phi_aux f g a n) = Phi_aux f g a n := by
+    (truncTotal (n + 1)) (Phi_aux f g a n).val = (Phi_aux f g a n).val := by
   ext d
   simp +contextual [coeff_truncTotal_eq_ite, coeff_Phi_aux_of_lt]
 
 lemma Phi_aux_truncTotal_succ {n : ℕ} :
-    (Phi_aux f g a n.succ).truncTotal n.succ = Phi_aux f g a n := by
+    (Phi_aux f g a n.succ).val.truncTotal n.succ = (Phi_aux f g a n).val := by
   rw [Phi_aux]
   by_cases! hn : n = 0
   · simp [hn, truncTotal_one_L]
@@ -441,15 +496,12 @@ lemma homogeneous_subst_eq_homogeneous {k : ℕ} {F : MvPowerSeries σ 𝒪[K]} 
   have hsupp : ∀ d ∈ (F.homogeneousComponent k).support, d.degree = k := by
     intro d hd
     contrapose! hd
-    rw [Function.mem_support]
-    rw [not_ne_iff]
+    rw [Function.mem_support, not_ne_iff]
     change coeff d (homogeneousComponent k F) = 0
     simp [coeff_homogeneousComponent, hd]
   rw [MvPowerSeries.rescale_homogeneous_eq_smul hsupp]
   ext d
-  by_cases hdk : d.degree = k
-  · simp [coeff_homogeneousComponent, hdk]
-  · simp [coeff_homogeneousComponent, hdk]
+  simp +contextual [coeff_homogeneousComponent]
 
 lemma constructive_lemma_base :
     (truncTotal 2) (f.toPowerSeries.subst (L a)) =
@@ -583,8 +635,8 @@ lemma constructive_lemma : f.toPowerSeries.subst (Phi f g a) =
   have hasSubst_aux : HasSubst fun (x : σ) ↦ (PowerSeries.toMvPowerSeries x)
     g.toPowerSeries := hasSubst_of_constantCoeff_zero
       <| PowerSeries.constantCoeff_toMvPowerSeries (constanceCoeff_F π)
-  have eq_aux {n : ℕ} : (f.toPowerSeries.subst (Phi_aux f g a n)).truncTotal (n + 1) =
-    ((Phi_aux f g a n).subst (g.toPowerSeries.toMvPowerSeries · )).truncTotal (n + 1) := by
+  have eq_aux {n : ℕ} : (f.toPowerSeries.subst (Phi_aux f g a n).val).truncTotal (n + 1) =
+    ((Phi_aux f g a n).val.subst (g.toPowerSeries.toMvPowerSeries · )).truncTotal (n + 1) := by
     induction n with
     | zero =>
       simp
@@ -597,7 +649,7 @@ lemma constructive_lemma : f.toPowerSeries.subst (Phi f g a) =
         fun a ↦ MvPolynomial.ext s t (congrFun a)
       apply this
       rw [truncTotal_subst_aux, truncTotal_subst_aux₂, Phi_aux_truncTotal_succ]
-      obtain h1 := eq_add_of_sub_eq' (pi_dvd_sub π f g (Phi_aux f g a n) hn).choose_spec
+      obtain h1 := eq_add_of_sub_eq' (pi_dvd_sub π f g (Phi_aux f g a n).prop hn).choose_spec
       have : C π.val * C (1 - π.val ^ n) (σ := σ) = C (π.val - (π.val ^ (n + 1))) := by
         rw [← map_mul]
         ring_nf
@@ -607,7 +659,7 @@ lemma constructive_lemma : f.toPowerSeries.subst (Phi f g a) =
       nth_rw 2 [this]
       conv_rhs => rw [← smul_eq_C_mul, map_smul, smul_eq_C_mul, map_sub, sub_mul]
       ring
-      · exact constantCoeff_Phi_aux π f g a
+      · exact (Phi_aux f g a (n + 1)).prop
   apply eq_of_forall_truncTotal_eq.mpr
   intro n
   by_cases! hn : n = 0
