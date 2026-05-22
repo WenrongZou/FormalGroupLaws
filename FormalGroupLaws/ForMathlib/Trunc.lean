@@ -60,6 +60,17 @@ lemma truncTotal_degree_one : p.truncTotal 1 = MvPolynomial.C p.constantCoeff :=
     exact h (n.degree_eq_zero_iff.mp hc)
   rw [if_neg this, if_neg h.symm]
 
+@[simp]
+lemma truncTotal_X_of_lt {i : σ} (hn : 1 < n) : (X i (R := R)).truncTotal n = MvPolynomial.X i := by
+  classical
+  ext d
+  by_cases hd : d = Finsupp.single i 1
+  · simp [coeff_truncTotal_eq_ite, MvPolynomial.coeff_X', hd, Finsupp.degree_single, hn]
+  · have hdsym : Finsupp.single i 1 ≠ d := fun h => hd h.symm
+    simp [coeff_truncTotal_eq_ite, MvPolynomial.coeff_X', MvPowerSeries.coeff_X, hdsym]
+    intro _ h
+    exact (hd h).elim
+
 theorem truncTotal_eq_sum :
     p.truncTotal n = ∑ i ∈ range n, p.homogeneousComponent i := by
   ext d

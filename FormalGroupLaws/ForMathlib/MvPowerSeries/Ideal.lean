@@ -22,8 +22,8 @@ lemma SModEq.subst_left (h : f ≡ g [SMOD I.map C]) (ha : HasSubst a) :
   have hkerτ : RingHom.ker (map q (σ := τ)) = I.map C := by
     rw [ker_map, Ideal.mk_ker]
   have hmap : f.map q = g.map q := by
-    rw [← sub_eq_zero, ← map_sub]
-    exact RingHom.mem_ker.mp (hkerσ.symm ▸ SModEq.sub_mem.mp h)
+    rw [← sub_eq_zero, ← map_sub, ← RingHom.mem_ker, ← SModEq.sub_mem, hkerσ]
+    exact h
   apply SModEq.sub_mem.mpr
   rw [← hkerτ, RingHom.mem_ker, map_sub, map_subst ha, map_subst ha, hmap, sub_self]
 

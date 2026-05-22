@@ -12,17 +12,137 @@ open ValuativeRel MvPowerSeries Classical Finsupp
 variable {K σ : Type*} [Field K] [ValuativeRel K] [TopologicalSpace K]
   [IsNonarchimedeanLocalField K] {π : (valuation K).Uniformizer}
 
-namespace FormalGroup
+namespace FormalGroup.LubinTate
 
 variable (f g : LubinTate.𝓕 π)
 
-def LT : FormalGroup 𝒪[K] where
-  toPowerSeries := LubinTate.Phi f f (equivFunOnFinite.symm 1)
-  zero_constantCoeff := sorry
-  lin_coeff_X := sorry
-  lin_coeff_Y := sorry
-  assoc := sorry
+name_power_vars X₀, X₁, X₂ over 𝒪[K]
 
+omit [TopologicalSpace K] [IsNonarchimedeanLocalField K] in
+@[simp]
+lemma L_one : (L (equivFunOnFinite.symm (1 : Fin 2 → 𝒪[K]))).toMvPowerSeries = X 0 + X 1 := by
+  simp [L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+
+omit [TopologicalSpace K] [IsNonarchimedeanLocalField K] in
+lemma L_two : (L (equivFunOnFinite.symm (1 : Fin 3 → 𝒪[K]))) = MvPolynomial.X 0 +
+    MvPolynomial.X 1 + MvPolynomial.X 2 := by
+  simp [L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum, Fin.sum_univ_three]
+
+lemma assoc_truncTotal_left :
+    let Φ := Phi f f (equivFunOnFinite.symm 1)
+    (Φ.subst ![Φ.subst ![X₀, X₁], X₂]).truncTotal 2 =
+      (Phi f f (equivFunOnFinite.symm 1)).truncTotal 2 := by
+  intro Φ
+  have : Φ = Phi f f (equivFunOnFinite.symm 1) := rfl
+  rw [this, truncTotal_subst, Phi_truncTotal_two, L_one]
+  have aux : (fun i ↦ ((truncTotal 2) (![subst ![X₀, X₁]
+    (Phi f f (equivFunOnFinite.symm 1)), X₂] i)).toMvPowerSeries) = ![X₀ + X₁, X₂] := by
+    funext i; fin_cases i
+    · simp [truncTotal_subst_eq_truncTotal_left, Phi_truncTotal_two, L_one,
+        subst_add HasSubst.X_X, subst_X HasSubst.X_X]
+    · simp
+  · simp [aux, subst_add, hasSubst_of_constantCoeff_zero, Phi_truncTotal_two, L_two]
+  · simp [constantCoeff_subst_eq_zero, hasSubst_of_constantCoeff_zero]
+
+lemma assoc_truncTotal_right :
+    let Φ := Phi f f (equivFunOnFinite.symm 1)
+    (Φ.subst ![X₀, Φ.subst ![X₁, X₂]]).truncTotal 2 =
+      (Phi f f (equivFunOnFinite.symm 1)).truncTotal 2 := by
+  intro Φ
+  have : Φ = Phi f f (equivFunOnFinite.symm 1) := rfl
+  rw [this, truncTotal_subst, Phi_truncTotal_two, L_one]
+  have aux : (fun i ↦ ↑((truncTotal 2) (![X₀, subst ![X₁, X₂]
+    (Phi f f (equivFunOnFinite.symm 1))] i))) = ![X₀, X₁ + X₂] := by
+    funext i; fin_cases i
+    · simp
+    · simp [truncTotal_subst_eq_truncTotal_left, Phi_truncTotal_two, L_one,
+        subst_add HasSubst.X_X, subst_X HasSubst.X_X]
+  · simp [aux, subst_add, Phi_truncTotal_two, L_two, subst_X, hasSubst_of_constantCoeff_zero,
+      _root_.add_assoc]
+  · simp [constantCoeff_subst_eq_zero, hasSubst_of_constantCoeff_zero]
+
+lemma f_Phi_eq_Phi_f {p q : MvPowerSeries σ 𝒪[K]} (h : HasSubst ![p, q]) :
+    let Φ := Phi f f (equivFunOnFinite.symm 1)
+    f.toPowerSeries.subst (Φ.subst ![p, q]) =
+      Φ.subst ![f.toPowerSeries.subst p, f.toPowerSeries.subst q] := by
+  intro _
+  rw [PowerSeries.subst, ← subst_comp_subst_apply _ h, ← PowerSeries.subst,
+    constructive_lemma f f (equivFunOnFinite.symm 1), subst_comp_subst_apply _ h]
+  congr! 2 with i
+  fin_cases i <;> simp [PowerSeries.toMvPowerSeries_val _ h]
+  · exact PowerSeries.HasSubst.toMvPowerSeries constantCoeff_F
+  · exact hasSubst_of_constantCoeff_zero (congrFun rfl)
+
+lemma subst_left :
+    let Φ := Phi f f (equivFunOnFinite.symm 1)
+    let Φ₁ := Φ.subst ![Φ.subst ![X₀, X₁], X₂]
+    f.toPowerSeries.subst Φ₁ = Φ₁.subst (f.toPowerSeries.toMvPowerSeries · ) := by
+  intro Φ Φ₁
+  obtain h1 := PowerSeries.HasSubst.toMvPowerSeries (σ := Fin 3) (constantCoeff_F (f := f))
+  rw [f_Phi_eq_Phi_f f (HasSubst.cons_subst_zero_left _ _ _ rfl), f_Phi_eq_Phi_f f (HasSubst.X_X), subst_comp_subst_apply
+    (HasSubst.cons_subst_zero_left _ _ _ rfl) h1]
+  congr! 2 with i
+  fin_cases i
+  · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Fin.zero_eta, Matrix.cons_val_zero]
+    rw [subst_comp_subst_apply HasSubst.X_X h1]
+    congr! 2 with j
+    fin_cases j <;>
+    simp [← PowerSeries.toMvPowerSeries_apply, subst_X, h1]
+  · simp [← PowerSeries.toMvPowerSeries_apply, subst_X, h1]
+
+lemma subst_right :
+    let Φ := Phi f f (equivFunOnFinite.symm 1)
+    let Φ₁ := Φ.subst ![X₀, Φ.subst ![X₁, X₂]]
+    f.toPowerSeries.subst Φ₁ = Φ₁.subst (f.toPowerSeries.toMvPowerSeries · ) := by
+  intro Φ Φ₁
+  obtain h1 := PowerSeries.HasSubst.toMvPowerSeries (σ := Fin 3) (constantCoeff_F (f := f))
+  rw [f_Phi_eq_Phi_f f (HasSubst.cons_subst_zero_right _ _ _ rfl), f_Phi_eq_Phi_f f (HasSubst.X_X), subst_comp_subst_apply
+    (HasSubst.cons_subst_zero_right _ _ _ rfl) h1]
+  congr! 2 with i
+  fin_cases i
+  · simp [← PowerSeries.toMvPowerSeries_apply, subst_X, h1]
+  · simp only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, Fin.mk_one, Matrix.cons_val_one,
+      Matrix.cons_val_fin_one, subst_comp_subst_apply HasSubst.X_X h1]
+    congr! 2 with j
+    fin_cases j <;>
+    simp [← PowerSeries.toMvPowerSeries_apply, subst_X, h1]
+
+/-- Lubin-Tate formal group law related to `f : 𝓕 π`, namely a multivariate power series $F$
+with two variable such that $f(F(X,Y)) = F(f(X), f(Y))$. -/
+def formalGroup : FormalGroup 𝒪[K] where
+  toPowerSeries := Phi f f (equivFunOnFinite.symm 1)
+  zero_constantCoeff := LubinTate.constantCoeff_Phi ..
+  lin_coeff_X := calc
+    _ = ((LubinTate.Phi f f (equivFunOnFinite.symm 1)).truncTotal 2).coeff
+      (single (0 : Fin 2) 1) := by simp [coeff_truncTotal_eq_ite]
+    _ = _ := by
+      simp [Phi_truncTotal_two, L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+  lin_coeff_Y := calc
+    _ = ((LubinTate.Phi f f (equivFunOnFinite.symm 1)).truncTotal 2).coeff
+      (single (1 : Fin 2) 1) := by simp [coeff_truncTotal_eq_ite]
+    _ = _ := by
+      simp [Phi_truncTotal_two, L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+  assoc := by
+    rw [constructive_lemma_unique _ _ _ (assoc_truncTotal_left f) (subst_left f),
+      constructive_lemma_unique _ _ _ (assoc_truncTotal_right f) (subst_right f)]
+
+local notation "F" => formalGroup
+
+/-- The power series `f : 𝓕 π` is a formal group homomorphism of the Lubin-Tate formal
+  group law `F f` associated to `f : 𝓕 π` -/
+def LT_hom : FormalGroupHom (F f) (F f) where
+  toPowerSeries := f.toPowerSeries
+  zero_constantCoeff := constantCoeff_F
+  hom := constructive_lemma f f _
+
+/-- For all `f, g ∈ F_π` there is a unique power series`[a]_g,f` such that
+`PowerSeries.trunc 2 [a]_g,f = a * X` and `g ∘ [a]_g,f = [a]_g,f ∘ f`, and this
+`[a]_g,f` turn out to be a formal group homomorphim from `F_f` to `F_g`. -/
+def SMul (a : 𝒪[K]) : FormalGroupHom (F f) (F g) where
+  toPowerSeries := sorry
+    -- Phi f g (single Unit a)
+  zero_constantCoeff := sorry
+  hom := sorry
 
 -- import Mathlib.RingTheory.PowerSeries.Substitution
 -- import Mathlib.RingTheory.PowerSeries.Trunc
