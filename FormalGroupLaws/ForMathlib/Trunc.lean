@@ -49,6 +49,10 @@ theorem truncTotal_zero {f : MvPowerSeries σ R} : f.truncTotal 0 = 0 := by
   ext n
   simp [coeff_truncTotal_eq_ite]
 
+lemma truncTotal_smul {a : R} : (a • p).truncTotal n = a • p.truncTotal n := by
+  ext
+  simp [coeff_truncTotal_eq_ite]
+
 lemma truncTotal_degree_one : p.truncTotal 1 = MvPolynomial.C p.constantCoeff := by
   classical
   ext n
@@ -132,6 +136,32 @@ lemma eq_of_forall_truncTotal_eq {f g : MvPowerSeries σ R} :
     ext d
     have hd : d.degree < d.degree + 1 := Nat.lt_succ_self _
     rw [← coeff_truncTotal _ hd, h (d.degree + 1), coeff_truncTotal _ hd]
+
+lemma _root_.FormalGroup.truncTotal_two {F : FormalGroup R} :
+    F.toPowerSeries.truncTotal 2 = MvPolynomial.X 0 + MvPolynomial.X 1 := by
+  ext n
+  by_cases hn : n.degree < 2
+  · rw [coeff_truncTotal _ hn]
+    rcases show n.degree = 0 ∨ n.degree = 1 by omega with hn0 | hn1
+    · have hn_zero : n = 0 := (Finsupp.degree_eq_zero_iff n).mp hn0
+      simp [hn_zero, F.zero_constantCoeff, MvPolynomial.coeff_X']
+    · have hn_single : ∃ i : Fin 2, n = Finsupp.single i 1 := (Finsupp.sum_eq_one_iff n).mp hn1
+      rcases hn_single with ⟨i, rfl⟩
+      fin_cases i
+      · have hne : Finsupp.single (1 : Fin 2) 1 ≠ Finsupp.single 0 1 := by
+          intro h
+          have := DFunLike.congr_fun h (1 : Fin 2)
+          simp at this
+        simp [F.lin_coeff_X, MvPolynomial.coeff_X', hne]
+      · have hne : Finsupp.single (0 : Fin 2) 1 ≠ Finsupp.single 1 1 := by
+          intro h
+          have := DFunLike.congr_fun h (0 : Fin 2)
+          simp at this
+        simp [F.lin_coeff_Y, MvPolynomial.coeff_X', hne]
+  · rw [coeff_truncTotal_eq_zero _ (not_lt.mp hn)]
+    have hn0 : Finsupp.single (0 : Fin 2) 1 ≠ n := fun h => by simp [← h] at hn
+    have hn1 : Finsupp.single (1 : Fin 2) 1 ≠ n := fun h => by simp [← h] at hn
+    simp [MvPolynomial.coeff_X', hn0, hn1]
 
 end
 
@@ -255,6 +285,15 @@ namespace PowerSeries
 
 variable {R S σ τ : Type*} [CommRing R] [CommRing S] {f : PowerSeries R} {a b : MvPowerSeries σ S}
   {n : ℕ} [Algebra R S]
+
+lemma trunc_eq_truncTotal :
+    (MvPolynomial.uniqueAlgEquiv _ Unit).symm (f.trunc n) = MvPowerSeries.truncTotal n f := by
+  ext d
+  rw [MvPolynomial.coeff_uniqueAlgEquiv_symm, coeff_trunc]
+  have hd : d default = d.degree := by
+    rw [Finsupp.unique_single d]
+    simp [Finsupp.degree_single]
+  simp [MvPowerSeries.coeff_truncTotal_eq_ite, hd, PowerSeries.coeff_def hd]
 
 lemma truncTotal_subst [Finite σ] (ha : PowerSeries.HasSubst a) :
     (f.subst a).truncTotal n = (f.subst (a.truncTotal n)).truncTotal n := by

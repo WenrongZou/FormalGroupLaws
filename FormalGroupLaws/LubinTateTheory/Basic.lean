@@ -28,6 +28,10 @@ lemma L_two : (L (equivFunOnFinite.symm (1 : Fin 3 → 𝒪[K]))) = MvPolynomial
     MvPolynomial.X 1 + MvPolynomial.X 2 := by
   simp [L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum, Fin.sum_univ_three]
 
+omit [TopologicalSpace K] [IsNonarchimedeanLocalField K] in
+lemma L_single {a : 𝒪[K]} : (L (single () a)) = a • MvPolynomial.X () := by
+  simp [L, MvPolynomial.sumSMulX]
+
 lemma assoc_truncTotal_left :
     let Φ := Phi f f (equivFunOnFinite.symm 1)
     (Φ.subst ![Φ.subst ![X₀, X₁], X₂]).truncTotal 2 =
@@ -135,14 +139,126 @@ def LT_hom : FormalGroupHom (F f) (F f) where
   zero_constantCoeff := constantCoeff_F
   hom := constructive_lemma f f _
 
-/-- For all `f, g ∈ F_π` there is a unique power series`[a]_g,f` such that
-`PowerSeries.trunc 2 [a]_g,f = a * X` and `g ∘ [a]_g,f = [a]_g,f ∘ f`, and this
-`[a]_g,f` turn out to be a formal group homomorphim from `F_f` to `F_g`. -/
-def SMul (a : 𝒪[K]) : FormalGroupHom (F f) (F g) where
-  toPowerSeries := sorry
-    -- Phi f g (single Unit a)
-  zero_constantCoeff := sorry
-  hom := sorry
+lemma self_hom_apply :
+  PowerSeries.subst (Phi f f (equivFunOnFinite.symm (1 : Fin 2 → 𝒪[K]))) f.toPowerSeries =
+    subst (fun x ↦ (PowerSeries.toMvPowerSeries x) f.toPowerSeries)
+      (Phi f f (equivFunOnFinite.symm 1)) := (LT_hom f).hom
+
+variable {a : 𝒪[K]}
+
+lemma SMul_trunc_two : PowerSeries.trunc 2 (Phi f g (single () a)) = a • Polynomial.X := by
+  ext n : 1
+  by_cases hn : n < 2
+  · rw [PowerSeries.coeff_trunc, if_pos hn, PowerSeries.coeff]
+    calc
+      _ = MvPolynomial.coeff (single () n) ((Phi f g (single () a)).truncTotal 2) := by
+        simp [coeff_truncTotal_eq_ite, hn]
+      _ = _ := by
+        rw [Phi_truncTotal_two, L_single]
+        simp [Polynomial.coeff_X]
+        grind
+  have : 1 ≠ n := by grind
+  simp [PowerSeries.coeff_trunc, hn, Polynomial.coeff_X, this]
+
+lemma SMul_truncTotal_left :
+    (PowerSeries.subst (F g).toPowerSeries (Phi f g (single () a))).truncTotal 2 =
+      a • (MvPolynomial.X 0 + MvPolynomial.X 1) := by
+  simp [PowerSeries.truncTotal_subst_eq_trunc, SMul_trunc_two, PowerSeries.subst_smul,
+    PowerSeries.subst_X, (F g).truncTotal_two, PowerSeries.HasSubst, (F g).zero_constantCoeff]
+
+
+lemma SMul_truncTotal_left' :
+    (PowerSeries.subst (F g).toPowerSeries (Phi f g (single () a))).truncTotal 2 =
+      (Phi f g (equivFunOnFinite.symm ![a, a])).truncTotal 2 := by
+  rw [SMul_truncTotal_left, Phi_truncTotal_two]
+  by_cases ha : a = 0
+  · subst ha
+    have hsupp : (Function.support ![(0 : 𝒪[K]), 0]).toFinset = ∅ := by simp
+    simp [hsupp, L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+  · have hsupp : (Function.support ![a, a]).toFinset = Finset.univ := by
+      ext i; fin_cases i <;> simp [Function.mem_support, ha]
+    simp [hsupp, L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+
+lemma SMul_truncTotal_right :
+    ((F f).toPowerSeries.subst fun x ↦ PowerSeries.toMvPowerSeries x
+      (Phi f g (single () a))).truncTotal 2 = a • (MvPolynomial.X 0 + MvPolynomial.X 1) := by
+  have : HasSubst fun (x : Fin 2) ↦ (PowerSeries.toMvPowerSeries x) (Phi f g (single () a)) := by
+    apply PowerSeries.HasSubst.toMvPowerSeries
+    rw [PowerSeries.constantCoeff, constantCoeff_Phi]
+  rw [truncTotal_subst_eq_truncTotal_left _, (F f).truncTotal_two]
+  simp only [Fin.isValue, MvPolynomial.coe_add, MvPolynomial.coe_X, smul_add]
+  rw [subst_add this, subst_X this, subst_X this, map_add, PowerSeries.toMvPowerSeries_apply,
+    PowerSeries.toMvPowerSeries_apply, PowerSeries.truncTotal_subst_eq_trunc (constantCoeff_X _),
+      PowerSeries.truncTotal_subst_eq_trunc (constantCoeff_X _) (f := Phi f g _), SMul_trunc_two]
+  simp [PowerSeries.subst_smul, PowerSeries.subst_X, truncTotal_X_of_lt]
+  · simp [PowerSeries.constantCoeff_toMvPowerSeries, PowerSeries.constantCoeff]
+
+lemma SMul_truncTotal_right' :
+    ((F f).toPowerSeries.subst fun x ↦ PowerSeries.toMvPowerSeries x
+      (Phi f g (single () a))).truncTotal 2 =
+        (Phi f g (equivFunOnFinite.symm ![a, a])).truncTotal 2 := by
+  rw [SMul_truncTotal_right, Phi_truncTotal_two]
+  by_cases ha : a = 0
+  · subst ha
+    have hsupp : (Function.support ![(0 : 𝒪[K]), 0]).toFinset = ∅ := by simp
+    simp [hsupp, L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+  · have hsupp : (Function.support ![a, a]).toFinset = Finset.univ := by
+      ext i; fin_cases i <;> simp [Function.mem_support, ha]
+    simp [hsupp, L, MvPolynomial.sumSMulX, linearCombination, Finsupp.sum]
+
+lemma SMul_subst_aux {p : MvPowerSeries σ 𝒪[K]} (hp : PowerSeries.HasSubst p) :
+    f.toPowerSeries.subst (PowerSeries.subst p (Phi f g (single () a))) =
+      PowerSeries.subst (g.toPowerSeries.subst p) (Phi f g (single () a)) := by
+  have := PowerSeries.HasSubst.of_constantCoeff_zero' (constantCoeff_F (f := g))
+  rw [← PowerSeries.subst_comp_subst_apply _ hp, constructive_lemma,
+    ← PowerSeries.subst_comp_subst_apply this hp]
+  congr; funext _
+  rw [PowerSeries.toMvPowerSeries_apply, PowerSeries.subst, subst_self, id]
+  · exact PowerSeries.HasSubst.of_constantCoeff_zero' rfl
+
+lemma SMul_subst_left :
+    let Φ := PowerSeries.subst (F g).toPowerSeries (Phi f g (single () a))
+    f.toPowerSeries.subst Φ = Φ.subst (g.toPowerSeries.toMvPowerSeries · ) := by
+  intro Φ
+  /- can we avoid erw here. `self_hom_apply` need erw -/
+  rw (transparency := .default) [SMul_subst_aux, self_hom_apply]
+  rw [PowerSeries.subst, ← subst_comp_subst_apply]
+  congr
+  · exact hasSubst_of_constantCoeff_zero (congrFun rfl)
+  · exact PowerSeries.HasSubst.toMvPowerSeries constantCoeff_F
+  · exact PowerSeries.HasSubst.of_constantCoeff_zero rfl
+
+lemma SMul_subst_right :
+    let Φ := (F f).toPowerSeries.subst fun x ↦ PowerSeries.toMvPowerSeries x (Phi f g (single () a))
+    f.toPowerSeries.subst Φ = Φ.subst (g.toPowerSeries.toMvPowerSeries ·) := by
+  have aux : HasSubst fun (x : Fin 2) ↦ (PowerSeries.toMvPowerSeries x) (Phi f g (single () a)) :=
+    PowerSeries.HasSubst.toMvPowerSeries rfl
+  have {f : 𝓕 π} := PowerSeries.HasSubst.toMvPowerSeries (constantCoeff_F (f := f)) (σ := Fin 2)
+  intro Φ
+  rw [PowerSeries.subst, ← subst_comp_subst_apply _ aux, ← PowerSeries.subst]
+  erw [self_hom_apply]
+  rw [subst_comp_subst_apply this aux, subst_comp_subst_apply aux this]
+  congr! 2 with i
+  · rw [PowerSeries.toMvPowerSeries_val _ aux, PowerSeries.toMvPowerSeries_val _ this,
+      PowerSeries.toMvPowerSeries_apply, PowerSeries.toMvPowerSeries_apply, SMul_subst_aux _ _
+        (PowerSeries.HasSubst.X i)]
+  · exact hasSubst_of_constantCoeff_zero (congrFun rfl)
+
+variable (a) in
+/-- For all `f, g ∈ F_π` there is a unique power series`[a]_f,g` such that
+`PowerSeries.trunc 2 [a]_f,g = a * X` and `f ∘ [a]_f,g = [a]_f,g ∘ g`, and this
+`[a]_f,g` turn out to be a formal group homomorphim from `F_g` to `F_f`. -/
+def SMul : FormalGroupHom (F g) (F f) where
+  toPowerSeries := Phi f g (single () a)
+  zero_constantCoeff := constantCoeff_Phi _ _ _
+  hom := by
+    rw [constructive_lemma_unique _ _ _ (SMul_truncTotal_left' f g) (SMul_subst_left f g),
+      constructive_lemma_unique _ _ _ (SMul_truncTotal_right' f g) (SMul_subst_right f g)]
+
+/-- Local notation for scalar multiplication of Lubin-Tate formal group law,
+`[a]_ f g`. -/
+local notation "[" a "]_" => fun f g => SMul f g a
+
 
 -- import Mathlib.RingTheory.PowerSeries.Substitution
 -- import Mathlib.RingTheory.PowerSeries.Trunc
