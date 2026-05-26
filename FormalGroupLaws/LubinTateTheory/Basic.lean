@@ -314,6 +314,14 @@ lemma SMul_one : (SMul f f 1).toPowerSeries = .X := by
   rw [PowerSeries.X, subst_X this, PowerSeries.subst, subst_self, id,
     PowerSeries.toMvPowerSeries_apply, PowerSeries.subst, subst_self, id]
 
+lemma SMul_zero : (SMul f f 0).toPowerSeries = 0 := by
+  rw [SMul_apply, ← constructive_lemma_unique f f (single () 0)]
+  · simp [Phi_truncTotal_two]
+  · rw [PowerSeries.subst_zero_of_constantCoeff_zero constantCoeff_F]
+    have hsubst : HasSubst fun x : Unit ↦ (PowerSeries.toMvPowerSeries x) f.toPowerSeries :=
+      PowerSeries.HasSubst.toMvPowerSeries constantCoeff_F
+    rw [← MvPowerSeries.coe_substAlgHom hsubst, map_zero]
+
 variable {b : 𝒪[K]}
 
 /-- $[a]_{f,g} ∘ [b]_{g,h} = [ab]_{f,h}$. -/
@@ -665,7 +673,7 @@ lemma point_add_assoc (x y z : Point f) : x + y + z = x + (y + z) := by
     · simpa using hX₀.symm
     · simpa using hyz'.symm
 
-instance instAddCommGroupPoint : AddCommGroup (Point f) where
+instance (priority := 2000) instAddCommGroupPoint : AddCommGroup (Point f) where
   add x y :=
     ⟨(F f).toPowerSeries.aeval
         (MvPowerSeries.hasEval_of_forall_mem_maximalIdeal (pointPair_apply_mem_maximalIdeal f x y)),
@@ -702,7 +710,17 @@ instance (priority := 2000) instSMulPoint : _root_.SMul 𝒪[K] (Point f) where
 
 instance : Module 𝒪[K] (Point f) where
   smul := pointSMul f
-  mul_smul := sorry
+  mul_smul a b x := by
+    apply Subtype.ext
+    have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
+    have hb0 : PowerSeries.HasSubst (SMul f f b).toPowerSeries :=
+      PowerSeries.HasSubst.of_constantCoeff_zero' (SMul f f b).zero_constantCoeff
+    change PowerSeries.aeval hx (SMul f f (a * b)).toPowerSeries =
+      PowerSeries.aeval _ (SMul f f a).toPowerSeries
+    have hcomp := PowerSeries.aeval_subst_of_hasSubst (K := K) hb0 hx
+      (SMul f f a).toPowerSeries
+    rw [SMul_tower f f f] at hcomp
+    exact hcomp
   one_smul := by
     intro x
     apply Subtype.ext
@@ -710,9 +728,23 @@ instance : Module 𝒪[K] (Point f) where
     change PowerSeries.aeval hx (SMul f f 1).toPowerSeries = (x : 𝒪[K])
     rw [SMul_one f]
     rw [← Polynomial.coe_X (R := 𝒪[K]), PowerSeries.aeval_coe, Polynomial.aeval_X]
-  smul_zero := sorry
+  smul_zero := by
+    intro a
+    apply Subtype.ext
+    have h0 : PowerSeries.HasEval (0 : 𝒪[K]) := IsTopologicallyNilpotent.zero
+    change PowerSeries.aeval h0 (SMul f f a).toPowerSeries = 0
+    have hsubst := PowerSeries.aeval_subst_of_hasSubst (K := K)
+      PowerSeries.HasSubst.zero' h0 (SMul f f a).toPowerSeries
+    rw [PowerSeries.subst_zero_of_constantCoeff_zero (SMul f f a).zero_constantCoeff] at hsubst
+    simpa using hsubst.symm
   smul_add := sorry
   add_smul := sorry
-  zero_smul := sorry
+  zero_smul := by
+    intro x
+    apply Subtype.ext
+    have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
+    change PowerSeries.aeval hx (SMul f f 0).toPowerSeries = 0
+    rw [SMul_zero f]
+    simp
 
 end
