@@ -708,7 +708,19 @@ def pointSMul (a : 𝒪[K]) (x : Point f) : Point f := by
 instance (priority := 2000) instSMulPoint : _root_.SMul 𝒪[K] (Point f) where
   smul := pointSMul f
 
-instance : Module 𝒪[K] (Point f) where
+lemma point_add_coe (x y : Point f) :
+    ((x + y : Point f) : 𝒪[K]) =
+      (F f).toPowerSeries.aeval
+        (MvPowerSeries.hasEval_of_forall_mem_maximalIdeal
+          (pointPair_apply_mem_maximalIdeal f x y)) := rfl
+
+lemma point_smul_coe (a : 𝒪[K]) (x : Point f) :
+    ((a • x : Point f) : 𝒪[K]) =
+      (SMul f f a).toPowerSeries.aeval (PowerSeries.hasEval_of_mem_maximalIdeal x) := rfl
+
+open scoped MvPowerSeries.WithPiTopology in
+instance pointDistribMulAction :
+    @DistribMulAction 𝒪[K] (Point f) _ (instAddCommGroupPoint (f := f)).toAddMonoid where
   smul := pointSMul f
   mul_smul a b x := by
     apply Subtype.ext
@@ -737,14 +749,110 @@ instance : Module 𝒪[K] (Point f) where
       PowerSeries.HasSubst.zero' h0 (SMul f f a).toPowerSeries
     rw [PowerSeries.subst_zero_of_constantCoeff_zero (SMul f f a).zero_constantCoeff] at hsubst
     simpa using hsubst.symm
-  smul_add := sorry
-  add_smul := sorry
-  zero_smul := by
-    intro x
+  smul_add := by
+    intro a x y
     apply Subtype.ext
+    let b : Fin 2 → 𝒪[K] := ![(x : 𝒪[K]), y]
+    have hb_mem : ∀ i, b i ∈ 𝓂[K] := by
+      intro i
+      fin_cases i <;> simp [b]
+    have hb : HasEval b := MvPowerSeries.hasEval_of_forall_mem_maximalIdeal hb_mem
+    have hF : HasSubst (fun _ : Unit ↦ (F f).toPowerSeries) :=
+      hasSubst_of_constantCoeff_zero fun _ ↦ (F f).zero_constantCoeff
+    have hSMul : HasSubst fun i : Fin 2 ↦ (SMul f f a).toPowerSeries.toMvPowerSeries i :=
+      PowerSeries.HasSubst.toMvPowerSeries (SMul f f a).zero_constantCoeff
+    have hleft := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
+      (σ := Unit) (τ := Fin 2) (a := fun _ : Unit ↦ (F f).toPowerSeries)
+      hF hb (SMul f f a).toPowerSeries
+    have hright := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
+      (σ := Fin 2) (τ := Fin 2)
+      (a := fun i : Fin 2 ↦ (SMul f f a).toPowerSeries.toMvPowerSeries i)
+      hSMul hb (F f).toPowerSeries
+    have hhom := congrArg (fun G : MvPowerSeries (Fin 2) 𝒪[K] ↦ G.aeval hb)
+      (SMul f f a).hom
+    rw [PowerSeries.subst] at hhom
+    change (MvPowerSeries.aeval hb)
+        (MvPowerSeries.subst (fun _ : Unit ↦ (F f).toPowerSeries)
+          (SMul f f a).toPowerSeries) =
+      (MvPowerSeries.aeval hb)
+        ((F f).toPowerSeries.subst
+          fun i : Fin 2 ↦ (SMul f f a).toPowerSeries.toMvPowerSeries i) at hhom
+    rw [hleft, hright] at hhom
+    have hleft_point :
+        (MvPowerSeries.aeval (hF.hasEval.map (MvPowerSeries.continuous_aeval hb))
+          (SMul f f a).toPowerSeries) = ((a • (x + y) : Point f) : 𝒪[K]) := by
+      change PowerSeries.aeval
+          (PowerSeries.hasEval_iff.mpr
+            (hF.hasEval.map (MvPowerSeries.continuous_aeval hb)))
+          (SMul f f a).toPowerSeries =
+        PowerSeries.aeval (PowerSeries.hasEval_of_mem_maximalIdeal (x + y))
+          (SMul f f a).toPowerSeries
+      congr
+    have hSMul_eval (i : Fin 2) :
+        (MvPowerSeries.aeval hb) ((SMul f f a).toPowerSeries.toMvPowerSeries i) =
+          PowerSeries.aeval (PowerSeries.hasEval_of_mem_maximalIdeal ⟨b i, hb_mem i⟩)
+            (SMul f f a).toPowerSeries := by
+      have h := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
+        (σ := Unit) (τ := Fin 2) (a := fun _ : Unit ↦ (X i : MvPowerSeries (Fin 2) 𝒪[K]))
+        (PowerSeries.HasSubst.X i).const hb (SMul f f a).toPowerSeries
+      change (MvPowerSeries.aeval hb)
+          (PowerSeries.subst (X i) (SMul f f a).toPowerSeries) =
+        (MvPowerSeries.aeval ((PowerSeries.HasSubst.X i).const.hasEval.map
+          (MvPowerSeries.continuous_aeval hb))) (SMul f f a).toPowerSeries at h
+      rw [← PowerSeries.toMvPowerSeries_apply] at h
+      refine h.trans ?_
+      change PowerSeries.aeval
+          (PowerSeries.hasEval_iff.mpr
+            ((PowerSeries.HasSubst.X i).const.hasEval.map
+              (MvPowerSeries.continuous_aeval hb)))
+          (SMul f f a).toPowerSeries =
+        PowerSeries.aeval (PowerSeries.hasEval_of_mem_maximalIdeal ⟨b i, hb_mem i⟩)
+          (SMul f f a).toPowerSeries
+      congr
+      simpa using (MvPowerSeries.aeval_coe hb (MvPolynomial.X i : MvPolynomial (Fin 2) 𝒪[K]))
+    have hright_point :
+        (MvPowerSeries.aeval (hSMul.hasEval.map (MvPowerSeries.continuous_aeval hb))
+          (F f).toPowerSeries) = ((a • x + a • y : Point f) : 𝒪[K]) := by
+      rw [point_add_coe]
+      change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
+      congr
+      ext i
+      fin_cases i
+      · simpa [b] using hSMul_eval 0
+      · simpa [b] using hSMul_eval 1
+    exact hleft_point.symm.trans (hhom.trans hright_point)
+
+open scoped MvPowerSeries.WithPiTopology in
+instance : @Module 𝒪[K] (Point f) _ (instAddCommGroupPoint (f := f)).toAddCommMonoid := by
+  refine @Module.mk 𝒪[K] (Point f) _ (instAddCommGroupPoint (f := f)).toAddCommMonoid
+    (pointDistribMulAction (f := f)) (fun a b x => ?_) fun x => ?_
+  · apply Subtype.ext
+    have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
+    have hxU : HasEval (fun _ : Unit ↦ (x : 𝒪[K])) := PowerSeries.hasEval_iff.mp hx
+    have hpair : HasSubst ![(SMul f f a).toPowerSeries, (SMul f f b).toPowerSeries] :=
+      hasSubst_of_constantCoeff_zero <| by
+        intro i
+        fin_cases i <;> exact (SMul f f _).zero_constantCoeff
+    have hsubst := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
+      (σ := Fin 2) (τ := Unit)
+      (a := ![(SMul f f a).toPowerSeries, (SMul f f b).toPowerSeries])
+      hpair hxU (F f).toPowerSeries
+    rw [← SMul_add (f := f) (g := f) (a := a) (b := b)] at hsubst
+    have hright :
+        (MvPowerSeries.aeval (hpair.hasEval.map (MvPowerSeries.continuous_aeval hxU))
+          (F f).toPowerSeries) = ((a • x + b • x : Point f) : 𝒪[K]) := by
+      rw [point_add_coe]
+      change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
+      congr
+      ext i
+      fin_cases i <;> rfl
+    change PowerSeries.aeval hx (SMul f f (a + b)).toPowerSeries =
+      ((a • x + b • x : Point f) : 𝒪[K])
+    exact hsubst.trans hright
+  · apply Subtype.ext
     have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
     change PowerSeries.aeval hx (SMul f f 0).toPowerSeries = 0
-    rw [SMul_zero f]
-    simp
+    exact (congrArg (PowerSeries.aeval hx) (SMul_zero f)).trans
+      (map_zero (PowerSeries.aeval hx))
 
 end
