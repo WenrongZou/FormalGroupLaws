@@ -221,7 +221,6 @@ theorem add_neg_cancel (f : F.Point σ) : f + (-f) = 0 := by
       simp [← coe_substAlgHom f.prop]
 
 instance : AddGroup (F.Point σ) where
-  nsmul := nsmulRec
   zsmul := zsmulRec
   neg_add_cancel x := by
     rw [← _root_.add_zero (- x + x), ← F.add_neg_cancel (- x), ← _root_.add_assoc,

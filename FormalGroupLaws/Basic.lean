@@ -640,8 +640,8 @@ theorem FormalGroupIso.ext_iff' {α β : FormalGroupIso F G} :
   rw [FormalGroupIso.ext_iff, and_iff_left_iff_imp]
   intro h
   rw [FormalGroupHom.ext_iff, ← (X_subst α.invHom.toPowerSeries), ← β.toHom_subst_invHom,
-    ← subst_comp_subst_apply (.of_constantCoeff_zero' (β.toHom.zero_constantCoeff))
-      (.of_constantCoeff_zero' (β.invHom.zero_constantCoeff)), ← h, α.invHom_subst_toHom,
+    ← subst_comp_subst_apply (.of_constantCoeff_zero' β.toHom.zero_constantCoeff)
+      (.of_constantCoeff_zero' β.invHom.zero_constantCoeff), ← h, α.invHom_subst_toHom,
       subst_X (.of_constantCoeff_zero' (β.invHom.zero_constantCoeff))]
 
 end FormalGroupIso
@@ -687,6 +687,25 @@ def FormalGroupHom.toAddMonoidHom (f : FormalGroupHom F G) : F.Point σ →+ G.P
 
 lemma FormalGroupHom.toAddMonoidHom_apply (f : FormalGroupHom F G) {x : F.Point σ} :
     f.toAddMonoidHom x = f.applyPoint x := rfl
+
+/-- A formal group isomorphism $α : F \cong G$ induces an equivalence `F.Point σ ≃ G.Point σ`
+for each type `σ`. -/
+def FormalGroupIso.toEquiv (α : FormalGroupIso F G) : F.Point σ ≃+ G.Point σ where
+  toFun := α.toHom.applyPoint
+  invFun := α.invHom.applyPoint
+  left_inv x := by
+    apply Subtype.ext
+    simp only [FormalGroupHom.applyPoint_val]
+    rw [← PowerSeries.subst_comp_subst_apply
+      (.of_constantCoeff_zero' α.toHom.zero_constantCoeff) x.prop,
+      α.invHom_subst_toHom, PowerSeries.subst_X x.prop]
+  right_inv y := by
+    apply Subtype.ext
+    simp only [FormalGroupHom.applyPoint_val]
+    rw [← PowerSeries.subst_comp_subst_apply
+      (.of_constantCoeff_zero' α.invHom.zero_constantCoeff) y.prop,
+      α.toHom_subst_invHom, PowerSeries.subst_X y.prop]
+  map_add' _ _ := α.toHom.map_add
 
 end FormalGroupHom
 
