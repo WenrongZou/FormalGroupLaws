@@ -229,6 +229,100 @@ instance : AddGroup (F.Point σ) where
 instance [F.IsComm] : AddCommGroup (F.Point σ) where
   add_comm x y := Subtype.ext <| F.comm' x.prop y.prop
 
+example [F.IsComm] (x y z : F.Point σ) :
+    x + y + z = z + (x + y) := by
+  abel
+
+example [F.IsComm] {n : ℕ} (x y : F.Point σ) :
+    n • (x + y) = n • x + n • y :=
+  nsmul_add x y n
+
+example [F.IsComm] {n : ℤ} (x y : F.Point σ) :
+    n • (x + y) = n • x + n • y :=
+  zsmul_add x y n
+
+/-- Substituting a power series `Q` into `F(p, q)` equals `F(p(Q), q(Q))`. -/
+lemma subst_subst_pair {p q : PowerSeries R} (hp : p.constantCoeff = 0) (hq : q.constantCoeff = 0)
+    {τ : Type*} {Q : MvPowerSeries τ R} (hQ : PowerSeries.HasSubst Q) :
+    PowerSeries.subst Q (F.toPowerSeries.subst ![p, q])
+      = F.toPowerSeries.subst ![PowerSeries.subst Q p, PowerSeries.subst Q q] := by
+  rw [PowerSeries.subst_def,
+    MvPowerSeries.subst_comp_subst_apply
+      (MvPowerSeries.hasSubst_of_constantCoeff_zero (by simp [hp, hq])) hQ.const]
+  refine MvPowerSeries.subst_congr ?_
+  funext s
+  fin_cases s <;> rfl
+
+/-- The substitution `F(p(X₀), p(X₁))` written with an explicit pair. -/
+lemma subst_toMv (p : PowerSeries R) :
+    F.toPowerSeries.subst (fun i : Fin 2 => p.toMvPowerSeries i)
+      = F.toPowerSeries.subst ![p.toMvPowerSeries 0, p.toMvPowerSeries 1] :=
+  MvPowerSeries.subst_congr (by funext s; fin_cases s <;> rfl)
+
+/-- The medial (interchange) law for a commutative formal group law:
+`F(F(a, b), F(c, d)) = F(F(a, c), F(b, d))`. -/
+lemma medial [F.IsComm] {a b c d : MvPowerSeries σ R}
+    (ha : PowerSeries.HasSubst a) (hb : PowerSeries.HasSubst b)
+    (hc : PowerSeries.HasSubst c) (hd : PowerSeries.HasSubst d) :
+    F.toPowerSeries.subst ![F.toPowerSeries.subst ![a, b], F.toPowerSeries.subst ![c, d]]
+      = F.toPowerSeries.subst ![F.toPowerSeries.subst ![a, c], F.toPowerSeries.subst ![b, d]] := by
+  have hsubst : ∀ {x y : MvPowerSeries σ R}, PowerSeries.HasSubst x → PowerSeries.HasSubst y →
+      PowerSeries.HasSubst (F.toPowerSeries.subst ![x, y]) := by
+    intro x y hx hy
+    refine MvPowerSeries.IsNilpotent_subst' ?_ (F.zero_constantCoeff ▸ IsNilpotent.zero)
+    refine MvPowerSeries.hasSubst_of_constantCoeff_nilpotent ?_
+    intro s
+    fin_cases s
+    · exact hx
+    · exact hy
+  calc
+    F.toPowerSeries.subst ![F.toPowerSeries.subst ![a, b], F.toPowerSeries.subst ![c, d]]
+        = F.toPowerSeries.subst ![a, F.toPowerSeries.subst ![b, F.toPowerSeries.subst ![c, d]]] :=
+          F.assoc' ha hb (hsubst hc hd)
+    _ = F.toPowerSeries.subst ![a, F.toPowerSeries.subst ![F.toPowerSeries.subst ![b, c], d]] := by
+          rw [← F.assoc' hb hc hd]
+    _ = F.toPowerSeries.subst ![a, F.toPowerSeries.subst ![F.toPowerSeries.subst ![c, b], d]] := by
+          rw [F.comm' hb hc]
+    _ = F.toPowerSeries.subst ![a, F.toPowerSeries.subst ![c, F.toPowerSeries.subst ![b, d]]] := by
+          rw [F.assoc' hc hb hd]
+    _ = F.toPowerSeries.subst ![F.toPowerSeries.subst ![a, c], F.toPowerSeries.subst ![b, d]] :=
+          (F.assoc' ha hc (hsubst hb hd)).symm
+
+def add_hom [F.IsComm] (f g : FormalGroupHom F F) : FormalGroupHom F F where
+  toPowerSeries := F.toPowerSeries.subst ![f.toPowerSeries, g.toPowerSeries]
+  zero_constantCoeff := by
+    refine MvPowerSeries.constantCoeff_subst_eq_zero ?_ ?_ F.zero_constantCoeff
+    · refine MvPowerSeries.hasSubst_of_constantCoeff_zero ?_
+      simp [f.zero_constantCoeff, g.zero_constantCoeff]
+    · simp [f.zero_constantCoeff, g.zero_constantCoeff]
+  hom := by
+    have fhom : PowerSeries.subst F.toPowerSeries f.toPowerSeries
+        = F.toPowerSeries.subst (fun i : Fin 2 => f.toPowerSeries.toMvPowerSeries i) := f.hom
+    have ghom : PowerSeries.subst F.toPowerSeries g.toPowerSeries
+        = F.toPowerSeries.subst (fun i : Fin 2 => g.toPowerSeries.toMvPowerSeries i) := g.hom
+    have hh : ∀ i : Fin 2,
+        (PowerSeries.toMvPowerSeries i) (F.toPowerSeries.subst ![f.toPowerSeries, g.toPowerSeries])
+          = F.toPowerSeries.subst
+              ![f.toPowerSeries.toMvPowerSeries i, g.toPowerSeries.toMvPowerSeries i] := by
+      intro i
+      rw [PowerSeries.toMvPowerSeries_apply,
+        F.subst_subst_pair f.zero_constantCoeff g.zero_constantCoeff (PowerSeries.HasSubst.X i)]
+      simp only [← PowerSeries.toMvPowerSeries_apply]
+    show PowerSeries.subst F.toPowerSeries
+          (F.toPowerSeries.subst ![f.toPowerSeries, g.toPowerSeries])
+        = F.toPowerSeries.subst
+            (fun i : Fin 2 =>
+              (PowerSeries.toMvPowerSeries i)
+                (F.toPowerSeries.subst ![f.toPowerSeries, g.toPowerSeries]))
+    rw [F.subst_subst_pair f.zero_constantCoeff g.zero_constantCoeff
+          (PowerSeries.HasSubst.of_constantCoeff_zero F.zero_constantCoeff),
+      fhom, ghom, F.subst_toMv f.toPowerSeries, F.subst_toMv g.toPowerSeries,
+      F.subst_toMv (F.toPowerSeries.subst ![f.toPowerSeries, g.toPowerSeries]), hh 0, hh 1]
+    exact F.medial ((PowerSeries.HasSubst.toMvPowerSeries f.zero_constantCoeff).const_coeff 0)
+      ((PowerSeries.HasSubst.toMvPowerSeries f.zero_constantCoeff).const_coeff 1)
+      ((PowerSeries.HasSubst.toMvPowerSeries g.zero_constantCoeff).const_coeff 0)
+      ((PowerSeries.HasSubst.toMvPowerSeries g.zero_constantCoeff).const_coeff 1)
+
 end FormalGroup
 
 
