@@ -210,8 +210,8 @@ structure FormalGroup where
   /-- The coefficient of $Y$ in $F(X, Y)$ is 1. -/
   lin_coeff_Y : toPowerSeries.coeff (single 1 1) = 1
   /-- Associativity condition: $F(F(X, Y), Z) = F(X, F(Y, Z))$. -/
-  assoc : toPowerSeries.subst ![toPowerSeries.subst ![Y₀, Y₁], Y₂]
-    = toPowerSeries.subst ![Y₀, toPowerSeries.subst ![Y₁, Y₂]] (S := R)
+  assoc : toPowerSeries.subst ![toPowerSeries.subst ![Y₀, Y₁], Y₂] =
+    toPowerSeries.subst ![Y₀, toPowerSeries.subst ![Y₁, Y₂]] (S := R)
 
 /-- The natural inclusion from formal group law into formal power series. -/
 instance FormalGroup.coeToPowerSeries : Coe (FormalGroup R) (MvPowerSeries (Fin 2) R) :=

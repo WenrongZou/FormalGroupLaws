@@ -372,30 +372,11 @@ variable {π : (valuation K).Uniformizer} (f : 𝓕 π)
 
 local notation "F" => formalGroup
 
--- instance : NonUnitalCommSemiring R := inferInstance
-
--- instance : NonUnitalCommRing 𝓂[K] := inferInstance
-
-/- here we need to generalize this `MvPowerSeries.HasEval` to
-`NonUnitalCommRing`. And we can start with generalizing `MvPolynomial.eval` to
-`NonUnitalCommSemiring`. -/
-
 instance : IsLinearTopology 𝒪[K] 𝒪[K] := by
-  let I : (ValueGroupWithZero K)ˣ → Ideal 𝒪[K] := fun γ ↦
-    { carrier := {x | valuation K (((x : 𝒪[K]) : K)) < γ}
-      zero_mem' := by simp
-      add_mem' := by
-        intro x y hx hy
-        change valuation K (((x + y : 𝒪[K]) : K)) < γ
-        simpa using (valuation K).map_add_lt hx hy
-      smul_mem' := by
-        intro c x hx
-        change valuation K (((c * x : 𝒪[K]) : K)) < γ
-        simpa [map_mul] using mul_lt_of_le_one_of_lt c.2 hx }
-  refine IsLinearTopology.mk_of_hasBasis (R := 𝒪[K]) (M := 𝒪[K])
-    (S := Ideal 𝒪[K]) (p := fun _ : (ValueGroupWithZero K)ˣ ↦ True) (s := I) ?_
+  refine IsLinearTopology.mk_of_hasBasis 𝒪[K]
+    (p := fun _ : (ValueGroupWithZero K)ˣ ↦ True) (s := Valuation.ltIdeal (valuation K)) ?_
   rw [nhds_subtype_eq_comap]
-  exact (IsValuativeTopology.hasBasis_nhds_zero K).comap ((↑) : 𝒪[K] → K)
+  exact (IsValuativeTopology.hasBasis_nhds_zero K).comap _
 
 omit [IsUniformAddGroup K] in
 lemma PowerSeries.hasEval_of_mem_maximalIdeal (x : 𝓂[K]) :
@@ -476,10 +457,7 @@ lemma PowerSeries.aeval_subst_of_hasSubst {g : PowerSeries 𝒪[K]}
     (φ : PowerSeries 𝒪[K]) :
     PowerSeries.aeval hx (φ.subst g) =
       PowerSeries.aeval (hg.hasEval.map (PowerSeries.continuous_aeval hx)) φ := by
-  have hb : HasEval (fun _ : Unit ↦ x) := PowerSeries.hasEval_iff.mp hx
-  have h := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Unit) (τ := Unit) (a := fun _ ↦ g) hg.const hb φ
-  simpa [PowerSeries.subst, PowerSeries.aeval] using h
+  simpa using MvPowerSeries.aeval_subst_of_hasSubst hg.const (PowerSeries.hasEval_iff.mp hx) φ
 
 set_option linter.unusedVariables false in
 def Point (f : 𝓕 π) := 𝓂[K]
@@ -496,6 +474,11 @@ instance : Add (Point f) where
       MvPowerSeries.aeval_mem_maximalIdeal_of_constantCoeff_eq_zero
         (F f).zero_constantCoeff (pointPair_apply_mem_maximalIdeal f x y)⟩
 
+lemma add_apply {x y : Point f} :
+    (x + y : Point f) = (F f).toPowerSeries.aeval
+      (MvPowerSeries.hasEval_of_forall_mem_maximalIdeal (pointPair_apply_mem_maximalIdeal f x y)) :=
+  rfl
+
 instance : Zero (Point f) where
   zero := ⟨0, Submodule.zero_mem _⟩
 
@@ -503,37 +486,29 @@ lemma point_add_zero (x : Point f) : x + 0 = x := by
   apply Subtype.ext
   have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
   have hb : HasEval (fun _ : Unit ↦ (x : 𝒪[K])) := PowerSeries.hasEval_iff.mp hx
-  have h := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Fin 2) (τ := Unit) (a := ![PowerSeries.X, 0])
-    MvPowerSeries.HasSubst.X_zero hb (F f).toPowerSeries
-  rw [FormalGroup.add_zero (F f) PowerSeries.HasSubst.X'] at h
+  symm
   have hX : (MvPowerSeries.aeval hb) (PowerSeries.X : PowerSeries 𝒪[K]) = (x : 𝒪[K]) := by
     change (PowerSeries.X : PowerSeries 𝒪[K]).aeval hx = (x : 𝒪[K])
     rw [← Polynomial.coe_X (R := 𝒪[K]), PowerSeries.aeval_coe, Polynomial.aeval_X]
-  convert h.symm using 1
-  · change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
-    congr
-    ext i
-    fin_cases i <;> simp [hX]
-  · exact hX.symm
+  rw [← hX, ← Xzero_eq_X (F f), Xzero, MvPowerSeries.aeval_subst_of_hasSubst, add_apply]
+  congr
+  funext i
+  fin_cases i <;> simp [hX]
+  · exact MvPowerSeries.HasSubst.X_zero
 
 lemma point_zero_add (x : Point f) : 0 + x = x := by
   apply Subtype.ext
   have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
   have hb : HasEval (fun _ : Unit ↦ (x : 𝒪[K])) := PowerSeries.hasEval_iff.mp hx
-  have h := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Fin 2) (τ := Unit) (a := ![0, PowerSeries.X])
-    MvPowerSeries.HasSubst.zero_X hb (F f).toPowerSeries
-  rw [FormalGroup.zero_add (F f) PowerSeries.HasSubst.X'] at h
+  symm
   have hX : (MvPowerSeries.aeval hb) (PowerSeries.X : PowerSeries 𝒪[K]) = (x : 𝒪[K]) := by
     change (PowerSeries.X : PowerSeries 𝒪[K]).aeval hx = (x : 𝒪[K])
     rw [← Polynomial.coe_X (R := 𝒪[K]), PowerSeries.aeval_coe, Polynomial.aeval_X]
-  convert h.symm using 1
-  · change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
-    congr
-    ext i
-    fin_cases i <;> simp [hX]
-  · exact hX.symm
+  rw [← hX, ← zeroX_eq_X (F f), zeroX, MvPowerSeries.aeval_subst_of_hasSubst, add_apply]
+  congr
+  funext i
+  fin_cases i <;> simp [hX]
+  · exact MvPowerSeries.HasSubst.zero_X
 
 instance : Neg (Point f) where
   neg x := by
@@ -601,92 +576,39 @@ lemma point_add_assoc (x y z : Point f) : x + y + z = x + (y + z) := by
     intro i
     fin_cases i <;> simp [a]
   have ha : HasEval a := MvPowerSeries.hasEval_of_forall_mem_maximalIdeal ha_mem
-  have hAssoc := congrArg (fun G : MvPowerSeries (Fin 3) 𝒪[K] ↦ G.aeval ha) (F f).assoc
-  have hleft := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Fin 2) (τ := Fin 3)
-    (a := ![MvPowerSeries.subst ![X 0, X 1] (F f).toPowerSeries, X 2])
-    (MvPowerSeries.HasSubst.cons_subst_zero_left (f := (F f).toPowerSeries)
-      (0 : Fin 3) 1 2 (F f).zero_constantCoeff)
-    ha (F f).toPowerSeries
-  have hright := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Fin 2) (τ := Fin 3)
-    (a := ![X 0, MvPowerSeries.subst ![X 1, X 2] (F f).toPowerSeries])
-    (MvPowerSeries.HasSubst.cons_subst_zero_right (f := (F f).toPowerSeries)
-      (0 : Fin 3) 1 2 (F f).zero_constantCoeff)
-    ha (F f).toPowerSeries
-  change (MvPowerSeries.aeval ha)
-      (MvPowerSeries.subst ![MvPowerSeries.subst ![X 0, X 1] (F f).toPowerSeries, X 2]
-        (F f).toPowerSeries) =
-    (MvPowerSeries.aeval ha)
-      (MvPowerSeries.subst ![X 0, MvPowerSeries.subst ![X 1, X 2] (F f).toPowerSeries]
-        (F f).toPowerSeries) at hAssoc
-  rw [hleft, hright] at hAssoc
-  have hxy := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Fin 2) (τ := Fin 3) (a := ![X 0, X 1])
-    MvPowerSeries.HasSubst.X_X ha (F f).toPowerSeries
-  have hyz := MvPowerSeries.aeval_subst_of_hasSubst (K := K)
-    (σ := Fin 2) (τ := Fin 3) (a := ![X 1, X 2])
-    MvPowerSeries.HasSubst.X_X ha (F f).toPowerSeries
-  have hX₀ : (MvPowerSeries.aeval ha) (X 0 : MvPowerSeries (Fin 3) 𝒪[K]) =
-      (x : 𝒪[K]) := by
-    rw [← MvPolynomial.coe_X, MvPowerSeries.aeval_coe, MvPolynomial.aeval_X]
-    rfl
-  have hX₁ : (MvPowerSeries.aeval ha) (X 1 : MvPowerSeries (Fin 3) 𝒪[K]) =
-      (y : 𝒪[K]) := by
-    rw [← MvPolynomial.coe_X, MvPowerSeries.aeval_coe, MvPolynomial.aeval_X]
-    rfl
-  have hX₂ : (MvPowerSeries.aeval ha) (X 2 : MvPowerSeries (Fin 3) 𝒪[K]) =
-      (z : 𝒪[K]) := by
-    rw [← MvPolynomial.coe_X, MvPowerSeries.aeval_coe, MvPolynomial.aeval_X]
-    rfl
-  have hxy' : (MvPowerSeries.aeval ha)
-      (MvPowerSeries.subst ![(X 0 : MvPowerSeries (Fin 3) 𝒪[K]), X 1]
-        (F f).toPowerSeries) = (x + y : Point f) := by
-    convert hxy using 1
-    change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
-    congr
-    ext i
-    fin_cases i
-    · simpa using hX₀.symm
-    · simpa using hX₁.symm
-  have hyz' : (MvPowerSeries.aeval ha)
-      (MvPowerSeries.subst ![(X 1 : MvPowerSeries (Fin 3) 𝒪[K]), X 2]
-        (F f).toPowerSeries) = (y + z : Point f) := by
-    convert hyz using 1
-    change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
-    congr
-    ext i
-    fin_cases i
-    · simpa using hX₁.symm
-    · simpa using hX₂.symm
-  convert hAssoc using 1
-  · change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
-    congr
-    ext i
-    fin_cases i
-    · simpa using hxy'.symm
-    · simpa using hX₂.symm
-  · change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
-    congr
-    ext i
-    fin_cases i
-    · simpa using hX₀.symm
-    · simpa using hyz'.symm
+  calc
+    _ = MvPowerSeries.aeval ha
+      ((F f).toPowerSeries.subst ![(F f).toPowerSeries.subst ![X 0 (R := 𝒪[K]), X 1], X 2]) := by
+      have hxy : MvPowerSeries.aeval ha
+          ((F f).toPowerSeries.subst ![X 0 (R := 𝒪[K]), X 1]) = (x + y : Point f) := by
+        rw [MvPowerSeries.aeval_subst_of_hasSubst HasSubst.X_X]
+        congr
+        funext x
+        fin_cases x <;> simp [← MvPolynomial.coe_X, a]
+      rw [MvPowerSeries.aeval_subst_of_hasSubst (has_subst_aux₁ rfl), add_apply]
+      congr
+      funext x
+      fin_cases x
+      · simp [hxy]
+      · simp [← MvPolynomial.coe_X, a]
+    _ = _ := by
+      rw [(F f).assoc, MvPowerSeries.aeval_subst_of_hasSubst (has_subst_aux₂ rfl), add_apply]
+      have hxy : MvPowerSeries.aeval ha
+          ((F f).toPowerSeries.subst ![X 1 (R := 𝒪[K]), X 2]) = (y + z : Point f) := by
+        rw [MvPowerSeries.aeval_subst_of_hasSubst HasSubst.X_X]
+        congr
+        funext x
+        fin_cases x <;> simp [← MvPolynomial.coe_X, a]
+      congr
+      funext x
+      fin_cases x
+      · simp [← MvPolynomial.coe_X, a]
+      · simp [hxy]
 
 instance (priority := 2000) instAddCommGroupPoint : AddCommGroup (Point f) where
-  add x y :=
-    ⟨(F f).toPowerSeries.aeval
-        (MvPowerSeries.hasEval_of_forall_mem_maximalIdeal (pointPair_apply_mem_maximalIdeal f x y)),
-      MvPowerSeries.aeval_mem_maximalIdeal_of_constantCoeff_eq_zero
-        (F f).zero_constantCoeff (pointPair_apply_mem_maximalIdeal f x y)⟩
-  zero := ⟨0, Submodule.zero_mem _⟩
-  neg x := by
-    have : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
-    refine ⟨(F f).addInv_X.aeval this,
-      ?_⟩
-    rw [PowerSeries.aeval]
-    exact MvPowerSeries.aeval_mem_maximalIdeal_of_constantCoeff_eq_zero rfl
-      fun _ ↦ Submodule.coe_mem x
+  add := (· + ·)
+  zero := 0
+  neg := (- ·)
   sub x y := x + -y
   add_assoc := point_add_assoc f
   zero_add := point_zero_add f
@@ -707,16 +629,6 @@ def pointSMul (a : 𝒪[K]) (x : Point f) : Point f := by
 
 instance (priority := 2000) instSMulPoint : _root_.SMul 𝒪[K] (Point f) where
   smul := pointSMul f
-
-lemma point_add_coe (x y : Point f) :
-    ((x + y : Point f) : 𝒪[K]) =
-      (F f).toPowerSeries.aeval
-        (MvPowerSeries.hasEval_of_forall_mem_maximalIdeal
-          (pointPair_apply_mem_maximalIdeal f x y)) := rfl
-
-lemma point_smul_coe (a : 𝒪[K]) (x : Point f) :
-    ((a • x : Point f) : 𝒪[K]) =
-      (SMul f f a).toPowerSeries.aeval (PowerSeries.hasEval_of_mem_maximalIdeal x) := rfl
 
 open scoped MvPowerSeries.WithPiTopology in
 instance pointDistribMulAction :
@@ -813,7 +725,7 @@ instance pointDistribMulAction :
     have hright_point :
         (MvPowerSeries.aeval (hSMul.hasEval.map (MvPowerSeries.continuous_aeval hb))
           (F f).toPowerSeries) = ((a • x + a • y : Point f) : 𝒪[K]) := by
-      rw [point_add_coe]
+      rw [add_apply]
       change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
       congr
       ext i
@@ -841,7 +753,7 @@ instance : @Module 𝒪[K] (Point f) _ (instAddCommGroupPoint (f := f)).toAddCom
     have hright :
         (MvPowerSeries.aeval (hpair.hasEval.map (MvPowerSeries.continuous_aeval hxU))
           (F f).toPowerSeries) = ((a • x + b • x : Point f) : 𝒪[K]) := by
-      rw [point_add_coe]
+      rw [add_apply]
       change (F f).toPowerSeries.aeval _ = (F f).toPowerSeries.aeval _
       congr
       ext i
