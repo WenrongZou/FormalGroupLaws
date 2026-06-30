@@ -462,6 +462,10 @@ lemma PowerSeries.aeval_subst_of_hasSubst {g : PowerSeries 𝒪[K]}
 set_option linter.unusedVariables false in
 def Point (f : 𝓕 π) := 𝓂[K]
 
+set_option linter.unusedVariables false in
+def Point' (f : 𝓕 π) (L : Type*) [Field L] [Algebra K L] [ValuativeRel L]
+  [ValuativeExtension K L] := 𝓂[L]
+
 omit [IsUniformAddGroup K] in
 lemma pointPair_apply_mem_maximalIdeal (x y : Point f) :
     ∀ i, ![(x : 𝒪[K]), y] i ∈ 𝓂[K] :=
@@ -501,7 +505,7 @@ lemma point_zero_add (x : Point f) : 0 + x = x := by
   have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
   have hb : HasEval (fun _ : Unit ↦ (x : 𝒪[K])) := PowerSeries.hasEval_iff.mp hx
   symm
-  have hX : (MvPowerSeries.aeval hb) (PowerSeries.X : PowerSeries 𝒪[K]) = (x : 𝒪[K]) := by
+  have hX : (MvPowerSeries.aeval hb) (PowerSeries.X : PowerSeries 𝒪[K]) = x.val := by
     change (PowerSeries.X : PowerSeries 𝒪[K]).aeval hx = (x : 𝒪[K])
     rw [← Polynomial.coe_X (R := 𝒪[K]), PowerSeries.aeval_coe, Polynomial.aeval_X]
   rw [← hX, ← zeroX_eq_X (F f), zeroX, MvPowerSeries.aeval_subst_of_hasSubst, add_apply]
@@ -513,8 +517,7 @@ lemma point_zero_add (x : Point f) : 0 + x = x := by
 instance : Neg (Point f) where
   neg x := by
     have : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
-    refine ⟨(F f).addInv_X.aeval this,
-      ?_⟩
+    refine ⟨(F f).addInv_X.aeval this, ?_⟩
     rw [PowerSeries.aeval]
     exact MvPowerSeries.aeval_mem_maximalIdeal_of_constantCoeff_eq_zero rfl
       fun _ ↦ Submodule.coe_mem x
@@ -632,7 +635,7 @@ instance (priority := 2000) instSMulPoint : _root_.SMul 𝒪[K] (Point f) where
 
 open scoped MvPowerSeries.WithPiTopology in
 instance pointDistribMulAction :
-    @DistribMulAction 𝒪[K] (Point f) _ (instAddCommGroupPoint (f := f)).toAddMonoid where
+    DistribMulAction 𝒪[K] (Point f) where
   smul := pointSMul f
   mul_smul a b x := by
     apply Subtype.ext
@@ -733,6 +736,22 @@ instance pointDistribMulAction :
       · simpa [b] using hSMul_eval 0
       · simpa [b] using hSMul_eval 1
     exact hleft_point.symm.trans (hhom.trans hright_point)
+
+lemma smul_apply (x : Point f) (a : 𝒪[K]) : (a • x).val = pointSMul f a x := rfl
+
+-- open scoped MvPowerSeries.WithPiTopology in
+-- instance : Module 𝒪[K] (Point f) := by
+--   refine Module.mk ?_ ?_
+--   · sorry
+--   · intro x
+--     apply Subtype.ext
+--     have hx : PowerSeries.HasEval (x : 𝒪[K]) := PowerSeries.hasEval_of_mem_maximalIdeal x
+--     rw [smul_apply f x 0]
+--     change PowerSeries.aeval hx (SMul f f 0).toPowerSeries = 0
+--     exact (congrArg (PowerSeries.aeval hx) (SMul_zero f)).trans
+--       (map_zero (PowerSeries.aeval hx))
+
+
 
 open scoped MvPowerSeries.WithPiTopology in
 instance : @Module 𝒪[K] (Point f) _ (instAddCommGroupPoint (f := f)).toAddCommMonoid := by
